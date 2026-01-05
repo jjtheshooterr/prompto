@@ -2,17 +2,28 @@
 
 import { signUp } from '@/lib/actions/auth.actions'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
     setError(null)
     
     try {
-      await signUp(formData)
+      const result = await signUp(formData)
+      
+      if (result.needsConfirmation) {
+        router.push('/auth/confirm?message=Check your email to confirm your account')
+      } else {
+        // Session should be established, wait a moment then redirect
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 1500)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setIsLoading(false)
@@ -22,7 +33,11 @@ export default function SignUpForm() {
   return (
     <form action={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className={`border px-4 py-3 rounded ${
+          error.includes('successfully') 
+            ? 'bg-green-50 border-green-200 text-green-700' 
+            : 'bg-red-50 border-red-200 text-red-700'
+        }`}>
           {error}
         </div>
       )}

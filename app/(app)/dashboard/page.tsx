@@ -12,20 +12,35 @@ export default async function DashboardPage() {
 
   const supabase = await createClient()
 
-  // Get user's recent problems and prompts
-  const { data: problems } = await supabase
-    .from('problems')
-    .select('*')
-    .eq('created_by', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  // Get user's recent problems and prompts with error handling
+  let problems = []
+  let prompts = []
 
-  const { data: prompts } = await supabase
-    .from('prompts')
-    .select('*, problems(title, slug)')
-    .eq('created_by', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  try {
+    const { data: problemsData } = await supabase
+      .from('problems')
+      .select('*')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    problems = problemsData || []
+  } catch (error) {
+    console.error('Error fetching problems:', error)
+  }
+
+  try {
+    const { data: promptsData } = await supabase
+      .from('prompts')
+      .select('*, problems(title, slug)')
+      .eq('created_by', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    prompts = promptsData || []
+  } catch (error) {
+    console.error('Error fetching prompts:', error)
+  }
 
   const displayName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'there'
 

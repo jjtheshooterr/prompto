@@ -21,7 +21,8 @@ export async function signUp(formData: FormData) {
     options: {
       data: {
         display_name: displayName,
-      }
+      },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback`
     }
   })
 
@@ -30,15 +31,32 @@ export async function signUp(formData: FormData) {
     throw new Error(error.message)
   }
 
-  // If email confirmation is required, redirect to a confirmation page
-  if (data.user && !data.session) {
-    redirect('/auth/confirm?message=Check your email to confirm your account')
+  // If email confirmation is disabled and we have a session, sign in the user
+  if (data.session) {
+    // Update display name if provided
+    if (displayName) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ display_name: displayName })
+          .eq('id', data.user.id)
+      } catch (updateError) {
+        console.error('Profile update error:', updateError)
+      }
+    }
+    
+    // Revalidate to ensure session is recognized
+    revalidatePath('/', 'layout')
+    return { success: true, needsConfirmation: false }
   }
 
-  // If user is immediately signed in, redirect to dashboard
-  if (data.session) {
-    redirect('/dashboard')
+  // If no session but user exists, email confirmation is required
+  if (data.user && !data.session) {
+    return { success: true, needsConfirmation: true }
   }
+
+  // Fallback
+  return { success: true, needsConfirmation: true }
 }
 
 export async function signIn(formData: FormData) {
@@ -62,7 +80,8 @@ export async function signIn(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  // Return success - let client handle redirect
+  return { success: true }
 }
 
 export async function signOut() {

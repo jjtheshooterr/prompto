@@ -2,10 +2,12 @@
 
 import { signIn } from '@/lib/actions/auth.actions'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   async function handleSubmit(formData: FormData) {
     setIsLoading(true)
@@ -13,6 +15,10 @@ export default function SignInForm() {
     
     try {
       await signIn(formData)
+      // Wait a moment for session to be established, then redirect
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       setIsLoading(false)
