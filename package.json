@@ -1,11 +1,11 @@
 {
-  "name": "promptbench",
+  "name": "promptvexity",
   "version": "0.1.0",
   "private": true,
   "author": "jjtheshooterr",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jjtheshooterr/promptbench.git"
+    "url": "https://github.com/jjtheshooterr/promptvexity.git"
   },
   "scripts": {
     "dev": "next dev",

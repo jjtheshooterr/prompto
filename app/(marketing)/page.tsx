@@ -19,10 +19,10 @@ export default function HomePage() {
             Browse Problems
           </Link>
           <Link 
-            href="/login" 
+            href="/signup" 
             className="border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Get Started
+            Sign Up Free
           </Link>
         </div>
       </div>

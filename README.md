@@ -1,4 +1,4 @@
-# PromptBench
+# Promptvexity
 
 A problem-first prompt library where users can browse, compare, and fork prompts organized by real-world problems.
 
@@ -29,8 +29,8 @@ A problem-first prompt library where users can browse, compare, and fork prompts
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jjtheshooterr/promptbench.git
-cd promptbench
+git clone https://github.com/jjtheshooterr/promptvexity.git
+cd promptvexity
 ```
 
 2. Install dependencies:

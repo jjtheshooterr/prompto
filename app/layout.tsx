@@ -5,7 +5,7 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PromptBench - Problem-First Prompt Library',
+  title: 'Promptvexity - Problem-First Prompt Library',
   description: 'Browse, compare, and fork prompts organized by real-world problems',
 }
 
