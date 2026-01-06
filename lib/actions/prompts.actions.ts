@@ -13,7 +13,7 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
     .eq('problem_id', problemId)
     .eq('is_listed', true)
     .eq('is_hidden', false)
-    .eq('visibility', 'public')
+    .eq('is_deleted', false) // Add soft delete check
 
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })

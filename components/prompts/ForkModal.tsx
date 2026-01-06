@@ -200,12 +200,12 @@ export default function ForkModal({
               id="forkReason"
               value={forkReason}
               onChange={(e) => setForkReason(e.target.value)}
-              placeholder="e.g., To add behavioral segmentation, To optimize for GPT-4o mini, To handle longer inputs..."
+              placeholder="e.g., To satisfy constraint #2, To improve success criterion #1, To handle edge case better..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              One sentence explaining your intent
+              Reference specific constraints or success criteria from the problem
             </p>
           </div>
 

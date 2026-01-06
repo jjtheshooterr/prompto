@@ -6,6 +6,7 @@ import Link from 'next/link'
 
 export default function ComparePage() {
   const [prompts, setPrompts] = useState<any[]>([])
+  const [problem, setProblem] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
   const [userVotes, setUserVotes] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -33,6 +34,14 @@ export default function ComparePage() {
         .from('prompts')
         .select(`
           *,
+          problems (
+            id,
+            title,
+            goal,
+            inputs,
+            constraints,
+            success_criteria
+          ),
           prompt_stats (
             upvotes,
             downvotes,
@@ -45,6 +54,11 @@ export default function ComparePage() {
         .in('id', promptIds)
 
       setPrompts(promptsData || [])
+
+      // Set problem data from the first prompt (assuming all prompts are for the same problem)
+      if (promptsData && promptsData.length > 0 && promptsData[0].problems) {
+        setProblem(promptsData[0].problems)
+      }
 
       // Get user votes if logged in
       if (currentUser && promptIds.length > 0) {
@@ -219,6 +233,73 @@ export default function ComparePage() {
           Clear All
         </button>
       </div>
+
+      {/* Problem Context */}
+      {problem && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Problem Goal */}
+            <div className="lg:col-span-3">
+              <h2 className="text-xl font-semibold text-blue-900 mb-2">
+                Problem: {problem.title}
+              </h2>
+              {problem.goal && (
+                <p className="text-blue-800 font-medium mb-4">
+                  Goal: {problem.goal}
+                </p>
+              )}
+            </div>
+
+            {/* Expected Inputs */}
+            {problem.inputs && problem.inputs.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Expected Inputs</h3>
+                <ul className="space-y-1">
+                  {problem.inputs.map((input: any, index: number) => (
+                    <li key={index} className="text-sm text-blue-800">
+                      <span className="font-medium">{input.name}</span>
+                      {input.required && <span className="text-red-600 ml-1">*</span>}
+                      <div className="text-blue-600 text-xs">{input.description}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Constraints */}
+            {problem.constraints && problem.constraints.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Constraints</h3>
+                <ul className="space-y-1">
+                  {problem.constraints.map((constraint: any, index: number) => (
+                    <li key={index} className="text-sm text-blue-800">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                        constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
+                      }`}></span>
+                      {constraint.rule}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Success Criteria */}
+            {problem.success_criteria && problem.success_criteria.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-blue-900 mb-2">Success Criteria</h3>
+                <ul className="space-y-1">
+                  {problem.success_criteria.map((criterion: any, index: number) => (
+                    <li key={index} className="text-sm text-blue-800">
+                      <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                      {criterion.criterion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {prompts.map((prompt) => {

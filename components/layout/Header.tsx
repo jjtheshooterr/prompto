@@ -7,6 +7,7 @@ import GlobalSearch from '@/components/search/GlobalSearch'
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -14,6 +15,17 @@ export default function Header() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      
+      // Get user profile to check role
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role, username')
+          .eq('id', user.id)
+          .single()
+        setUserProfile(profile)
+      }
+      
       setLoading(false)
     }
 
@@ -23,6 +35,9 @@ export default function Header() {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      if (!session?.user) {
+        setUserProfile(null)
+      }
     })
 
     return () => subscription.unsubscribe()
@@ -66,6 +81,11 @@ export default function Header() {
                 <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Dashboard
                 </Link>
+                {userProfile?.role === 'admin' && (
+                  <Link href="/admin/reports" className="text-red-600 hover:text-red-700 transition-colors font-medium">
+                    Admin
+                  </Link>
+                )}
               </>
             )}
           </nav>

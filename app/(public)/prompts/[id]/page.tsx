@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ForkModal from '@/components/prompts/ForkModal'
 import ForkLineage from '@/components/prompts/ForkLineage'
+import ReportModal from '@/components/moderation/ReportModal'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 
@@ -17,6 +18,7 @@ export default function PromptDetailPage() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showForkModal, setShowForkModal] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -369,6 +371,16 @@ export default function PromptDetailPage() {
           >
             Add to Compare
           </button>
+
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="px-3 py-2 text-gray-500 hover:text-red-600 transition-colors"
+            title="Report this prompt"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -485,6 +497,15 @@ export default function PromptDetailPage() {
         promptId={promptId}
         originalTitle={prompt.title}
         onSuccess={handleForkSuccess}
+      />
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        contentType="prompt"
+        contentId={promptId}
+        contentTitle={prompt.title}
       />
     </div>
   )

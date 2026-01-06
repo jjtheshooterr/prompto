@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ReportModal from '@/components/moderation/ReportModal'
 
 interface PromptCardProps {
   prompt: any
@@ -17,6 +18,7 @@ interface ParentPrompt {
 
 export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = false }: PromptCardProps) {
   const [parentPrompt, setParentPrompt] = useState<ParentPrompt | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const stats = prompt.prompt_stats?.[0] || {
     upvotes: 0,
@@ -176,8 +178,25 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
           >
             View Details
           </Link>
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
+            title="Report this prompt"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        contentType="prompt"
+        contentId={prompt.id}
+        contentTitle={prompt.title}
+      />
     </div>
   )
 }

@@ -76,6 +76,69 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
         <h1 className="text-3xl font-bold mb-4">{problem.title}</h1>
         <p className="text-gray-600 text-lg mb-6">{problem.description}</p>
 
+        {/* Problem Goal */}
+        {problem.goal && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-semibold text-blue-900 mb-2">Goal</h3>
+            <p className="text-blue-800">{problem.goal}</p>
+          </div>
+        )}
+
+        {/* Structured Information */}
+        {(problem.inputs || problem.constraints || problem.success_criteria) && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            {/* Expected Inputs */}
+            {problem.inputs && problem.inputs.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Expected Inputs</h3>
+                <ul className="space-y-2">
+                  {problem.inputs.map((input: any, index: number) => (
+                    <li key={index} className="text-sm">
+                      <div className="font-medium text-gray-900">
+                        {input.name}
+                        {input.required && <span className="text-red-600 ml-1">*</span>}
+                      </div>
+                      <div className="text-gray-600 text-xs">{input.description}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Constraints */}
+            {problem.constraints && problem.constraints.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Constraints</h3>
+                <ul className="space-y-2">
+                  {problem.constraints.map((constraint: any, index: number) => (
+                    <li key={index} className="text-sm flex items-start">
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 mt-1.5 flex-shrink-0 ${
+                        constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
+                      }`}></span>
+                      <span className="text-gray-700">{constraint.rule}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Success Criteria */}
+            {problem.success_criteria && problem.success_criteria.length > 0 && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-3">Success Criteria</h3>
+                <ul className="space-y-2">
+                  {problem.success_criteria.map((criterion: any, index: number) => (
+                    <li key={index} className="text-sm flex items-start">
+                      <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 mt-1.5 flex-shrink-0"></span>
+                      <span className="text-gray-700">{criterion.criterion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {problem.tags && problem.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {problem.tags.map((tag: string) => (

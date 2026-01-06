@@ -19,7 +19,8 @@ export async function listProblems({
     .select('*')
     .eq('is_listed', true)
     .eq('is_hidden', false)
-    .eq('visibility', 'public')
+    .eq('is_deleted', false)
+    .in('visibility', ['public', 'unlisted']) // Include unlisted for browse page
 
   // Apply search filter
   if (search) {
@@ -49,7 +50,7 @@ export async function listProblems({
     return []
   }
 
-  // Get prompt counts for each problem (only count public, listed, non-hidden prompts)
+  // Get prompt counts for each problem (only count visible, non-deleted prompts)
   const problemsWithCounts = await Promise.all(
     problems.map(async (problem) => {
       const { count } = await supabase
@@ -58,7 +59,8 @@ export async function listProblems({
         .eq('problem_id', problem.id)
         .eq('is_listed', true)
         .eq('is_hidden', false)
-        .eq('visibility', 'public')
+        .eq('is_deleted', false)
+        .in('visibility', ['public', 'unlisted'])
 
       return {
         ...problem,
@@ -73,13 +75,17 @@ export async function listProblems({
 export async function getPublicProblemBySlug(slug: string) {
   const supabase = await createClient()
   
+  // RLS will handle visibility filtering, but we still check for soft deletes
   const { data, error } = await supabase
     .from('problems')
-    .select('*')
+    .select(`
+      *,
+      inputs,
+      constraints,
+      success_criteria
+    `)
     .eq('slug', slug)
-    .eq('is_listed', true)
-    .eq('is_hidden', false)
-    .eq('visibility', 'public')
+    .eq('is_deleted', false)
     .single()
 
   if (error) {
@@ -160,6 +166,7 @@ export async function createProblem(formData: FormData) {
       slug,
       is_listed: true,
       created_by: user.id,
+      owner_id: user.id, // Set owner_id for new visibility system
       workspace_id: workspace?.id
     })
     .select()
@@ -167,6 +174,17 @@ export async function createProblem(formData: FormData) {
 
   if (error) {
     throw new Error(`Failed to create problem: ${error.message}`)
+  }
+
+  // If creating a private problem, add the owner as a member
+  if (visibility === 'private') {
+    await supabase
+      .from('problem_members')
+      .insert({
+        problem_id: data.id,
+        user_id: user.id,
+        role: 'owner'
+      })
   }
 
   revalidatePath('/problems')
