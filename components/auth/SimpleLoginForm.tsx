@@ -38,18 +38,12 @@ export default function SimpleLoginForm() {
         setError(error.message)
       } else if (data.session) {
         console.log('Login successful! User:', data.session.user.email)
-        setSuccess(true)
-        setUser(data.session.user)
         
-        // Try multiple redirect methods
-        console.log('Trying router.push...')
-        router.push('/dashboard')
-        
-        // Backup redirect after delay
+        // Direct redirect to dashboard
         setTimeout(() => {
-          console.log('Trying window.location.href...')
-          window.location.href = '/dashboard'
-        }, 1000)
+          console.log('Redirecting to dashboard...')
+          window.location.replace('/dashboard')
+        }, 500)
         
       } else {
         setError('Login failed - no session created')

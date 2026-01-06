@@ -2,25 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground: #000;
-  --background: #fff;
-  --btn-background: #f3f4f6;
-  --btn-background-hover: #e5e7eb;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground: #fff;
-    --background: #000;
-    --btn-background: #374151;
-    --btn-background-hover: #4b5563;
-  }
-}
-
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: #000;
+  background: #fff;
 }
 
 .animate-in {

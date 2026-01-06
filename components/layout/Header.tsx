@@ -1,10 +1,38 @@
-import Link from 'next/link'
-import { getUser } from '@/lib/actions/auth.actions'
-import UserMenu from '@/components/auth/UserMenu'
+'use client'
 
-export default async function Header() {
-  // Safely get user, will return null if not authenticated
-  const user = await getUser()
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+
+export default function Header() {
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      setLoading(false)
+    }
+
+    getUser()
+
+    // Listen for auth changes
+    const supabase = createClient()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    setUser(null)
+    window.location.href = '/'
+  }
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -24,8 +52,26 @@ export default async function Header() {
           </nav>
           
           <div className="flex items-center space-x-4">
-            {user ? (
-              <UserMenu user={user} />
+            {loading ? (
+              <div className="text-gray-400">Loading...</div>
+            ) : user ? (
+              <div className="flex items-center space-x-4">
+                <Link 
+                  href="/dashboard" 
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Dashboard
+                </Link>
+                <span className="text-sm text-gray-600">
+                  {user.email}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  Sign Out
+                </button>
+              </div>
             ) : (
               <>
                 <Link 
