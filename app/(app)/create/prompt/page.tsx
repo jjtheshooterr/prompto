@@ -1,29 +1,133 @@
+'use client'
+
 import { createPrompt } from '@/lib/actions/prompts.actions'
-import { getPublicProblemBySlug } from '@/lib/actions/problems.actions'
-import { redirect } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 
-interface CreatePromptPageProps {
-  searchParams: Promise<{ problem?: string }>
-}
+export default function CreatePromptPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const problemId = searchParams.get('problem')
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
-export default async function CreatePromptPage({ searchParams }: CreatePromptPageProps) {
-  const params = await searchParams
-  const problemId = params.problem
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      
+      setUser(user)
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
 
   if (!problemId) {
-    redirect('/problems')
+    router.push('/problems')
+    return null
   }
 
   async function handleSubmit(formData: FormData) {
-    'use server'
-    
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    setSubmitting(true)
     try {
-      const prompt = await createPrompt(formData)
-      redirect(`/prompts/${prompt.id}`)
+      // Create prompt directly from client
+      const supabase = createClient()
+      
+      // Double-check authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      const title = formData.get('title') as string
+      const systemPrompt = formData.get('system_prompt') as string
+      const userPromptTemplate = formData.get('user_prompt_template') as string
+      const model = formData.get('model') as string
+      const params = formData.get('params') as string
+      const exampleInput = formData.get('example_input') as string
+      const exampleOutput = formData.get('example_output') as string
+      const status = formData.get('status') as string || 'production'
+
+      // Get problem to get workspace_id
+      const { data: problem } = await supabase
+        .from('problems')
+        .select('workspace_id')
+        .eq('id', problemId)
+        .single()
+
+      let parsedParams = {}
+      try {
+        parsedParams = params ? JSON.parse(params) : {}
+      } catch (e) {
+        throw new Error('Invalid JSON in params field')
+      }
+
+      const { data: prompt, error } = await supabase
+        .from('prompts')
+        .insert({
+          problem_id: problemId,
+          title,
+          system_prompt: systemPrompt,
+          user_prompt_template: userPromptTemplate,
+          model,
+          params: parsedParams,
+          example_input: exampleInput,
+          example_output: exampleOutput,
+          status,
+          visibility: 'public',
+          is_listed: true,
+          created_by: user.id,
+          workspace_id: problem?.workspace_id
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw new Error(`Failed to create prompt: ${error.message}`)
+      }
+
+      // Create initial prompt_stats row
+      await supabase
+        .from('prompt_stats')
+        .insert({
+          prompt_id: prompt.id,
+          upvotes: 0,
+          downvotes: 0,
+          score: 0
+        })
+
+      router.push(`/prompts/${prompt.id}`)
     } catch (error) {
       console.error('Failed to create prompt:', error)
-      // In a real app, you'd handle this error properly
+      alert(`Failed to create prompt: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect to login
   }
 
   return (
@@ -171,14 +275,15 @@ export default async function CreatePromptPage({ searchParams }: CreatePromptPag
         <div className="flex gap-4 pt-6">
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={submitting}
+            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Prompt
+            {submitting ? 'Creating...' : 'Create Prompt'}
           </button>
           
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => router.back()}
             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel

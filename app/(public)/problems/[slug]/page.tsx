@@ -1,24 +1,65 @@
+'use client'
+
 import { getPublicProblemBySlug } from '@/lib/actions/problems.actions'
 import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 interface ProblemDetailPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ sort?: 'newest' | 'top' }>
 }
 
-export default async function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
-  const { slug } = await params
-  const { sort = 'top' } = await searchParams
-  
-  const problem = await getPublicProblemBySlug(slug)
-  
-  if (!problem) {
-    notFound()
+export default function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
+  const [problem, setProblem] = useState<any>(null)
+  const [prompts, setPrompts] = useState<any[]>([])
+  const [sort, setSort] = useState<'newest' | 'top'>('top')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadData = async () => {
+      const { slug } = await params
+      const { sort: sortParam = 'top' } = await searchParams
+      
+      setSort(sortParam)
+      
+      const problemData = await getPublicProblemBySlug(slug)
+      
+      if (!problemData) {
+        notFound()
+        return
+      }
+
+      setProblem(problemData)
+      const promptsData = await listPromptsByProblem(problemData.id, sortParam)
+      setPrompts(promptsData)
+      setLoading(false)
+    }
+
+    loadData()
+  }, [params, searchParams])
+
+  const addToCompare = (promptId: string) => {
+    const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+    if (!selected.includes(promptId)) {
+      selected.push(promptId)
+      localStorage.setItem('comparePrompts', JSON.stringify(selected))
+    }
   }
 
-  const prompts = await listPromptsByProblem(problem.id, sort)
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!problem) {
+    notFound()
+    return null
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -65,7 +106,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
       <div className="mb-6">
         <div className="flex gap-2">
           <Link
-            href={`/problems/${slug}?sort=top`}
+            href={`/problems/${problem.slug}?sort=top`}
             className={`px-4 py-2 rounded-lg transition-colors ${
               sort === 'top'
                 ? 'bg-blue-600 text-white'
@@ -75,7 +116,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
             Top Rated
           </Link>
           <Link
-            href={`/problems/${slug}?sort=newest`}
+            href={`/problems/${problem.slug}?sort=newest`}
             className={`px-4 py-2 rounded-lg transition-colors ${
               sort === 'newest'
                 ? 'bg-blue-600 text-white'
@@ -142,13 +183,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                 <div className="flex gap-2">
                   <button
                     className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-                    onClick={() => {
-                      const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-                      if (!selected.includes(prompt.id)) {
-                        selected.push(prompt.id)
-                        localStorage.setItem('comparePrompts', JSON.stringify(selected))
-                      }
-                    }}
+                    onClick={() => addToCompare(prompt.id)}
                   >
                     Compare
                   </button>

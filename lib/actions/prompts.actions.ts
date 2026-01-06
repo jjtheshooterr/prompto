@@ -27,7 +27,9 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })
   } else {
-    query = query.order('score', { ascending: false, nullsFirst: false })
+    // Order by score from prompt_stats, with fallback to created_at
+    query = query.order('prompt_stats.score', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
   }
 
   const { data, error } = await query

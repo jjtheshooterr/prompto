@@ -18,7 +18,7 @@ export async function listProblems({
     .from('problems')
     .select(`
       *,
-      prompts!inner(count)
+      prompts(count)
     `)
     .eq('is_listed', true)
     .eq('is_hidden', false)
@@ -72,12 +72,28 @@ export async function getPublicProblemBySlug(slug: string) {
 }
 
 export async function createProblem(formData: FormData) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    throw new Error('Must be authenticated to create problems')
-  }
+  try {
+    const supabase = await createClient()
+    
+    // Try to get user with more detailed error handling
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    console.log('Server action - createProblem auth check:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      authError: authError?.message,
+      cookies: process.env.NODE_ENV === 'development' ? 'checking cookies...' : 'hidden'
+    })
+    
+    if (authError) {
+      console.error('Auth error in createProblem:', authError)
+      throw new Error(`Authentication error: ${authError.message}`)
+    }
+    
+    if (!user) {
+      console.error('No user found in createProblem')
+      throw new Error('Must be authenticated to create problems')
+    }
 
   const title = formData.get('title') as string
   const description = formData.get('description') as string
@@ -94,15 +110,19 @@ export async function createProblem(formData: FormData) {
   let { data: workspace } = await supabase
     .from('workspaces')
     .select('id')
-    .eq('created_by', user.id)
+    .eq('owner_id', user.id)
     .single()
 
   if (!workspace) {
+    // Generate a unique workspace slug
+    const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
+    
     const { data: newWorkspace } = await supabase
       .from('workspaces')
       .insert({
         name: `${user.email}'s Workspace`,
-        created_by: user.id
+        slug: workspaceSlug,
+        owner_id: user.id
       })
       .select('id')
       .single()
@@ -132,4 +152,8 @@ export async function createProblem(formData: FormData) {
 
   revalidatePath('/problems')
   return data
+} catch (error) {
+  console.error('Error in createProblem:', error)
+  throw error
+}
 }

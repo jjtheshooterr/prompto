@@ -1,17 +1,128 @@
+'use client'
+
 import { createProblem } from '@/lib/actions/problems.actions'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
 
 export default function CreateProblemPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        router.push('/login')
+        return
+      }
+      
+      setUser(user)
+      setLoading(false)
+    }
+
+    checkAuth()
+  }, [router])
+
   async function handleSubmit(formData: FormData) {
-    'use server'
-    
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    setSubmitting(true)
     try {
-      const problem = await createProblem(formData)
-      redirect(`/problems/${problem.slug}`)
+      // Create problem directly from client
+      const supabase = createClient()
+      
+      // Double-check authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      const title = formData.get('title') as string
+      const description = formData.get('description') as string
+      const tags = (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean)
+      const industry = formData.get('industry') as string
+      const visibility = formData.get('visibility') as string || 'public'
+
+      // Create slug from title
+      const slug = title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+
+      // Get or create user's default workspace
+      let { data: workspace } = await supabase
+        .from('workspaces')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (!workspace) {
+        // Generate a unique workspace slug
+        const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
+        
+        const { data: newWorkspace, error: workspaceError } = await supabase
+          .from('workspaces')
+          .insert({
+            name: `${user.email}'s Workspace`,
+            slug: workspaceSlug,
+            owner_id: user.id
+          })
+          .select('id')
+          .single()
+        
+        if (workspaceError) {
+          throw new Error(`Failed to create workspace: ${workspaceError.message}`)
+        }
+        
+        workspace = newWorkspace
+      }
+
+      const { data: problem, error } = await supabase
+        .from('problems')
+        .insert({
+          title,
+          description,
+          tags,
+          industry,
+          visibility,
+          slug,
+          is_listed: true,
+          created_by: user.id,
+          workspace_id: workspace?.id
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw new Error(`Failed to create problem: ${error.message}`)
+      }
+
+      router.push(`/problems/${problem.slug}`)
     } catch (error) {
       console.error('Failed to create problem:', error)
-      // In a real app, you'd handle this error properly
+      alert(`Failed to create problem: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect to login
   }
 
   return (
@@ -110,14 +221,15 @@ export default function CreateProblemPage() {
         <div className="flex gap-4 pt-6">
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={submitting}
+            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Problem
+            {submitting ? 'Creating...' : 'Create Problem'}
           </button>
           
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => router.back()}
             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Cancel

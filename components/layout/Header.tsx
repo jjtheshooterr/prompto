@@ -20,7 +20,7 @@ export default function Header() {
 
     // Listen for auth changes
     const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
 
@@ -43,12 +43,22 @@ export default function Header() {
           </Link>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/problems" className="text-gray-600 hover:text-gray-900">
-              Problems
+            <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
+              Browse Problems
             </Link>
-            <Link href="/compare" className="text-gray-600 hover:text-gray-900">
+            <Link href="/compare" className="text-gray-600 hover:text-gray-900 transition-colors">
               Compare
             </Link>
+            {user && (
+              <>
+                <Link href="/create/problem" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Create Problem
+                </Link>
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Dashboard
+                </Link>
+              </>
+            )}
           </nav>
           
           <div className="flex items-center space-x-4">
@@ -56,18 +66,12 @@ export default function Header() {
               <div className="text-gray-400">Loading...</div>
             ) : user ? (
               <div className="flex items-center space-x-4">
-                <Link 
-                  href="/dashboard" 
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Dashboard
-                </Link>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 hidden sm:block">
                   {user.email}
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Sign Out
                 </button>
@@ -76,7 +80,7 @@ export default function Header() {
               <>
                 <Link 
                   href="/login" 
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Sign In
                 </Link>

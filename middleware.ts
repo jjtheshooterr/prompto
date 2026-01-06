@@ -3,10 +3,8 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // TEMPORARILY DISABLED - Let's get basic auth working first
-  return NextResponse.next()
-  
-  // return await updateSession(request)
+  // Enable middleware for session management
+  return await updateSession(request)
 }
 
 export const config = {
