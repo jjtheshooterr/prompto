@@ -35,12 +35,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  console.log('Middleware - Path:', request.nextUrl.pathname)
+  console.log('Middleware - User:', user?.email || 'No user')
+
   // Protect dashboard routes
   if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    // no user, potentially respond by redirecting the user to the login page
+    console.log('Middleware - Redirecting to login, no user found')
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    console.log('Middleware - User authenticated, allowing access to dashboard')
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
