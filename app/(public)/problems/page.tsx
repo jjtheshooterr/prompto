@@ -46,11 +46,18 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">All Industries</option>
-            <option value="technology">Technology</option>
+            <option value="dev">Development & Technology</option>
+            <option value="marketing">Marketing</option>
+            <option value="content">Content Creation</option>
+            <option value="data">Data & Analytics</option>
             <option value="finance">Finance</option>
             <option value="healthcare">Healthcare</option>
             <option value="education">Education</option>
-            <option value="retail">Retail</option>
+            <option value="legal">Legal</option>
+            <option value="sales">Sales</option>
+            <option value="support">Customer Support</option>
+            <option value="hr">Human Resources</option>
+            <option value="video">Video & Media</option>
           </select>
 
           <select

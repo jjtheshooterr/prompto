@@ -98,74 +98,125 @@ export async function getPromptsByIds(ids: string[]) {
 }
 
 export async function createPrompt(formData: FormData) {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    throw new Error('Must be authenticated to create prompts')
-  }
-
-  const problemId = formData.get('problem_id') as string
-  const title = formData.get('title') as string
-  const systemPrompt = formData.get('system_prompt') as string
-  const userPromptTemplate = formData.get('user_prompt_template') as string
-  const model = formData.get('model') as string
-  const params = formData.get('params') as string
-  const exampleInput = formData.get('example_input') as string
-  const exampleOutput = formData.get('example_output') as string
-  const status = formData.get('status') as string || 'production'
-
-  // Get problem to get workspace_id
-  const { data: problem } = await supabase
-    .from('problems')
-    .select('workspace_id')
-    .eq('id', problemId)
-    .single()
-
-  let parsedParams = {}
   try {
-    parsedParams = params ? JSON.parse(params) : {}
-  } catch (e) {
-    throw new Error('Invalid JSON in params field')
-  }
-
-  const { data, error } = await supabase
-    .from('prompts')
-    .insert({
-      problem_id: problemId,
-      title,
-      system_prompt: systemPrompt,
-      user_prompt_template: userPromptTemplate,
-      model,
-      params: parsedParams,
-      example_input: exampleInput,
-      example_output: exampleOutput,
-      status,
-      visibility: 'public',
-      is_listed: true,
-      created_by: user.id,
-      workspace_id: problem?.workspace_id
+    const supabase = await createClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    console.log('Server action - createPrompt auth check:', {
+      hasUser: !!user,
+      userEmail: user?.email,
+      authError: authError?.message
     })
-    .select()
-    .single()
+    
+    if (authError) {
+      console.error('Auth error in createPrompt:', authError)
+      throw new Error(`Authentication error: ${authError.message}`)
+    }
+    
+    if (!user) {
+      console.error('No user found in createPrompt')
+      throw new Error('Must be authenticated to create prompts')
+    }
 
-  if (error) {
-    throw new Error(`Failed to create prompt: ${error.message}`)
+    const problemId = formData.get('problem_id') as string
+    const title = formData.get('title') as string
+    const systemPrompt = formData.get('system_prompt') as string
+    const userPromptTemplate = formData.get('user_prompt_template') as string
+    const model = formData.get('model') as string
+    const params = formData.get('params') as string
+    const exampleInput = formData.get('example_input') as string
+    const exampleOutput = formData.get('example_output') as string
+    const status = formData.get('status') as string || 'production'
+
+    // Get or create user's workspace
+    let { data: workspace } = await supabase
+      .from('workspaces')
+      .select('id')
+      .eq('owner_id', user.id)
+      .single()
+
+    if (!workspace) {
+      // Create workspace if it doesn't exist
+      const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
+      
+      const { data: newWorkspace, error: workspaceError } = await supabase
+        .from('workspaces')
+        .insert({
+          name: `${user.email}'s Workspace`,
+          slug: workspaceSlug,
+          owner_id: user.id
+        })
+        .select('id')
+        .single()
+      
+      if (workspaceError) {
+        console.error('Failed to create workspace:', workspaceError)
+        // If workspace creation fails, set to null
+        workspace = { id: null }
+      } else {
+        // Add user as workspace member
+        await supabase
+          .from('workspace_members')
+          .insert({
+            workspace_id: newWorkspace.id,
+            user_id: user.id,
+            role: 'owner'
+          })
+        
+        workspace = newWorkspace
+      }
+    }
+
+    let parsedParams = {}
+    try {
+      parsedParams = params ? JSON.parse(params) : {}
+    } catch (e) {
+      throw new Error('Invalid JSON in params field')
+    }
+
+    const { data, error } = await supabase
+      .from('prompts')
+      .insert({
+        problem_id: problemId,
+        title,
+        system_prompt: systemPrompt,
+        user_prompt_template: userPromptTemplate,
+        model,
+        params: parsedParams,
+        example_input: exampleInput,
+        example_output: exampleOutput,
+        status,
+        visibility: 'public',
+        is_listed: true,
+        created_by: user.id,
+        workspace_id: workspace?.id || null
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to create prompt:', error)
+      throw new Error(`Failed to create prompt: ${error.message}`)
+    }
+
+    // Create initial prompt_stats row
+    await supabase
+      .from('prompt_stats')
+      .insert({
+        prompt_id: data.id,
+        upvotes: 0,
+        downvotes: 0,
+        score: 0
+      })
+
+    revalidatePath('/problems')
+    revalidatePath(`/problems/${problemId}`)
+    return data
+  } catch (error) {
+    console.error('Error in createPrompt:', error)
+    throw error
   }
-
-  // Create initial prompt_stats row
-  await supabase
-    .from('prompt_stats')
-    .insert({
-      prompt_id: data.id,
-      upvotes: 0,
-      downvotes: 0,
-      score: 0
-    })
-
-  revalidatePath('/problems')
-  revalidatePath(`/problems/${problemId}`)
-  return data
 }
 
 export async function forkPrompt(parentPromptId: string) {

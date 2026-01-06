@@ -7,17 +7,17 @@ import { useRouter } from 'next/navigation'
 export default function SimpleLoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const [user, setUser] = useState<any>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    
+    if (loading) return // Prevent multiple submissions
+    
     console.log('Form submitted - preventDefault called')
     
     setLoading(true)
     setError(null)
-    setSuccess(false)
     
     const formData = new FormData(e.currentTarget)
     const email = formData.get('email') as string
@@ -36,143 +36,102 @@ export default function SimpleLoginForm() {
       if (error) {
         console.log('Login error:', error.message)
         setError(error.message)
+        setLoading(false)
       } else if (data.session) {
         console.log('Login successful! User:', data.session.user.email)
         
-        // Direct redirect to dashboard
+        // Wait a bit for session to be fully established, then redirect
         setTimeout(() => {
           console.log('Redirecting to dashboard...')
-          window.location.replace('/dashboard')
-        }, 500)
+          router.push('/dashboard')
+        }, 1000)
         
       } else {
         setError('Login failed - no session created')
+        setLoading(false)
       }
     } catch (err) {
       console.log('Login exception:', err)
       setError('Login failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
+      setLoading(false)
     }
-    
-    setLoading(false)
-  }
-
-  const handleManualRedirect = () => {
-    console.log('Manual redirect clicked')
-    window.location.href = '/dashboard'
-  }
-
-  if (success) {
-    return (
-      <div style={{ padding: '50px', maxWidth: '400px', margin: '0 auto', fontFamily: 'Arial' }}>
-        <h1>Login Successful!</h1>
-        
-        <div style={{ color: 'green', marginBottom: '20px', padding: '10px', border: '1px solid green' }}>
-          ✅ Welcome back, {user?.email}!
-        </div>
-
-        <button
-          onClick={handleManualRedirect}
-          style={{
-            width: '100%',
-            padding: '15px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            marginBottom: '10px'
-          }}
-        >
-          Go to Dashboard
-        </button>
-
-        <a 
-          href="/dashboard"
-          style={{
-            display: 'block',
-            width: '100%',
-            padding: '15px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            textDecoration: 'none',
-            textAlign: 'center',
-            borderRadius: '4px',
-            fontSize: '16px'
-          }}
-        >
-          Direct Link to Dashboard
-        </a>
-      </div>
-    )
   }
 
   return (
-    <div style={{ padding: '50px', maxWidth: '400px', margin: '0 auto', fontFamily: 'Arial' }}>
-      <h1>Login</h1>
-      
-      {error && (
-        <div style={{ color: 'red', marginBottom: '20px', padding: '10px', border: '1px solid red' }}>
-          Error: {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Email:</label>
-          <input
-            name="email"
-            type="email"
-            required
-            style={{ 
-              width: '100%', 
-              padding: '12px', 
-              border: '2px solid #333',
-              borderRadius: '4px',
-              fontSize: '16px',
-              backgroundColor: 'white',
-              color: 'black'
-            }}
-            placeholder="Enter your email"
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Welcome back to Promptvexity
+          </p>
         </div>
         
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
-          <input
-            name="password"
-            type="password"
-            required
-            style={{ 
-              width: '100%', 
-              padding: '12px', 
-              border: '2px solid #333',
-              borderRadius: '4px',
-              fontSize: '16px',
-              backgroundColor: 'white',
-              color: 'black'
-            }}
-            placeholder="Enter your password"
-          />
-        </div>
+        {error && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="text-sm text-red-700">
+              {error}
+            </div>
+          </div>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '15px',
-            backgroundColor: loading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          {loading ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                disabled={loading}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:opacity-50"
+                placeholder="Enter your email"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                disabled={loading}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm disabled:opacity-50"
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+                Sign up
+              </a>
+            </p>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

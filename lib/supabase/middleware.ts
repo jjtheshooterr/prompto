@@ -38,16 +38,21 @@ export async function updateSession(request: NextRequest) {
   console.log('Middleware - Path:', request.nextUrl.pathname)
   console.log('Middleware - User:', user?.email || 'No user')
 
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    console.log('Middleware - Redirecting to login, no user found')
+  // Only protect specific authenticated routes
+  const protectedRoutes = ['/dashboard', '/create']
+  const isProtectedRoute = protectedRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  )
+
+  if (isProtectedRoute && !user) {
+    console.log('Middleware - Redirecting to login, no user found for protected route')
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    console.log('Middleware - User authenticated, allowing access to dashboard')
+  if (user && isProtectedRoute) {
+    console.log('Middleware - User authenticated, allowing access to protected route')
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
