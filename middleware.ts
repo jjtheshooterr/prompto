@@ -3,8 +3,9 @@ import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Enable middleware for session management with better logic
-  return await updateSession(request)
+  // Completely disable middleware temporarily to test login redirect
+  console.log('Middleware completely bypassed for:', request.nextUrl.pathname)
+  return NextResponse.next()
 }
 
 export const config = {

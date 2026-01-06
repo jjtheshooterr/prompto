@@ -1,8 +1,8 @@
 'use client'
 
-import { createPrompt } from '@/lib/actions/prompts.actions'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface CreatePromptClientProps {
   user: any
@@ -33,7 +33,125 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
   async function handleSubmit(formData: FormData) {
     setSubmitting(true)
     try {
-      const prompt = await createPrompt(formData)
+      // Create prompt directly from client instead of using server action
+      const supabase = createClient()
+      
+      // Double-check authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Please log in again')
+      }
+
+      const title = formData.get('title') as string
+      const systemPrompt = formData.get('system_prompt') as string
+      const userPromptTemplate = formData.get('user_prompt_template') as string
+      const model = formData.get('model') as string
+      const params = formData.get('params') as string
+      const exampleInput = formData.get('example_input') as string
+      const exampleOutput = formData.get('example_output') as string
+      const status = formData.get('status') as string || 'production'
+
+      let parsedParams = {}
+      if (params && params.trim()) {
+        try {
+          parsedParams = JSON.parse(params)
+        } catch (e) {
+          throw new Error('Invalid JSON in params field. Please check your JSON syntax.')
+        }
+      }
+
+      // Get or create user's workspace and ensure membership
+      let { data: workspace } = await supabase
+        .from('workspaces')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (!workspace) {
+        // Create workspace if it doesn't exist
+        const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
+        
+        const { data: newWorkspace, error: workspaceError } = await supabase
+          .from('workspaces')
+          .insert({
+            name: `${user.email}'s Workspace`,
+            slug: workspaceSlug,
+            owner_id: user.id
+          })
+          .select('id')
+          .single()
+        
+        if (workspaceError) {
+          throw new Error(`Failed to create workspace: ${workspaceError.message}`)
+        }
+        
+        // Add user as workspace member
+        await supabase
+          .from('workspace_members')
+          .insert({
+            workspace_id: newWorkspace.id,
+            user_id: user.id,
+            role: 'owner'
+          })
+        
+        workspace = newWorkspace
+      } else {
+        // Ensure user is a member of their workspace
+        const { data: membership } = await supabase
+          .from('workspace_members')
+          .select('*')
+          .eq('workspace_id', workspace.id)
+          .eq('user_id', user.id)
+          .single()
+
+        if (!membership) {
+          // Add user as workspace member if not already
+          await supabase
+            .from('workspace_members')
+            .insert({
+              workspace_id: workspace.id,
+              user_id: user.id,
+              role: 'owner'
+            })
+        }
+      }
+
+      console.log('Creating prompt with workspace:', workspace.id)
+
+      const { data: prompt, error } = await supabase
+        .from('prompts')
+        .insert({
+          problem_id: problemId,
+          title,
+          system_prompt: systemPrompt,
+          user_prompt_template: userPromptTemplate,
+          model,
+          params: parsedParams,
+          example_input: exampleInput,
+          example_output: exampleOutput,
+          status,
+          visibility: 'public',
+          is_listed: true,
+          created_by: user.id,
+          workspace_id: workspace.id // Use actual workspace ID
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw new Error(`Failed to create prompt: ${error.message}`)
+      }
+
+      // Create initial prompt_stats row
+      await supabase
+        .from('prompt_stats')
+        .insert({
+          prompt_id: prompt.id,
+          upvotes: 0,
+          downvotes: 0,
+          score: 0
+        })
+
       router.push(`/prompts/${prompt.id}`)
     } catch (error) {
       console.error('Failed to create prompt:', error)

@@ -1,24 +1,56 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { createClient } from '@/lib/supabase/client'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import CreatePromptClient from './CreatePromptClient'
 
-interface CreatePromptPageProps {
-  searchParams: Promise<{ problem?: string }>
-}
+export default function CreatePromptPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const problemId = searchParams.get('problem')
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function CreatePromptPage({ searchParams }: CreatePromptPageProps) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      console.log('Create prompt - Auth check:', { user: user?.email || 'No user' })
+      
+      if (!user) {
+        console.log('No user found, redirecting to login')
+        router.push('/login')
+        return
+      }
+      
+      setUser(user)
+      setLoading(false)
+    }
 
-  if (!user) {
-    redirect('/login')
-  }
-
-  const params = await searchParams
-  const problemId = params.problem
+    checkAuth()
+  }, [router])
 
   if (!problemId) {
-    redirect('/problems')
+    router.push('/problems')
+    return null
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center">Redirecting to login...</div>
+      </div>
+    )
   }
 
   return <CreatePromptClient user={user} problemId={problemId} />

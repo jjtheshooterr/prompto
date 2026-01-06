@@ -1,8 +1,8 @@
 'use client'
 
-import { createProblem } from '@/lib/actions/problems.actions'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface CreateProblemClientProps {
   user: any
@@ -15,7 +15,104 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
   async function handleSubmit(formData: FormData) {
     setSubmitting(true)
     try {
-      const problem = await createProblem(formData)
+      // Create problem directly from client instead of using server action
+      const supabase = createClient()
+      
+      // Double-check authentication
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Please log in again')
+      }
+
+      const title = formData.get('title') as string
+      const description = formData.get('description') as string
+      const tags = (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean)
+      const industry = formData.get('industry') as string
+      const visibility = formData.get('visibility') as string || 'public'
+
+      // Create slug from title
+      const slug = title.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '')
+
+      // Get or create user's workspace and ensure membership
+      let { data: workspace } = await supabase
+        .from('workspaces')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (!workspace) {
+        // Create workspace if it doesn't exist
+        const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
+        
+        const { data: newWorkspace, error: workspaceError } = await supabase
+          .from('workspaces')
+          .insert({
+            name: `${user.email}'s Workspace`,
+            slug: workspaceSlug,
+            owner_id: user.id
+          })
+          .select('id')
+          .single()
+        
+        if (workspaceError) {
+          throw new Error(`Failed to create workspace: ${workspaceError.message}`)
+        }
+        
+        // Add user as workspace member
+        await supabase
+          .from('workspace_members')
+          .insert({
+            workspace_id: newWorkspace.id,
+            user_id: user.id,
+            role: 'owner'
+          })
+        
+        workspace = newWorkspace
+      } else {
+        // Ensure user is a member of their workspace
+        const { data: membership } = await supabase
+          .from('workspace_members')
+          .select('*')
+          .eq('workspace_id', workspace.id)
+          .eq('user_id', user.id)
+          .single()
+
+        if (!membership) {
+          // Add user as workspace member if not already
+          await supabase
+            .from('workspace_members')
+            .insert({
+              workspace_id: workspace.id,
+              user_id: user.id,
+              role: 'owner'
+            })
+        }
+      }
+
+      console.log('Creating problem with workspace:', workspace.id)
+
+      const { data: problem, error } = await supabase
+        .from('problems')
+        .insert({
+          title,
+          description,
+          tags,
+          industry,
+          visibility,
+          slug,
+          is_listed: true,
+          created_by: user.id,
+          workspace_id: workspace.id // Use actual workspace ID
+        })
+        .select()
+        .single()
+
+      if (error) {
+        throw new Error(`Failed to create problem: ${error.message}`)
+      }
+
       router.push(`/problems/${problem.slug}`)
     } catch (error) {
       console.error('Failed to create problem:', error)

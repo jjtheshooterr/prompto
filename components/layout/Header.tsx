@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
+import GlobalSearch from '@/components/search/GlobalSearch'
 
 export default function Header() {
   const [user, setUser] = useState<any>(null)
@@ -42,9 +43,17 @@ export default function Header() {
             Promptvexity
           </Link>
           
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:block flex-1 max-w-md mx-8">
+            <GlobalSearch />
+          </div>
+          
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
               Browse Problems
+            </Link>
+            <Link href="/prompts" className="text-gray-600 hover:text-gray-900 transition-colors">
+              All Prompts
             </Link>
             <Link href="/compare" className="text-gray-600 hover:text-gray-900 transition-colors">
               Compare
@@ -93,6 +102,11 @@ export default function Header() {
               </>
             )}
           </div>
+        </div>
+        
+        {/* Search Bar - Mobile */}
+        <div className="md:hidden mt-4">
+          <GlobalSearch />
         </div>
       </div>
     </header>

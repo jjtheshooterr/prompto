@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { trackPromptEvent } from '@/lib/actions/events.actions'
 import { setVote, clearVote, getUserVote } from '@/lib/actions/votes.actions'
-import { forkPrompt } from '@/lib/actions/prompts.actions'
+import ForkModal from '@/components/prompts/ForkModal'
+import ForkLineage from '@/components/prompts/ForkLineage'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 export default function PromptDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const promptId = params.id as string
   
   const [prompt, setPrompt] = useState<any>(null)
   const [userVote, setUserVote] = useState<number | null>(null)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showForkModal, setShowForkModal] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,9 +53,36 @@ export default function PromptDetailPage() {
         setUserVote(vote)
       }
 
-      // Track view event
+      // Track view event client-side
       if (currentUser) {
-        await trackPromptEvent(promptId, 'view')
+        const supabase = createClient()
+        
+        // Insert view event
+        await supabase
+          .from('prompt_events')
+          .insert({
+            prompt_id: promptId,
+            user_id: currentUser.id,
+            event_type: 'view'
+          })
+
+        // Update view count using RPC function or fallback
+        try {
+          await supabase.rpc('increment_view_count', { prompt_id: promptId })
+        } catch (rpcError) {
+          console.warn('RPC failed for view count, using direct update:', rpcError)
+          const { data: currentStats } = await supabase
+            .from('prompt_stats')
+            .select('view_count')
+            .eq('prompt_id', promptId)
+            .single()
+          
+          const newCount = (currentStats?.view_count || 0) + 1
+          await supabase
+            .from('prompt_stats')
+            .update({ view_count: newCount })
+            .eq('prompt_id', promptId)
+        }
       }
 
       setLoading(false)
@@ -83,21 +112,43 @@ export default function PromptDetailPage() {
     await navigator.clipboard.writeText(text)
     
     if (user) {
-      await trackPromptEvent(promptId, 'copy')
+      // Track copy event client-side
+      const supabase = createClient()
+      
+      // Insert copy event
+      await supabase
+        .from('prompt_events')
+        .insert({
+          prompt_id: promptId,
+          user_id: user.id,
+          event_type: 'copy'
+        })
+
+      // Update copy count using RPC function or fallback
+      try {
+        await supabase.rpc('increment_copy_count', { prompt_id: promptId })
+      } catch (rpcError) {
+        console.warn('RPC failed for copy count, using direct update:', rpcError)
+        const { data: currentStats } = await supabase
+          .from('prompt_stats')
+          .select('copy_count')
+          .eq('prompt_id', promptId)
+          .single()
+        
+        const newCount = (currentStats?.copy_count || 0) + 1
+        await supabase
+          .from('prompt_stats')
+          .update({ copy_count: newCount })
+          .eq('prompt_id', promptId)
+      }
     }
     
     alert('Prompt copied to clipboard!')
   }
 
-  const handleFork = async () => {
-    if (!user) return
-
-    try {
-      const forkedPrompt = await forkPrompt(promptId)
-      window.location.href = `/prompts/${forkedPrompt.id}`
-    } catch (error) {
-      console.error('Fork failed:', error)
-    }
+  const handleForkSuccess = (newPromptId: string) => {
+    // Redirect to edit the new forked prompt
+    router.push(`/prompts/${newPromptId}/edit`)
   }
 
   const handleAddToCompare = () => {
@@ -157,6 +208,11 @@ export default function PromptDetailPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-gray-500">
             Model: {prompt.model} • Created {new Date(prompt.created_at).toLocaleDateString()}
+            {prompt.status === 'draft' && (
+              <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+                Draft
+              </span>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
@@ -203,7 +259,7 @@ export default function PromptDetailPage() {
           
           {user && (
             <button
-              onClick={handleFork}
+              onClick={() => setShowForkModal(true)}
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Fork
@@ -278,6 +334,12 @@ export default function PromptDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Fork Lineage */}
+          <ForkLineage 
+            promptId={promptId} 
+            parentPromptId={prompt.parent_prompt_id}
+          />
         </div>
 
         {/* Sidebar */}
@@ -318,6 +380,15 @@ export default function PromptDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Fork Modal */}
+      <ForkModal
+        isOpen={showForkModal}
+        onClose={() => setShowForkModal(false)}
+        promptId={promptId}
+        originalTitle={prompt.title}
+        onSuccess={handleForkSuccess}
+      />
     </div>
   )
 }

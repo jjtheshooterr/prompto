@@ -273,3 +273,219 @@ export async function forkPrompt(parentPromptId: string) {
   revalidatePath('/problems')
   return forkedPrompt
 }
+
+export async function forkPromptWithModal(parentPromptId: string, newTitle: string, notes: string) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    throw new Error('Must be authenticated to fork prompts')
+  }
+
+  // Get the parent prompt
+  const { data: parentPrompt, error: fetchError } = await supabase
+    .from('prompts')
+    .select('*')
+    .eq('id', parentPromptId)
+    .single()
+
+  if (fetchError || !parentPrompt) {
+    throw new Error('Parent prompt not found')
+  }
+
+  // Check if prompt is hidden/unlisted and user has access
+  if (parentPrompt.is_hidden || !parentPrompt.is_listed) {
+    // Check if user is workspace member
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', parentPrompt.workspace_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      throw new Error('Cannot fork hidden or unlisted prompts')
+    }
+  }
+
+  // Get user's workspace
+  let { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!workspace) {
+    throw new Error('User workspace not found')
+  }
+
+  // Prepare notes with attribution
+  const attributedNotes = `Forked from ${parentPromptId}. ${notes}`
+
+  // Create forked prompt
+  const { data: forkedPrompt, error } = await supabase
+    .from('prompts')
+    .insert({
+      workspace_id: workspace.id,
+      problem_id: parentPrompt.problem_id,
+      visibility: parentPrompt.visibility,
+      title: newTitle,
+      system_prompt: parentPrompt.system_prompt,
+      user_prompt_template: parentPrompt.user_prompt_template,
+      model: parentPrompt.model,
+      params: parentPrompt.params,
+      example_input: parentPrompt.example_input,
+      example_output: parentPrompt.example_output,
+      known_failures: parentPrompt.known_failures,
+      notes: attributedNotes,
+      parent_prompt_id: parentPromptId,
+      status: 'draft', // Start as draft
+      is_listed: true,
+      is_hidden: false,
+      is_reported: false,
+      report_count: 0,
+      created_by: user.id
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to fork prompt: ${error.message}`)
+  }
+
+  // Create prompt_stats for forked prompt
+  await supabase
+    .from('prompt_stats')
+    .insert({
+      prompt_id: forkedPrompt.id,
+      upvotes: 0,
+      downvotes: 0,
+      score: 0,
+      copy_count: 0,
+      view_count: 0,
+      fork_count: 0
+    })
+
+  // Insert fork event
+  await supabase
+    .from('prompt_events')
+    .insert({
+      prompt_id: parentPromptId,
+      user_id: user.id,
+      event_type: 'fork'
+    })
+
+  // Update fork count on parent
+  await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
+
+  revalidatePath('/problems')
+  revalidatePath(`/prompts/${parentPromptId}`)
+  return forkedPrompt
+}
+
+export async function getPromptForks(promptId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('prompts')
+    .select(`
+      id,
+      title,
+      created_at,
+      created_by,
+      notes,
+      profiles!created_by (
+        username
+      )
+    `)
+    .eq('parent_prompt_id', promptId)
+    .order('created_at', { ascending: false })
+    .limit(10)
+
+  if (error) {
+    console.error('Error fetching prompt forks:', error)
+    return []
+  }
+
+  // Transform the data to match our interface
+  return (data || []).map(fork => ({
+    ...fork,
+    profiles: Array.isArray(fork.profiles) ? fork.profiles[0] : fork.profiles
+  }))
+}
+
+export async function getParentPrompt(parentPromptId: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase
+    .from('prompts')
+    .select('id, title')
+    .eq('id', parentPromptId)
+    .single()
+
+  if (error) {
+    console.error('Error fetching parent prompt:', error)
+    return null
+  }
+
+  return data
+}
+
+export async function updatePrompt(promptId: string, formData: FormData) {
+  try {
+    const supabase = await createClient()
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      throw new Error('Must be authenticated to update prompts')
+    }
+
+    const title = formData.get('title') as string
+    const systemPrompt = formData.get('system_prompt') as string
+    const userPromptTemplate = formData.get('user_prompt_template') as string
+    const model = formData.get('model') as string
+    const params = formData.get('params') as string
+    const exampleInput = formData.get('example_input') as string
+    const exampleOutput = formData.get('example_output') as string
+    const notes = formData.get('notes') as string
+    const status = formData.get('status') as string
+
+    let parsedParams = {}
+    try {
+      parsedParams = params ? JSON.parse(params) : {}
+    } catch (e) {
+      throw new Error('Invalid JSON in params field')
+    }
+
+    const { data, error } = await supabase
+      .from('prompts')
+      .update({
+        title,
+        system_prompt: systemPrompt,
+        user_prompt_template: userPromptTemplate,
+        model,
+        params: parsedParams,
+        example_input: exampleInput,
+        example_output: exampleOutput,
+        notes,
+        status,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', promptId)
+      .eq('created_by', user.id) // Only allow updating own prompts
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Failed to update prompt:', error)
+      throw new Error(`Failed to update prompt: ${error.message}`)
+    }
+
+    revalidatePath(`/prompts/${promptId}`)
+    return data
+  } catch (error) {
+    console.error('Error in updatePrompt:', error)
+    throw error
+  }
+}

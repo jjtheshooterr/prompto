@@ -2,6 +2,7 @@
 
 import { getPublicProblemBySlug } from '@/lib/actions/problems.actions'
 import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
+import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -45,6 +46,7 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
     if (!selected.includes(promptId)) {
       selected.push(promptId)
       localStorage.setItem('comparePrompts', JSON.stringify(selected))
+      alert('Added to comparison!')
     }
   }
 
@@ -130,74 +132,13 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
 
       {/* Prompts List */}
       <div className="space-y-6">
-        {prompts.map((prompt) => {
-          const stats = prompt.prompt_stats?.[0] || {
-            upvotes: 0,
-            downvotes: 0,
-            score: 0,
-            copy_count: 0,
-            view_count: 0,
-            fork_count: 0
-          }
-
-          return (
-            <div key={prompt.id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <Link
-                    href={`/prompts/${prompt.id}`}
-                    className="text-xl font-semibold hover:text-blue-600 transition-colors"
-                  >
-                    {prompt.title}
-                  </Link>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <span className="text-green-600">↑{stats.upvotes}</span>
-                    <span className="text-red-600">↓{stats.downvotes}</span>
-                  </div>
-                  <div className="text-gray-500">
-                    Score: {stats.score}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
-                <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3">
-                  {prompt.system_prompt}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex gap-4 text-sm text-gray-500">
-                  <span>{stats.view_count} views</span>
-                  <span>{stats.copy_count} copies</span>
-                  <span>{stats.fork_count} forks</span>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-                    onClick={() => addToCompare(prompt.id)}
-                  >
-                    Compare
-                  </button>
-                  <Link
-                    href={`/prompts/${prompt.id}`}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+        {prompts.map((prompt) => (
+          <PromptCard
+            key={prompt.id}
+            prompt={prompt}
+            onAddToCompare={addToCompare}
+          />
+        ))}
       </div>
 
       {prompts.length === 0 && (

@@ -1,99 +1,165 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface PromptCardProps {
-  prompt: {
-    id: string
-    title: string
-    model: string | null
-    status: string
-    user_prompt_template: string
-    created_at: string
-    prompt_stats?: {
-      upvotes: number
-      downvotes: number
-      score: number
-      copy_count: number
-      view_count: number
-      fork_count: number
-    }[]
-  }
-  showCompareCheckbox?: boolean
-  isSelected?: boolean
-  onSelectionChange?: (id: string, selected: boolean) => void
+  prompt: any
+  onAddToCompare?: (promptId: string) => void
+  showProblemTitle?: boolean
 }
 
-export default function PromptCard({ 
-  prompt, 
-  showCompareCheckbox = false,
-  isSelected = false,
-  onSelectionChange 
-}: PromptCardProps) {
-  const stats = prompt.prompt_stats?.[0]
-  
-  const statusColors = {
-    experimental: 'bg-yellow-100 text-yellow-800',
-    tested: 'bg-blue-100 text-blue-800',
-    production: 'bg-green-100 text-green-800'
+interface ParentPrompt {
+  id: string
+  title: string
+}
+
+export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = false }: PromptCardProps) {
+  const [parentPrompt, setParentPrompt] = useState<ParentPrompt | null>(null)
+
+  const stats = prompt.prompt_stats?.[0] || {
+    upvotes: 0,
+    downvotes: 0,
+    score: 0,
+    copy_count: 0,
+    view_count: 0,
+    fork_count: 0
   }
 
+  // Extract fork reason from notes if this is a fork
+  const getForkReason = () => {
+    if (!prompt.parent_prompt_id || !prompt.notes) return null
+    
+    // Extract the reason after "Forked from {id}. "
+    const match = prompt.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
+    return match ? match[1] : null
+  }
+
+  const forkReason = getForkReason()
+
+  useEffect(() => {
+    const loadParentPrompt = async () => {
+      if (!prompt.parent_prompt_id) return
+
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('prompts')
+        .select('id, title')
+        .eq('id', prompt.parent_prompt_id)
+        .single()
+
+      if (data) {
+        setParentPrompt(data)
+      }
+    }
+
+    loadParentPrompt()
+  }, [prompt.parent_prompt_id])
+
   return (
-    <div className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-      <div className="flex items-start justify-between mb-3">
+    <div className={`bg-white rounded-lg shadow p-6 ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
+      <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            {showCompareCheckbox && (
-              <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={(e) => onSelectionChange?.(prompt.id, e.target.checked)}
-                className="rounded border-gray-300"
-              />
+          {/* Fork indicator and title */}
+          <div className="flex items-center gap-2 mb-1">
+            {prompt.parent_prompt_id && (
+              <div className="flex items-center gap-1 text-orange-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
+              </div>
             )}
-            <Link href={`/prompts/${prompt.id}`} className="flex-1">
-              <h4 className="font-medium text-gray-900 hover:text-blue-600">
-                {prompt.title}
-              </h4>
-            </Link>
           </div>
-          
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`px-2 py-1 text-xs rounded-full ${statusColors[prompt.status as keyof typeof statusColors]}`}>
-              {prompt.status}
-            </span>
-            {prompt.model && (
-              <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded">
-                {prompt.model}
-              </span>
+
+          <Link
+            href={`/prompts/${prompt.id}`}
+            className="text-xl font-semibold hover:text-blue-600 transition-colors block"
+          >
+            {prompt.title}
+          </Link>
+
+          {/* Fork reason - the key addition! */}
+          {forkReason && (
+            <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                <span className="font-medium">Forked to:</span>
+                <span>{forkReason}</span>
+              </div>
+              {parentPrompt && (
+                <div className="mt-1 text-xs text-orange-600">
+                  from <Link href={`/prompts/${parentPrompt.id}`} className="underline hover:text-orange-800">{parentPrompt.title}</Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="text-sm text-gray-500 mt-2">
+            Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
+            {showProblemTitle && prompt.problems?.title && (
+              <>
+                {' • '}
+                <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-gray-700">
+                  {prompt.problems.title}
+                </Link>
+              </>
             )}
           </div>
         </div>
-        
-        {stats && (
-          <div className="text-right text-sm text-gray-500">
-            <div className="flex items-center gap-1">
-              <span className="text-green-600">↑{stats.upvotes}</span>
-              <span className="text-red-600">↓{stats.downvotes}</span>
-              <span className="font-medium">({stats.score})</span>
-            </div>
+
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <span className="text-green-600">↑{stats.upvotes}</span>
+            <span className="text-red-600">↓{stats.downvotes}</span>
           </div>
-        )}
+          <div className="text-gray-500">
+            Score: {stats.score}
+          </div>
+        </div>
       </div>
-      
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-        {prompt.user_prompt_template}
-      </p>
-      
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>{new Date(prompt.created_at).toLocaleDateString()}</span>
-        {stats && (
-          <div className="flex gap-3">
-            <span>{stats.view_count} views</span>
-            <span>{stats.copy_count} copies</span>
-            <span>{stats.fork_count} forks</span>
-          </div>
-        )}
+
+      <div className="mb-4">
+        <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
+        <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3">
+          {prompt.system_prompt}
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <div className="flex gap-4 text-sm text-gray-500">
+          <span>{stats.view_count} views</span>
+          <span>{stats.copy_count} copies</span>
+          {/* Show fork count with icon - Fix #3 */}
+          {stats.fork_count > 0 && (
+            <span className="flex items-center gap-1 text-orange-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+              {stats.fork_count} forks
+            </span>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          {onAddToCompare && (
+            <button
+              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+              onClick={() => onAddToCompare(prompt.id)}
+            >
+              Compare
+            </button>
+          )}
+          <Link
+            href={`/prompts/${prompt.id}`}
+            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            View Details
+          </Link>
+        </div>
       </div>
     </div>
   )
