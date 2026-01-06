@@ -1,35 +1,79 @@
-import SignInForm from '@/components/auth/SignInForm'
 import Link from 'next/link'
+import { login, signup } from './actions'
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ message?: string; error?: string }>
+}) {
+  const params = await searchParams
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to Promptvexity
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
-              create a new account
-            </Link>
+    <div className="flex-1 flex flex-col w-full px-8 sm:max-w-md justify-center gap-2 mx-auto">
+      <Link
+        href="/"
+        className="absolute left-8 top-8 py-2 px-4 rounded-md no-underline text-foreground bg-btn-background hover:bg-btn-background-hover flex items-center group text-sm"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1"
+        >
+          <polyline points="15,18 9,12 15,6" />
+        </svg>{' '}
+        Back
+      </Link>
+
+      <form className="animate-in flex-1 flex flex-col w-full justify-center gap-2 text-foreground">
+        <label className="text-md" htmlFor="email">
+          Email
+        </label>
+        <input
+          className="rounded-md px-4 py-2 bg-inherit border mb-6"
+          name="email"
+          placeholder="you@example.com"
+          required
+        />
+        <label className="text-md" htmlFor="password">
+          Password
+        </label>
+        <input
+          className="rounded-md px-4 py-2 bg-inherit border mb-6"
+          type="password"
+          name="password"
+          placeholder="••••••••"
+          required
+        />
+        <button
+          formAction={login}
+          className="bg-green-700 rounded-md px-4 py-2 text-foreground mb-2"
+        >
+          Sign In
+        </button>
+        <button
+          formAction={signup}
+          className="border border-foreground/20 rounded-md px-4 py-2 text-foreground mb-2"
+        >
+          Sign Up
+        </button>
+        {params?.message && (
+          <p className="mt-4 p-4 bg-foreground/10 text-foreground text-center">
+            {params.message}
           </p>
-        </div>
-        
-        <div className="mt-8 bg-white py-8 px-6 shadow rounded-lg">
-          <SignInForm />
-        </div>
-        
-        <div className="text-center">
-          <Link 
-            href="/problems"
-            className="text-blue-600 hover:text-blue-500 text-sm"
-          >
-            Continue browsing without signing in
-          </Link>
-        </div>
-      </div>
+        )}
+        {params?.error && (
+          <p className="mt-4 p-4 bg-red-100 text-red-700 text-center">
+            {params.error}
+          </p>
+        )}
+      </form>
     </div>
   )
 }

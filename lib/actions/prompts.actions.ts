@@ -242,10 +242,7 @@ export async function forkPrompt(parentPromptId: string) {
     })
 
   // Update fork count on parent
-  await supabase
-    .from('prompt_stats')
-    .update({ fork_count: supabase.sql`fork_count + 1` })
-    .eq('prompt_id', parentPromptId)
+  await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
 
   revalidatePath('/problems')
   

@@ -46,7 +46,7 @@ export default async function ProblemPage({ params, searchParams }: PageProps) {
         
         {problem.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {problem.tags.map((tag) => (
+            {problem.tags.map((tag: string) => (
               <span
                 key={tag}
                 className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"

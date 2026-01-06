@@ -26,15 +26,9 @@ export async function trackPromptEvent(
 
     // Update relevant counters in prompt_stats
     if (eventType === 'view') {
-      await supabase
-        .from('prompt_stats')
-        .update({ view_count: supabase.sql`view_count + 1` })
-        .eq('prompt_id', promptId)
+      await supabase.rpc('increment_view_count', { prompt_id: promptId })
     } else if (eventType === 'copy') {
-      await supabase
-        .from('prompt_stats')
-        .update({ copy_count: supabase.sql`copy_count + 1` })
-        .eq('prompt_id', promptId)
+      await supabase.rpc('increment_copy_count', { prompt_id: promptId })
     }
   } catch (error) {
     // Fail silently for analytics
