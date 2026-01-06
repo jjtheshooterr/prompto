@@ -1,50 +1,49 @@
 'use client'
 
-import { signIn } from '@/lib/actions/auth.actions'
+import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function SignInForm() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
-    setIsLoading(true)
-    setError(null)
+  const handleSignIn = async (formData: FormData) => {
+    setLoading(true)
     
-    try {
-      await signIn(formData)
-      // Wait a moment for session to be established, then redirect
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 1500)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      setIsLoading(false)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    const supabase = createClient()
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      alert(error.message)
+      setLoading(false)
+    } else if (data.session) {
+      console.log('Login successful, session created:', data.session.user.email)
+      // Force a full page reload to ensure session is picked up
+      window.location.replace('/dashboard')
+    } else {
+      alert('Login failed - no session created')
+      setLoading(false)
     }
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-      
+    <form action={handleSignIn} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email address
+          Email
         </label>
         <input
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter your email"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
 
@@ -56,19 +55,17 @@ export default function SignInForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter your password"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
       >
-        {isLoading ? 'Signing in...' : 'Sign in'}
+        {loading ? 'Signing in...' : 'Sign in'}
       </button>
     </form>
   )

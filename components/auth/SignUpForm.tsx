@@ -1,73 +1,53 @@
 'use client'
 
-import { signUp } from '@/lib/actions/auth.actions'
+import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function SignUpForm() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(formData: FormData) {
-    setIsLoading(true)
-    setError(null)
+  const handleSignUp = async (formData: FormData) => {
+    setLoading(true)
     
-    try {
-      const result = await signUp(formData)
-      
-      if (result.needsConfirmation) {
-        router.push('/auth/confirm?message=Check your email to confirm your account')
-      } else {
-        // Session should be established, wait a moment then redirect
-        setTimeout(() => {
-          window.location.href = '/'
-        }, 1500)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      setIsLoading(false)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    const supabase = createClient()
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) {
+      alert(error.message)
+      setLoading(false)
+    } else if (data.session) {
+      console.log('Signup successful, session created:', data.session.user.email)
+      // User is immediately logged in (email confirmation disabled)
+      window.location.replace('/dashboard')
+    } else if (data.user && !data.session) {
+      // Email confirmation required
+      alert('Check your email for confirmation!')
+      setLoading(false)
+    } else {
+      alert('Signup failed')
+      setLoading(false)
     }
   }
 
   return (
-    <form action={handleSubmit} className="space-y-6">
-      {error && (
-        <div className={`border px-4 py-3 rounded ${
-          error.includes('successfully') 
-            ? 'bg-green-50 border-green-200 text-green-700' 
-            : 'bg-red-50 border-red-200 text-red-700'
-        }`}>
-          {error}
-        </div>
-      )}
-      
-      <div>
-        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-          Display Name
-        </label>
-        <input
-          id="displayName"
-          name="displayName"
-          type="text"
-          autoComplete="name"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="How should we call you?"
-        />
-      </div>
-
+    <form action={handleSignUp} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email address
+          Email
         </label>
         <input
           id="email"
           name="email"
           type="email"
-          autoComplete="email"
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Enter your email"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
 
@@ -79,20 +59,17 @@ export default function SignUpForm() {
           id="password"
           name="password"
           type="password"
-          autoComplete="new-password"
           required
-          minLength={6}
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Create a password (min 6 characters)"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
         />
       </div>
 
       <button
         type="submit"
-        disabled={isLoading}
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50"
       >
-        {isLoading ? 'Creating account...' : 'Create account'}
+        {loading ? 'Signing up...' : 'Sign up'}
       </button>
     </form>
   )

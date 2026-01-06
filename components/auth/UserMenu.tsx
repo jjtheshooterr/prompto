@@ -1,6 +1,6 @@
 'use client'
 
-import { signOut } from '@/lib/actions/auth.actions'
+import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import Link from 'next/link'
 
@@ -19,7 +19,9 @@ export default function UserMenu({ user }: UserMenuProps) {
 
   async function handleSignOut() {
     try {
-      await signOut()
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      window.location.href = '/'
     } catch (error) {
       console.error('Sign out error:', error)
     }
