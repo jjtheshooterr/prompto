@@ -18,8 +18,9 @@ export default function ForkModal({
   originalTitle, 
   onSuccess 
 }: ForkModalProps) {
-  const [newTitle, setNewTitle] = useState(`Fork of ${originalTitle}`)
-  const [notes, setNotes] = useState('')
+  const [newTitle, setNewTitle] = useState('')
+  const [forkReason, setForkReason] = useState('')
+  const [changesSummary, setChangesSummary] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isOpen) return null
@@ -27,7 +28,12 @@ export default function ForkModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!notes.trim()) {
+    if (!newTitle.trim()) {
+      alert('Please provide a title for your fork')
+      return
+    }
+    
+    if (!forkReason.trim()) {
       alert('Please provide a reason for forking (required)')
       return
     }
@@ -80,8 +86,13 @@ export default function ForkModal({
         throw new Error('User workspace not found')
       }
 
-      // Prepare notes with attribution
-      const attributedNotes = `Forked from ${promptId}. ${notes}`
+      // Prepare notes with attribution and changes summary
+      const notesData = {
+        forked_from: promptId,
+        fork_reason: forkReason,
+        changes_summary: changesSummary || null
+      }
+      const attributedNotes = `Forked from ${promptId}. ${forkReason}${changesSummary ? ` | Changes: ${changesSummary}` : ''}`
 
       // Create forked prompt
       const { data: forkedPrompt, error } = await supabase
@@ -114,18 +125,22 @@ export default function ForkModal({
         throw new Error(`Failed to fork prompt: ${error.message}`)
       }
 
-      // Create prompt_stats for forked prompt
-      await supabase
-        .from('prompt_stats')
-        .insert({
-          prompt_id: forkedPrompt.id,
-          upvotes: 0,
-          downvotes: 0,
-          score: 0,
-          copy_count: 0,
-          view_count: 0,
-          fork_count: 0
-        })
+      // Create prompt_stats for forked prompt - skip if RLS blocks it
+      try {
+        await supabase
+          .from('prompt_stats')
+          .insert({
+            prompt_id: forkedPrompt.id,
+            upvotes: 0,
+            downvotes: 0,
+            score: 0,
+            copy_count: 0,
+            view_count: 0,
+            fork_count: 0
+          })
+      } catch (statsError) {
+        console.warn('Could not create prompt_stats (will be created by triggers):', statsError)
+      }
 
       // Insert fork event
       await supabase
@@ -136,23 +151,11 @@ export default function ForkModal({
           event_type: 'fork'
         })
 
-      // Update fork count on parent using RPC function or fallback to direct update
+      // Update fork count on parent using RPC function
       try {
         await supabase.rpc('increment_fork_count', { prompt_id: promptId })
       } catch (rpcError) {
-        console.warn('RPC failed, using direct update:', rpcError)
-        // Fallback: get current count and increment
-        const { data: currentStats } = await supabase
-          .from('prompt_stats')
-          .select('fork_count')
-          .eq('prompt_id', promptId)
-          .single()
-        
-        const newCount = (currentStats?.fork_count || 0) + 1
-        await supabase
-          .from('prompt_stats')
-          .update({ fork_count: newCount })
-          .eq('prompt_id', promptId)
+        console.warn('RPC failed for fork count:', rpcError)
       }
 
       onSuccess(forkedPrompt.id)
@@ -173,32 +176,52 @@ export default function ForkModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              New Title
+              Fork Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               id="title"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="e.g., Behavior-Driven Email Personalization"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Give your fork a clean, descriptive title
+            </p>
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              What did you change or why fork? <span className="text-red-500">*</span>
+            <label htmlFor="forkReason" className="block text-sm font-medium text-gray-700 mb-1">
+              Why are you forking this? <span className="text-red-500">*</span>
             </label>
             <textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Added stricter JSON schema, Optimized for cheaper model, Handles long input better..."
+              id="forkReason"
+              value={forkReason}
+              onChange={(e) => setForkReason(e.target.value)}
+              placeholder="e.g., To add behavioral segmentation, To optimize for GPT-4o mini, To handle longer inputs..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              One sentence explaining your improvements or changes
+              One sentence explaining your intent
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="changesSummary" className="block text-sm font-medium text-gray-700 mb-1">
+              What will you change? <span className="text-gray-400">(optional)</span>
+            </label>
+            <textarea
+              id="changesSummary"
+              value={changesSummary}
+              onChange={(e) => setChangesSummary(e.target.value)}
+              placeholder="e.g., Updated system prompt with behavioral triggers, Added JSON schema validation, Simplified language for cheaper models..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Describe the specific changes you plan to make
             </p>
           </div>
 

@@ -1,9 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getPromptsByIds } from '@/lib/actions/prompts.actions'
-import { setVote, clearVote, getUserVote } from '@/lib/actions/votes.actions'
-import { forkPrompt } from '@/lib/actions/prompts.actions'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
@@ -31,17 +28,36 @@ export default function ComparePage() {
         return
       }
 
-      // Fetch prompts
-      const promptsData = await getPromptsByIds(promptIds)
-      setPrompts(promptsData)
+      // Fetch prompts client-side
+      const { data: promptsData } = await supabase
+        .from('prompts')
+        .select(`
+          *,
+          prompt_stats (
+            upvotes,
+            downvotes,
+            score,
+            copy_count,
+            view_count,
+            fork_count
+          )
+        `)
+        .in('id', promptIds)
+
+      setPrompts(promptsData || [])
 
       // Get user votes if logged in
-      if (currentUser) {
+      if (currentUser && promptIds.length > 0) {
+        const { data: votesData } = await supabase
+          .from('votes')
+          .select('prompt_id, value')
+          .eq('user_id', currentUser.id)
+          .in('prompt_id', promptIds)
+
         const votes: Record<string, number> = {}
-        for (const promptId of promptIds) {
-          const vote = await getUserVote(promptId)
-          if (vote) votes[promptId] = vote
-        }
+        votesData?.forEach(vote => {
+          votes[vote.prompt_id] = vote.value
+        })
         setUserVotes(votes)
       }
 
@@ -52,35 +68,111 @@ export default function ComparePage() {
   }, [])
 
   const handleVote = async (promptId: string, value: 1 | -1) => {
-    if (!user) return
+    if (!user) {
+      alert('Please log in to vote')
+      return
+    }
 
     try {
+      const supabase = createClient()
+
       if (userVotes[promptId] === value) {
-        await clearVote(promptId)
+        // Clear vote
+        console.log('Clearing vote for prompt:', promptId, 'user:', user.id)
+        const { error } = await supabase
+          .from('votes')
+          .delete()
+          .eq('prompt_id', promptId)
+          .eq('user_id', user.id)
+
+        if (error) {
+          console.error('Failed to clear vote:', error)
+          alert(`Failed to clear vote: ${error.message || JSON.stringify(error)}`)
+          return
+        }
+
         setUserVotes(prev => ({ ...prev, [promptId]: 0 }))
+        console.log('Vote cleared successfully')
+        
+        // Skip RPC call since it may not be available on hosted instance
       } else {
-        await setVote(promptId, value)
+        // Check if vote exists first
+        console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
+        
+        const { data: existingVote } = await supabase
+          .from('votes')
+          .select('*')
+          .eq('prompt_id', promptId)
+          .eq('user_id', user.id)
+          .single()
+
+        let error = null
+
+        if (existingVote) {
+          // Update existing vote
+          console.log('Updating existing vote')
+          const result = await supabase
+            .from('votes')
+            .update({ value })
+            .eq('prompt_id', promptId)
+            .eq('user_id', user.id)
+          error = result.error
+        } else {
+          // Insert new vote
+          console.log('Inserting new vote')
+          const result = await supabase
+            .from('votes')
+            .insert({
+              prompt_id: promptId,
+              user_id: user.id,
+              value
+            })
+          error = result.error
+        }
+
+        if (error) {
+          console.error('Failed to vote:', error)
+          alert(`Failed to vote: ${error.message || JSON.stringify(error)}`)
+          return
+        }
+
+        // Track vote event (don't fail if this fails)
+        try {
+          await supabase
+            .from('prompt_events')
+            .insert({
+              prompt_id: promptId,
+              user_id: user.id,
+              event_type: value === 1 ? 'vote_up' : 'vote_down'
+            })
+        } catch (eventError) {
+          console.warn('Failed to track vote event:', eventError)
+        }
+
         setUserVotes(prev => ({ ...prev, [promptId]: value }))
+        console.log('Vote set successfully')
+        
+        // Skip RPC call since it may not be available on hosted instance
       }
     } catch (error) {
       console.error('Vote failed:', error)
-    }
-  }
-
-  const handleFork = async (promptId: string) => {
-    if (!user) return
-
-    try {
-      const forkedPrompt = await forkPrompt(promptId)
-      window.location.href = `/prompts/${forkedPrompt.id}`
-    } catch (error) {
-      console.error('Fork failed:', error)
+      alert(`Vote failed: ${error instanceof Error ? error.message : JSON.stringify(error)}`)
     }
   }
 
   const clearComparison = () => {
     localStorage.removeItem('comparePrompts')
     setPrompts([])
+  }
+
+  // Helper function to safely render content that might be an object
+  const renderContent = (content: any) => {
+    if (typeof content === 'string') {
+      return content
+    } else if (typeof content === 'object' && content !== null) {
+      return JSON.stringify(content, null, 2)
+    }
+    return String(content || '')
   }
 
   if (loading) {
@@ -192,7 +284,7 @@ export default function ComparePage() {
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">System Prompt</div>
                 <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
-                  {prompt.system_prompt}
+                  {renderContent(prompt.system_prompt)}
                 </div>
               </div>
 
@@ -200,7 +292,7 @@ export default function ComparePage() {
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">User Template</div>
                 <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-24 overflow-y-auto">
-                  {prompt.user_prompt_template}
+                  {renderContent(prompt.user_prompt_template)}
                 </div>
               </div>
 
@@ -211,7 +303,7 @@ export default function ComparePage() {
                     <div>
                       <div className="text-xs font-medium text-gray-700 mb-1">Example Input</div>
                       <div className="bg-blue-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
-                        {prompt.example_input}
+                        {renderContent(prompt.example_input)}
                       </div>
                     </div>
                   )}
@@ -220,7 +312,7 @@ export default function ComparePage() {
                     <div>
                       <div className="text-xs font-medium text-gray-700 mb-1">Example Output</div>
                       <div className="bg-green-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
-                        {prompt.example_output}
+                        {renderContent(prompt.example_output)}
                       </div>
                     </div>
                   )}
@@ -247,7 +339,14 @@ export default function ComparePage() {
               <div className="flex gap-2 pt-2">
                 {user && (
                   <button
-                    onClick={() => handleFork(prompt.id)}
+                    onClick={() => {
+                      // Simple client-side fork - just redirect to create prompt with pre-filled data
+                      const params = new URLSearchParams({
+                        fork: prompt.id,
+                        problem: prompt.problem_id || ''
+                      })
+                      window.location.href = `/create/prompt?${params.toString()}`
+                    }}
                     className="flex-1 px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                   >
                     Fork

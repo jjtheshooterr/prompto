@@ -27,16 +27,28 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
     fork_count: 0
   }
 
-  // Extract fork reason from notes if this is a fork
-  const getForkReason = () => {
-    if (!prompt.parent_prompt_id || !prompt.notes) return null
+  // Extract fork reason and changes summary from notes if this is a fork
+  const getForkDetails = () => {
+    if (!prompt.parent_prompt_id || !prompt.notes) return { reason: null, changes: null }
     
-    // Extract the reason after "Forked from {id}. "
-    const match = prompt.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
-    return match ? match[1] : null
+    // Extract the reason and changes from "Forked from {id}. {reason} | Changes: {changes}"
+    const match = prompt.notes.match(/^Forked from [^.]+\.\s*([^|]+)(?:\s*\|\s*Changes:\s*(.+))?$/)
+    if (match) {
+      return {
+        reason: match[1]?.trim() || null,
+        changes: match[2]?.trim() || null
+      }
+    }
+    
+    // Fallback for old format
+    const oldMatch = prompt.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
+    return {
+      reason: oldMatch ? oldMatch[1] : null,
+      changes: null
+    }
   }
 
-  const forkReason = getForkReason()
+  const forkDetails = getForkDetails()
 
   useEffect(() => {
     const loadParentPrompt = async () => {
@@ -80,16 +92,21 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             {prompt.title}
           </Link>
 
-          {/* Fork reason - the key addition! */}
-          {forkReason && (
+          {/* Fork reason and changes summary - the key addition! */}
+          {forkDetails.reason && (
             <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
               <div className="flex items-center gap-2">
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                 </svg>
                 <span className="font-medium">Forked to:</span>
-                <span>{forkReason}</span>
+                <span>{forkDetails.reason}</span>
               </div>
+              {forkDetails.changes && (
+                <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-300">
+                  <span className="font-medium">Changes:</span> {forkDetails.changes}
+                </div>
+              )}
               {parentPrompt && (
                 <div className="mt-1 text-xs text-orange-600">
                   from <Link href={`/prompts/${parentPrompt.id}`} className="underline hover:text-orange-800">{parentPrompt.title}</Link>

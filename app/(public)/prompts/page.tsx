@@ -51,14 +51,6 @@ export default function AllPromptsPage() {
           problems!inner (
             title,
             slug
-          ),
-          prompt_stats (
-            upvotes,
-            downvotes,
-            score,
-            copy_count,
-            view_count,
-            fork_count
           )
         `)
         .eq('is_listed', true)
@@ -72,14 +64,11 @@ export default function AllPromptsPage() {
         query = query.not('parent_prompt_id', 'is', null)
       }
 
-      // Apply sort
+      // Apply sort (we'll sort after fetching stats)
       if (sort === 'newest') {
         query = query.order('created_at', { ascending: false })
-      } else if (sort === 'top') {
-        query = query.order('prompt_stats.score', { ascending: false, nullsFirst: false })
-      } else if (sort === 'most_forked') {
-        query = query.order('prompt_stats.fork_count', { ascending: false, nullsFirst: false })
       }
+      // Note: 'top' and 'most_forked' sorting will be done client-side after fetching stats
 
       query = query.limit(20)
 
@@ -87,13 +76,59 @@ export default function AllPromptsPage() {
 
       if (error) {
         console.error('Error loading prompts:', error)
-      } else {
-        // Transform the data to match our interface
-        const transformedPrompts = (data || []).map(prompt => ({
+      } else if (data) {
+        // Transform the data and fetch stats separately
+        const transformedPrompts = data.map(prompt => ({
           ...prompt,
           problems: Array.isArray(prompt.problems) ? prompt.problems[0] : prompt.problems
         }))
-        setPrompts(transformedPrompts)
+
+        // Fetch stats for all prompts
+        const promptIds = transformedPrompts.map(p => p.id)
+        const { data: statsData } = await supabase
+          .from('prompt_stats')
+          .select('*')
+          .in('prompt_id', promptIds)
+
+        console.log('Fetched stats for prompts:', statsData)
+
+        // Attach stats to prompts
+        const promptsWithStats = transformedPrompts.map(prompt => {
+          const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          return {
+            ...prompt,
+            prompt_stats: stats ? [stats] : [{
+              upvotes: 0,
+              downvotes: 0,
+              score: 0,
+              copy_count: 0,
+              view_count: 0,
+              fork_count: 0
+            }]
+          }
+        })
+
+        // Apply client-side sorting for stats-based sorts
+        let sortedPrompts = promptsWithStats
+        if (sort === 'top') {
+          sortedPrompts = promptsWithStats.sort((a, b) => {
+            const aUpvotes = a.prompt_stats[0]?.upvotes || 0
+            const bUpvotes = b.prompt_stats[0]?.upvotes || 0
+            if (bUpvotes !== aUpvotes) {
+              return bUpvotes - aUpvotes
+            }
+            // Fallback to created_at for same upvote counts
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          })
+        } else if (sort === 'most_forked') {
+          sortedPrompts = promptsWithStats.sort((a, b) => {
+            const aForks = a.prompt_stats[0]?.fork_count || 0
+            const bForks = b.prompt_stats[0]?.fork_count || 0
+            return bForks - aForks
+          })
+        }
+
+        setPrompts(sortedPrompts)
       }
 
       setLoading(false)

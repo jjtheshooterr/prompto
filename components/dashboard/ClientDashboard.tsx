@@ -86,14 +86,40 @@ export default function ClientDashboard() {
           title,
           status,
           created_at,
-          problems (title),
-          prompt_stats (upvotes, downvotes, fork_count)
+          problems (title)
         `)
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(5)
 
-      setMyPrompts(userPrompts || [])
+      // Fetch stats separately for user prompts
+      if (userPrompts && userPrompts.length > 0) {
+        const promptIds = userPrompts.map(p => p.id)
+        const { data: statsData } = await supabase
+          .from('prompt_stats')
+          .select('*')
+          .in('prompt_id', promptIds)
+
+        // Attach stats to prompts
+        const promptsWithStats = userPrompts.map(prompt => {
+          const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          return {
+            ...prompt,
+            prompt_stats: stats ? [stats] : [{
+              upvotes: 0,
+              downvotes: 0,
+              score: 0,
+              copy_count: 0,
+              view_count: 0,
+              fork_count: 0
+            }]
+          }
+        })
+
+        setMyPrompts(promptsWithStats)
+      } else {
+        setMyPrompts([])
+      }
 
       setLoading(false)
     }

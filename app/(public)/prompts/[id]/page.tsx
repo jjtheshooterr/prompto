@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { setVote, clearVote, getUserVote } from '@/lib/actions/votes.actions'
 import ForkModal from '@/components/prompts/ForkModal'
 import ForkLineage from '@/components/prompts/ForkLineage'
 import Link from 'next/link'
@@ -20,90 +19,192 @@ export default function PromptDetailPage() {
   const [showForkModal, setShowForkModal] = useState(false)
 
   useEffect(() => {
-    const loadData = async () => {
-      const supabase = createClient()
-      
-      // Get user
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      setUser(currentUser)
-
-      // Get prompt
-      const { data: promptData } = await supabase
-        .from('prompts')
-        .select(`
-          *,
-          problems (title, slug),
-          prompt_stats (
-            upvotes,
-            downvotes,
-            score,
-            copy_count,
-            view_count,
-            fork_count
-          )
-        `)
-        .eq('id', promptId)
-        .single()
-
-      setPrompt(promptData)
-
-      // Get user's vote if logged in
-      if (currentUser) {
-        const vote = await getUserVote(promptId)
-        setUserVote(vote)
-      }
+    const loadInitialData = async () => {
+      await loadData()
 
       // Track view event client-side
-      if (currentUser) {
+      if (user) {
         const supabase = createClient()
         
         // Insert view event
-        await supabase
-          .from('prompt_events')
-          .insert({
-            prompt_id: promptId,
-            user_id: currentUser.id,
-            event_type: 'view'
-          })
+        try {
+          await supabase
+            .from('prompt_events')
+            .insert({
+              prompt_id: promptId,
+              user_id: user.id,
+              event_type: 'view'
+            })
+        } catch (eventError) {
+          console.warn('Failed to track view event:', eventError)
+        }
 
-        // Update view count using RPC function or fallback
+        // Update view count using RPC function
         try {
           await supabase.rpc('increment_view_count', { prompt_id: promptId })
         } catch (rpcError) {
-          console.warn('RPC failed for view count, using direct update:', rpcError)
-          const { data: currentStats } = await supabase
-            .from('prompt_stats')
-            .select('view_count')
-            .eq('prompt_id', promptId)
-            .single()
-          
-          const newCount = (currentStats?.view_count || 0) + 1
-          await supabase
-            .from('prompt_stats')
-            .update({ view_count: newCount })
-            .eq('prompt_id', promptId)
+          console.warn('RPC failed for view count:', rpcError)
         }
       }
 
       setLoading(false)
     }
 
-    loadData()
+    loadInitialData()
   }, [promptId])
 
   const handleVote = async (value: 1 | -1) => {
-    if (!user) return
+    if (!user) {
+      alert('Please log in to vote')
+      return
+    }
 
     try {
+      const supabase = createClient()
+
       if (userVote === value) {
-        await clearVote(promptId)
+        // Clear vote
+        console.log('Clearing vote for prompt:', promptId, 'user:', user.id)
+        const { error } = await supabase
+          .from('votes')
+          .delete()
+          .eq('prompt_id', promptId)
+          .eq('user_id', user.id)
+
+        if (error) {
+          console.error('Failed to clear vote:', error)
+          alert(`Failed to clear vote: ${error.message || JSON.stringify(error)}`)
+          return
+        }
+
         setUserVote(null)
       } else {
-        await setVote(promptId, value)
+        // Check if vote exists first
+        console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
+        
+        const { data: existingVote } = await supabase
+          .from('votes')
+          .select('*')
+          .eq('prompt_id', promptId)
+          .eq('user_id', user.id)
+          .single()
+
+        let error = null
+
+        if (existingVote) {
+          // Update existing vote
+          console.log('Updating existing vote')
+          const result = await supabase
+            .from('votes')
+            .update({ value })
+            .eq('prompt_id', promptId)
+            .eq('user_id', user.id)
+          error = result.error
+        } else {
+          // Insert new vote
+          console.log('Inserting new vote')
+          const result = await supabase
+            .from('votes')
+            .insert({
+              prompt_id: promptId,
+              user_id: user.id,
+              value
+            })
+          error = result.error
+        }
+
+        if (error) {
+          console.error('Failed to vote:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
+          alert(`Failed to vote: ${error.message || 'Unknown error'}`)
+          return
+        }
+
+        // Track vote event
+        try {
+          await supabase
+            .from('prompt_events')
+            .insert({
+              prompt_id: promptId,
+              user_id: user.id,
+              event_type: value === 1 ? 'vote_up' : 'vote_down'
+            })
+        } catch (eventError) {
+          console.warn('Failed to track vote event:', eventError)
+        }
+
         setUserVote(value)
       }
+
+      // Note: Vote stats are updated by database triggers automatically
+      // Wait a moment for the trigger to complete, then refresh the data
+      setTimeout(async () => {
+        await loadData()
+      }, 500)
     } catch (error) {
       console.error('Vote failed:', error)
+      alert(`Vote failed: ${error instanceof Error ? error.message : JSON.stringify(error)}`)
+    }
+  }
+
+  const loadData = async () => {
+    const supabase = createClient()
+    
+    // Get user
+    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    setUser(currentUser)
+
+    // Get prompt with fresh stats using LEFT JOIN approach
+    const { data: promptData, error: promptError } = await supabase
+      .from('prompts')
+      .select(`
+        *,
+        problems (title, slug)
+      `)
+      .eq('id', promptId)
+      .single()
+
+    console.log('Prompt query result:', promptData)
+    console.log('Prompt query error:', promptError)
+
+    if (promptData) {
+      // Fetch stats separately to avoid nested query issues
+      const { data: statsData, error: statsError } = await supabase
+        .from('prompt_stats')
+        .select('*')
+        .eq('prompt_id', promptId)
+        .single()
+      
+      console.log('Stats query result:', statsData)
+      console.log('Stats query error:', statsError)
+      
+      if (statsData) {
+        promptData.prompt_stats = [statsData]
+      } else {
+        // Create default stats if none exist
+        promptData.prompt_stats = [{
+          upvotes: 0,
+          downvotes: 0,
+          score: 0,
+          copy_count: 0,
+          view_count: 0,
+          fork_count: 0
+        }]
+      }
+      
+      setPrompt(promptData)
+    }
+
+    // Get user's vote if logged in
+    if (currentUser) {
+      const { data: voteData } = await supabase
+        .from('votes')
+        .select('value')
+        .eq('prompt_id', promptId)
+        .eq('user_id', currentUser.id)
+        .single()
+
+      setUserVote(voteData?.value || null)
     }
   }
 
@@ -116,30 +217,23 @@ export default function PromptDetailPage() {
       const supabase = createClient()
       
       // Insert copy event
-      await supabase
-        .from('prompt_events')
-        .insert({
-          prompt_id: promptId,
-          user_id: user.id,
-          event_type: 'copy'
-        })
+      try {
+        await supabase
+          .from('prompt_events')
+          .insert({
+            prompt_id: promptId,
+            user_id: user.id,
+            event_type: 'copy'
+          })
+      } catch (eventError) {
+        console.warn('Failed to track copy event:', eventError)
+      }
 
-      // Update copy count using RPC function or fallback
+      // Update copy count using RPC function
       try {
         await supabase.rpc('increment_copy_count', { prompt_id: promptId })
       } catch (rpcError) {
-        console.warn('RPC failed for copy count, using direct update:', rpcError)
-        const { data: currentStats } = await supabase
-          .from('prompt_stats')
-          .select('copy_count')
-          .eq('prompt_id', promptId)
-          .single()
-        
-        const newCount = (currentStats?.copy_count || 0) + 1
-        await supabase
-          .from('prompt_stats')
-          .update({ copy_count: newCount })
-          .eq('prompt_id', promptId)
+        console.warn('RPC failed for copy count:', rpcError)
       }
     }
     
@@ -184,6 +278,9 @@ export default function PromptDetailPage() {
     view_count: 0,
     fork_count: 0
   }
+
+  console.log('Prompt data:', prompt)
+  console.log('Stats data:', stats)
 
   return (
     <div className="container mx-auto px-4 py-8">

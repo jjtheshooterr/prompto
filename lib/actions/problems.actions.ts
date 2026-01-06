@@ -16,10 +16,7 @@ export async function listProblems({
   
   let query = supabase
     .from('problems')
-    .select(`
-      *,
-      prompts(count)
-    `)
+    .select('*')
     .eq('is_listed', true)
     .eq('is_hidden', false)
     .eq('visibility', 'public')
@@ -41,14 +38,36 @@ export async function listProblems({
     query = query.order('created_at', { ascending: false }) // Default for now
   }
 
-  const { data, error } = await query
+  const { data: problems, error } = await query
 
   if (error) {
     console.error('Error fetching problems:', error)
     return []
   }
 
-  return data || []
+  if (!problems || problems.length === 0) {
+    return []
+  }
+
+  // Get prompt counts for each problem (only count public, listed, non-hidden prompts)
+  const problemsWithCounts = await Promise.all(
+    problems.map(async (problem) => {
+      const { count } = await supabase
+        .from('prompts')
+        .select('id', { count: 'exact' })
+        .eq('problem_id', problem.id)
+        .eq('is_listed', true)
+        .eq('is_hidden', false)
+        .eq('visibility', 'public')
+
+      return {
+        ...problem,
+        prompts: Array(count || 0).fill(null) // Create array with correct length for compatibility
+      }
+    })
+  )
+
+  return problemsWithCounts
 }
 
 export async function getPublicProblemBySlug(slug: string) {

@@ -6,19 +6,10 @@ import { revalidatePath } from 'next/cache'
 export async function listPromptsByProblem(problemId: string, sort: 'newest' | 'top' = 'top') {
   const supabase = await createClient()
   
+  // First get the prompts
   let query = supabase
     .from('prompts')
-    .select(`
-      *,
-      prompt_stats (
-        upvotes,
-        downvotes,
-        score,
-        copy_count,
-        view_count,
-        fork_count
-      )
-    `)
+    .select('*')
     .eq('problem_id', problemId)
     .eq('is_listed', true)
     .eq('is_hidden', false)
@@ -27,19 +18,62 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })
   } else {
-    // Order by score from prompt_stats, with fallback to created_at
-    query = query.order('prompt_stats.score', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
+    // For 'top' sort, we'll sort client-side after getting stats
+    query = query.order('created_at', { ascending: false })
   }
 
-  const { data, error } = await query
+  const { data: prompts, error } = await query
 
   if (error) {
     console.error('Error fetching prompts:', error)
     return []
   }
 
-  return data || []
+  if (!prompts || prompts.length === 0) {
+    return []
+  }
+
+  // Fetch stats separately for all prompts
+  const promptIds = prompts.map(p => p.id)
+  const { data: statsData } = await supabase
+    .from('prompt_stats')
+    .select('*')
+    .in('prompt_id', promptIds)
+
+  console.log(`Found ${prompts.length} prompts for problem ${problemId}`)
+  console.log('Prompt IDs:', promptIds)
+  console.log('Stats data:', statsData)
+
+  // Attach stats to prompts
+  let promptsWithStats = prompts.map(prompt => {
+    const stats = statsData?.find(s => s.prompt_id === prompt.id)
+    return {
+      ...prompt,
+      prompt_stats: stats ? [stats] : [{
+        upvotes: 0,
+        downvotes: 0,
+        score: 0,
+        copy_count: 0,
+        view_count: 0,
+        fork_count: 0
+      }]
+    }
+  })
+
+  // Apply sorting for 'top' after attaching stats
+  if (sort === 'top') {
+    promptsWithStats = promptsWithStats.sort((a, b) => {
+      const aUpvotes = a.prompt_stats[0]?.upvotes || 0
+      const bUpvotes = b.prompt_stats[0]?.upvotes || 0
+      if (bUpvotes !== aUpvotes) {
+        return bUpvotes - aUpvotes
+      }
+      // Fallback to created_at for same upvote counts
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+  }
+
+  return promptsWithStats
 }
 
 export async function getPromptById(id: string) {

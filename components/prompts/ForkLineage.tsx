@@ -43,20 +43,17 @@ export default function ForkLineage({ promptId, parentPromptId }: ForkLineagePro
             title,
             created_at,
             created_by,
-            notes,
-            profiles!created_by (
-              username
-            )
+            notes
           `)
           .eq('parent_prompt_id', promptId)
           .order('created_at', { ascending: false })
           .limit(10)
 
         if (forksData) {
-          // Transform the data to match our interface
+          // Transform the data to match our interface - remove profiles lookup for now
           const transformedForks = forksData.map(fork => ({
             ...fork,
-            profiles: Array.isArray(fork.profiles) ? fork.profiles[0] : fork.profiles
+            profiles: null // Skip profiles lookup to avoid 400 errors
           }))
           setForks(transformedForks)
         }
@@ -130,10 +127,35 @@ export default function ForkLineage({ promptId, parentPromptId }: ForkLineagePro
                       </Link>
                     </div>
                     
-                    {/* Fork reason extraction and display */}
+                    {/* Fork reason and changes extraction and display */}
                     {fork.notes && (() => {
-                      const match = fork.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
-                      const reason = match ? match[1] : null
+                      // Extract reason and changes from enhanced format
+                      const match = fork.notes.match(/^Forked from [^.]+\.\s*([^|]+)(?:\s*\|\s*Changes:\s*(.+))?$/)
+                      if (match) {
+                        const reason = match[1]?.trim()
+                        const changes = match[2]?.trim()
+                        return (
+                          <div className="space-y-2 mb-2">
+                            {reason && (
+                              <div className="text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded border border-orange-200">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Forked to:</span>
+                                  <span>{reason}</span>
+                                </div>
+                              </div>
+                            )}
+                            {changes && (
+                              <div className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-300">
+                                <span className="font-medium">Changes:</span> {changes}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      }
+                      
+                      // Fallback for old format
+                      const oldMatch = fork.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
+                      const reason = oldMatch ? oldMatch[1] : null
                       return reason ? (
                         <div className="text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded border border-orange-200 mb-2">
                           <div className="flex items-center gap-2">

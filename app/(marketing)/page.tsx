@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getUser } from '@/lib/actions/auth.actions'
+import TopRatedPrompts from '@/components/home/TopRatedPrompts'
 
 export default async function HomePage() {
   const user = await getUser()
@@ -49,6 +50,11 @@ export default async function HomePage() {
             </Link>
           )}
         </div>
+      </div>
+      
+      {/* Top Rated Prompts Section */}
+      <div className="mt-16">
+        <TopRatedPrompts />
       </div>
       
       <div className="mt-16 grid md:grid-cols-3 gap-8">
