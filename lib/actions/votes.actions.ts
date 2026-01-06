@@ -8,9 +8,10 @@ export async function setVote(promptId: string, value: 1 | -1) {
   
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('Authentication required')
+    throw new Error('Must be authenticated to vote')
   }
 
+  // Upsert vote
   const { error } = await supabase
     .from('votes')
     .upsert({
@@ -20,11 +21,19 @@ export async function setVote(promptId: string, value: 1 | -1) {
     })
 
   if (error) {
-    console.error('Error setting vote:', error)
-    throw new Error('Failed to vote')
+    throw new Error(`Failed to vote: ${error.message}`)
   }
 
-  revalidatePath('/prompts/[id]', 'page')
+  // Track vote event
+  await supabase
+    .from('prompt_events')
+    .insert({
+      prompt_id: promptId,
+      user_id: user.id,
+      event_type: value === 1 ? 'vote_up' : 'vote_down'
+    })
+
+  revalidatePath(`/prompts/${promptId}`)
 }
 
 export async function clearVote(promptId: string) {
@@ -32,7 +41,7 @@ export async function clearVote(promptId: string) {
   
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('Authentication required')
+    throw new Error('Must be authenticated to vote')
   }
 
   const { error } = await supabase
@@ -42,11 +51,10 @@ export async function clearVote(promptId: string) {
     .eq('user_id', user.id)
 
   if (error) {
-    console.error('Error clearing vote:', error)
-    throw new Error('Failed to clear vote')
+    throw new Error(`Failed to clear vote: ${error.message}`)
   }
 
-  revalidatePath('/prompts/[id]', 'page')
+  revalidatePath(`/prompts/${promptId}`)
 }
 
 export async function getUserVote(promptId: string) {
@@ -54,23 +62,17 @@ export async function getUserVote(promptId: string) {
     const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return null
-    }
+    if (!user) return null
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('votes')
       .select('value')
       .eq('prompt_id', promptId)
       .eq('user_id', user.id)
       .single()
 
-    if (error) {
-      return null
-    }
-
     return data?.value || null
-  } catch (error) {
+  } catch {
     return null
   }
 }

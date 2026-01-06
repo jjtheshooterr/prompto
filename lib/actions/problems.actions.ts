@@ -3,10 +3,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function listPublicProblems(filters?: {
+export async function listProblems({
+  search = '',
+  industry = '',
+  sort = 'newest'
+}: {
   search?: string
   industry?: string
-  tags?: string[]
   sort?: 'newest' | 'top'
 }) {
   const supabase = await createClient()
@@ -15,31 +18,27 @@ export async function listPublicProblems(filters?: {
     .from('problems')
     .select(`
       *,
-      prompts(count)
+      prompts!inner(count)
     `)
-    .eq('visibility', 'public')
     .eq('is_listed', true)
     .eq('is_hidden', false)
+    .eq('visibility', 'public')
 
-  // Apply filters
-  if (filters?.search) {
-    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
+  // Apply search filter
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,tags.cs.{${search}}`)
   }
-  
-  if (filters?.industry) {
-    query = query.eq('industry', filters.industry)
-  }
-  
-  if (filters?.tags && filters.tags.length > 0) {
-    query = query.overlaps('tags', filters.tags)
+
+  // Apply industry filter
+  if (industry) {
+    query = query.eq('industry', industry)
   }
 
   // Apply sorting
-  if (filters?.sort === 'newest') {
+  if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })
   } else {
-    // Default to newest for now, later implement "top" based on prompt scores
-    query = query.order('created_at', { ascending: false })
+    query = query.order('created_at', { ascending: false }) // Default for now
   }
 
   const { data, error } = await query
@@ -59,9 +58,9 @@ export async function getPublicProblemBySlug(slug: string) {
     .from('problems')
     .select('*')
     .eq('slug', slug)
-    .eq('visibility', 'public')
     .eq('is_listed', true)
     .eq('is_hidden', false)
+    .eq('visibility', 'public')
     .single()
 
   if (error) {
@@ -77,53 +76,60 @@ export async function createProblem(formData: FormData) {
   
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('Authentication required')
-  }
-
-  // Get user's workspace
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!workspace) {
-    throw new Error('No workspace found')
+    throw new Error('Must be authenticated to create problems')
   }
 
   const title = formData.get('title') as string
   const description = formData.get('description') as string
+  const tags = (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean)
   const industry = formData.get('industry') as string
-  const tags = formData.get('tags') as string
-  const visibility = formData.get('visibility') as string
+  const visibility = formData.get('visibility') as string || 'public'
 
-  // Generate slug from title
+  // Create slug from title
   const slug = title.toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
+  // Get or create user's default workspace
+  let { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('created_by', user.id)
+    .single()
+
+  if (!workspace) {
+    const { data: newWorkspace } = await supabase
+      .from('workspaces')
+      .insert({
+        name: `${user.email}'s Workspace`,
+        created_by: user.id
+      })
+      .select('id')
+      .single()
+    
+    workspace = newWorkspace
+  }
+
   const { data, error } = await supabase
     .from('problems')
     .insert({
-      workspace_id: workspace.id,
       title,
       description,
-      industry: industry || null,
-      tags: tags ? tags.split(',').map(t => t.trim()) : [],
-      slug,
+      tags,
+      industry,
       visibility,
-      created_by: user.id
+      slug,
+      is_listed: true,
+      created_by: user.id,
+      workspace_id: workspace?.id
     })
     .select()
     .single()
 
   if (error) {
-    console.error('Error creating problem:', error)
-    throw new Error('Failed to create problem')
+    throw new Error(`Failed to create problem: ${error.message}`)
   }
 
   revalidatePath('/problems')
-  revalidatePath('/dashboard')
-  
   return data
 }

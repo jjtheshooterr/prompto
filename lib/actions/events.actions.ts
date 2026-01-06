@@ -3,26 +3,23 @@
 import { createClient } from '@/lib/supabase/server'
 
 export async function trackPromptEvent(
-  promptId: string, 
-  eventType: 'view' | 'copy' | 'fork' | 'compare_add'
+  promptId: string,
+  eventType: 'view' | 'copy' | 'fork' | 'vote_up' | 'vote_down'
 ) {
   try {
     const supabase = await createClient()
     
     const { data: { user } } = await supabase.auth.getUser()
-    
-    const { error } = await supabase
+    if (!user) return
+
+    // Insert event
+    await supabase
       .from('prompt_events')
       .insert({
         prompt_id: promptId,
-        user_id: user?.id || null, // Allow null for anonymous users
+        user_id: user.id,
         event_type: eventType
       })
-
-    if (error) {
-      console.error('Error tracking event:', error)
-      // Don't throw error for analytics - fail silently
-    }
 
     // Update relevant counters in prompt_stats
     if (eventType === 'view') {
@@ -32,6 +29,6 @@ export async function trackPromptEvent(
     }
   } catch (error) {
     // Fail silently for analytics
-    console.error('Error in trackPromptEvent:', error)
+    console.error('Failed to track event:', error)
   }
 }

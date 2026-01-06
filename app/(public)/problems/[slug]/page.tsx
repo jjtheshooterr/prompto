@@ -1,16 +1,16 @@
 import { getPublicProblemBySlug } from '@/lib/actions/problems.actions'
 import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
-import PromptCard from '@/components/prompts/PromptCard'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-interface PageProps {
+interface ProblemDetailPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ sort?: 'newest' | 'top' }>
 }
 
-export default async function ProblemPage({ params, searchParams }: PageProps) {
+export default async function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
   const { slug } = await params
-  const { sort } = await searchParams
+  const { sort = 'top' } = await searchParams
   
   const problem = await getPublicProblemBySlug(slug)
   
@@ -18,33 +18,22 @@ export default async function ProblemPage({ params, searchParams }: PageProps) {
     notFound()
   }
 
-  const prompts = await listPromptsByProblem(problem.id, sort || 'top')
+  const prompts = await listPromptsByProblem(problem.id, sort)
 
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Problem Header */}
       <div className="mb-8">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{problem.title}</h1>
-            <div className="flex items-center gap-2 mb-4">
-              {problem.industry && (
-                <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
-                  {problem.industry}
-                </span>
-              )}
-              <span className="text-gray-500">
-                {new Date(problem.created_at).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+          <Link href="/problems" className="hover:text-gray-700">Problems</Link>
+          <span>/</span>
+          <span>{problem.title}</span>
         </div>
-        
-        {problem.description && (
-          <p className="text-gray-700 mb-4">{problem.description}</p>
-        )}
-        
-        {problem.tags.length > 0 && (
+
+        <h1 className="text-3xl font-bold mb-4">{problem.title}</h1>
+        <p className="text-gray-600 text-lg mb-6">{problem.description}</p>
+
+        {problem.tags && problem.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {problem.tags.map((tag: string) => (
               <span
@@ -56,50 +45,149 @@ export default async function ProblemPage({ params, searchParams }: PageProps) {
             ))}
           </div>
         )}
+
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            <span className="mr-4">Industry: {problem.industry}</span>
+            <span>{prompts.length} prompts</span>
+          </div>
+
+          <Link
+            href={`/create/prompt?problem=${problem.id}`}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Add Prompt
+          </Link>
+        </div>
       </div>
 
-      {/* Prompts Section */}
+      {/* Sort Controls */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">
-            Prompts ({prompts.length})
-          </h2>
-          
-          <div className="flex items-center gap-4">
-            <select
-              defaultValue={sort || 'top'}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            >
-              <option value="top">Top Rated</option>
-              <option value="newest">Newest</option>
-            </select>
-            
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-              Compare Selected
-            </button>
-          </div>
+        <div className="flex gap-2">
+          <Link
+            href={`/problems/${slug}?sort=top`}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              sort === 'top'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Top Rated
+          </Link>
+          <Link
+            href={`/problems/${slug}?sort=newest`}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              sort === 'newest'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Newest
+          </Link>
         </div>
-        
-        {prompts.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No prompts yet</h3>
-            <p className="text-gray-600 mb-4">Be the first to create a prompt for this problem.</p>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              Create Prompt
-            </button>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {prompts.map((prompt) => (
-              <PromptCard 
-                key={prompt.id} 
-                prompt={prompt}
-                showCompareCheckbox={true}
-              />
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Prompts List */}
+      <div className="space-y-6">
+        {prompts.map((prompt) => {
+          const stats = prompt.prompt_stats?.[0] || {
+            upvotes: 0,
+            downvotes: 0,
+            score: 0,
+            copy_count: 0,
+            view_count: 0,
+            fork_count: 0
+          }
+
+          return (
+            <div key={prompt.id} className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <Link
+                    href={`/prompts/${prompt.id}`}
+                    className="text-xl font-semibold hover:text-blue-600 transition-colors"
+                  >
+                    {prompt.title}
+                  </Link>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600">↑{stats.upvotes}</span>
+                    <span className="text-red-600">↓{stats.downvotes}</span>
+                  </div>
+                  <div className="text-gray-500">
+                    Score: {stats.score}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
+                <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3">
+                  {prompt.system_prompt}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex gap-4 text-sm text-gray-500">
+                  <span>{stats.view_count} views</span>
+                  <span>{stats.copy_count} copies</span>
+                  <span>{stats.fork_count} forks</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                    onClick={() => {
+                      const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+                      if (!selected.includes(prompt.id)) {
+                        selected.push(prompt.id)
+                        localStorage.setItem('comparePrompts', JSON.stringify(selected))
+                      }
+                    }}
+                  >
+                    Compare
+                  </button>
+                  <Link
+                    href={`/prompts/${prompt.id}`}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  >
+                    View Details
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {prompts.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 mb-4">No prompts yet for this problem.</p>
+          <Link
+            href={`/create/prompt?problem=${problem.id}`}
+            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Be the First to Add a Prompt
+          </Link>
+        </div>
+      )}
+
+      {/* Compare Button */}
+      {prompts.length > 0 && (
+        <div className="fixed bottom-6 right-6">
+          <Link
+            href="/compare"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition-colors"
+          >
+            Compare Selected
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

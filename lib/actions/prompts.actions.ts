@@ -8,45 +8,36 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
   
   let query = supabase
     .from('prompts')
-    .select('*')
+    .select(`
+      *,
+      prompt_stats (
+        upvotes,
+        downvotes,
+        score,
+        copy_count,
+        view_count,
+        fork_count
+      )
+    `)
     .eq('problem_id', problemId)
-    .eq('visibility', 'public')
     .eq('is_listed', true)
     .eq('is_hidden', false)
+    .eq('visibility', 'public')
 
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })
   } else {
-    // For now, just order by created_at, we'll add proper scoring later
-    query = query.order('created_at', { ascending: false })
+    query = query.order('score', { ascending: false, nullsFirst: false })
   }
 
-  const { data: prompts, error } = await query
+  const { data, error } = await query
 
   if (error) {
     console.error('Error fetching prompts:', error)
     return []
   }
 
-  if (!prompts) return []
-
-  // Get stats for each prompt separately
-  const promptsWithStats = await Promise.all(
-    prompts.map(async (prompt) => {
-      const { data: stats } = await supabase
-        .from('prompt_stats')
-        .select('*')
-        .eq('prompt_id', prompt.id)
-        .single()
-
-      return {
-        ...prompt,
-        prompt_stats: stats ? [stats] : []
-      }
-    })
-  )
-
-  return promptsWithStats
+  return data || []
 }
 
 export async function getPromptById(id: string) {
@@ -55,34 +46,27 @@ export async function getPromptById(id: string) {
   // First get the prompt
   const { data: prompt, error: promptError } = await supabase
     .from('prompts')
-    .select('*')
+    .select(`
+      *,
+      problems (title, slug),
+      prompt_stats (
+        upvotes,
+        downvotes,
+        score,
+        copy_count,
+        view_count,
+        fork_count
+      )
+    `)
     .eq('id', id)
     .single()
 
-  if (promptError || !prompt) {
+  if (promptError) {
     console.error('Error fetching prompt:', promptError)
     return null
   }
 
-  // Get the problem info separately
-  const { data: problem } = await supabase
-    .from('problems')
-    .select('title, slug')
-    .eq('id', prompt.problem_id)
-    .single()
-
-  // Get the stats separately
-  const { data: stats } = await supabase
-    .from('prompt_stats')
-    .select('*')
-    .eq('prompt_id', id)
-    .single()
-
-  return {
-    ...prompt,
-    problem: problem || null,
-    prompt_stats: stats ? [stats] : []
-  }
+  return prompt
 }
 
 export async function getPromptsByIds(ids: string[]) {
@@ -92,13 +76,19 @@ export async function getPromptsByIds(ids: string[]) {
     .from('prompts')
     .select(`
       *,
-      problem:problems(title, slug),
-      prompt_stats(upvotes, downvotes, score, copy_count, view_count, fork_count)
+      prompt_stats (
+        upvotes,
+        downvotes,
+        score,
+        copy_count,
+        view_count,
+        fork_count
+      )
     `)
     .in('id', ids)
 
   if (error) {
-    console.error('Error fetching prompts for comparison:', error)
+    console.error('Error fetching prompts:', error)
     return []
   }
 
@@ -110,58 +100,58 @@ export async function createPrompt(formData: FormData) {
   
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('Authentication required')
+    throw new Error('Must be authenticated to create prompts')
   }
 
-  // Get user's workspace
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', user.id)
+  const problemId = formData.get('problem_id') as string
+  const title = formData.get('title') as string
+  const systemPrompt = formData.get('system_prompt') as string
+  const userPromptTemplate = formData.get('user_prompt_template') as string
+  const model = formData.get('model') as string
+  const params = formData.get('params') as string
+  const exampleInput = formData.get('example_input') as string
+  const exampleOutput = formData.get('example_output') as string
+  const status = formData.get('status') as string || 'production'
+
+  // Get problem to get workspace_id
+  const { data: problem } = await supabase
+    .from('problems')
+    .select('workspace_id')
+    .eq('id', problemId)
     .single()
 
-  if (!workspace) {
-    throw new Error('No workspace found')
+  let parsedParams = {}
+  try {
+    parsedParams = params ? JSON.parse(params) : {}
+  } catch (e) {
+    throw new Error('Invalid JSON in params field')
   }
-
-  const problemId = formData.get('problemId') as string
-  const title = formData.get('title') as string
-  const systemPrompt = formData.get('systemPrompt') as string
-  const userPromptTemplate = formData.get('userPromptTemplate') as string
-  const model = formData.get('model') as string
-  const visibility = formData.get('visibility') as string
-  const parentPromptId = formData.get('parentPromptId') as string || null
-
-  // Parse JSON fields
-  const params = formData.get('params') as string
-  const exampleInput = formData.get('exampleInput') as string
-  const exampleOutput = formData.get('exampleOutput') as string
 
   const { data, error } = await supabase
     .from('prompts')
     .insert({
-      workspace_id: workspace.id,
       problem_id: problemId,
       title,
       system_prompt: systemPrompt,
       user_prompt_template: userPromptTemplate,
       model,
-      params: params ? JSON.parse(params) : {},
-      example_input: exampleInput ? JSON.parse(exampleInput) : null,
-      example_output: exampleOutput ? JSON.parse(exampleOutput) : null,
-      visibility,
-      parent_prompt_id: parentPromptId,
-      created_by: user.id
+      params: parsedParams,
+      example_input: exampleInput,
+      example_output: exampleOutput,
+      status,
+      visibility: 'public',
+      is_listed: true,
+      created_by: user.id,
+      workspace_id: problem?.workspace_id
     })
     .select()
     .single()
 
   if (error) {
-    console.error('Error creating prompt:', error)
-    throw new Error('Failed to create prompt')
+    throw new Error(`Failed to create prompt: ${error.message}`)
   }
 
-  // Initialize prompt stats
+  // Create initial prompt_stats row
   await supabase
     .from('prompt_stats')
     .insert({
@@ -172,8 +162,7 @@ export async function createPrompt(formData: FormData) {
     })
 
   revalidatePath('/problems')
-  revalidatePath('/dashboard')
-  
+  revalidatePath(`/problems/${problemId}`)
   return data
 }
 
@@ -182,60 +171,44 @@ export async function forkPrompt(parentPromptId: string) {
   
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('Authentication required')
+    throw new Error('Must be authenticated to fork prompts')
   }
 
   // Get the parent prompt
-  const { data: parentPrompt, error: fetchError } = await supabase
+  const { data: parentPrompt } = await supabase
     .from('prompts')
     .select('*')
     .eq('id', parentPromptId)
     .single()
 
-  if (fetchError || !parentPrompt) {
+  if (!parentPrompt) {
     throw new Error('Parent prompt not found')
   }
 
-  // Get user's workspace
-  const { data: workspace } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', user.id)
-    .single()
-
-  if (!workspace) {
-    throw new Error('No workspace found')
-  }
-
   // Create forked prompt
-  const { data, error } = await supabase
+  const { data: forkedPrompt, error } = await supabase
     .from('prompts')
     .insert({
-      workspace_id: workspace.id,
-      problem_id: parentPrompt.problem_id,
-      title: `${parentPrompt.title} (Fork)`,
-      system_prompt: parentPrompt.system_prompt,
-      user_prompt_template: parentPrompt.user_prompt_template,
-      model: parentPrompt.model,
-      params: parentPrompt.params,
-      example_input: parentPrompt.example_input,
-      example_output: parentPrompt.example_output,
+      ...parentPrompt,
+      id: undefined, // Let DB generate new ID
       parent_prompt_id: parentPromptId,
-      created_by: user.id
+      created_by: user.id,
+      title: `${parentPrompt.title} (Fork)`,
+      created_at: undefined,
+      updated_at: undefined
     })
     .select()
     .single()
 
   if (error) {
-    console.error('Error forking prompt:', error)
-    throw new Error('Failed to fork prompt')
+    throw new Error(`Failed to fork prompt: ${error.message}`)
   }
 
-  // Initialize prompt stats
+  // Create prompt_stats for forked prompt
   await supabase
     .from('prompt_stats')
     .insert({
-      prompt_id: data.id,
+      prompt_id: forkedPrompt.id,
       upvotes: 0,
       downvotes: 0,
       score: 0
@@ -245,6 +218,5 @@ export async function forkPrompt(parentPromptId: string) {
   await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
 
   revalidatePath('/problems')
-  
-  return data
+  return forkedPrompt
 }

@@ -1,32 +1,110 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { getPromptsByIds } from '@/lib/actions/prompts.actions'
+import { setVote, clearVote, getUserVote } from '@/lib/actions/votes.actions'
+import { forkPrompt } from '@/lib/actions/prompts.actions'
+import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 
-interface SearchParams {
-  ids?: string
-}
+export default function ComparePage() {
+  const [prompts, setPrompts] = useState<any[]>([])
+  const [user, setUser] = useState<any>(null)
+  const [userVotes, setUserVotes] = useState<Record<string, number>>({})
+  const [loading, setLoading] = useState(true)
 
-export default async function ComparePage({
-  searchParams,
-}: {
-  searchParams: Promise<SearchParams>
-}) {
-  const params = await searchParams
-  const ids = params.ids?.split(',').filter(Boolean) || []
-  const prompts = ids.length > 0 ? await getPromptsByIds(ids) : []
+  useEffect(() => {
+    const loadData = async () => {
+      // Get user
+      const supabase = createClient()
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      setUser(currentUser)
 
-  if (ids.length === 0) {
+      // Get prompt IDs from localStorage or URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlIds = urlParams.get('ids')?.split(',') || []
+      const storageIds = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+      const promptIds = [...new Set([...urlIds, ...storageIds])].filter(Boolean)
+
+      if (promptIds.length === 0) {
+        setLoading(false)
+        return
+      }
+
+      // Fetch prompts
+      const promptsData = await getPromptsByIds(promptIds)
+      setPrompts(promptsData)
+
+      // Get user votes if logged in
+      if (currentUser) {
+        const votes: Record<string, number> = {}
+        for (const promptId of promptIds) {
+          const vote = await getUserVote(promptId)
+          if (vote) votes[promptId] = vote
+        }
+        setUserVotes(votes)
+      }
+
+      setLoading(false)
+    }
+
+    loadData()
+  }, [])
+
+  const handleVote = async (promptId: string, value: 1 | -1) => {
+    if (!user) return
+
+    try {
+      if (userVotes[promptId] === value) {
+        await clearVote(promptId)
+        setUserVotes(prev => ({ ...prev, [promptId]: 0 }))
+      } else {
+        await setVote(promptId, value)
+        setUserVotes(prev => ({ ...prev, [promptId]: value }))
+      }
+    } catch (error) {
+      console.error('Vote failed:', error)
+    }
+  }
+
+  const handleFork = async (promptId: string) => {
+    if (!user) return
+
+    try {
+      const forkedPrompt = await forkPrompt(promptId)
+      window.location.href = `/prompts/${forkedPrompt.id}`
+    } catch (error) {
+      console.error('Fork failed:', error)
+    }
+  }
+
+  const clearComparison = () => {
+    localStorage.removeItem('comparePrompts')
+    setPrompts([])
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading comparison...</div>
+      </div>
+    )
+  }
+
+  if (prompts.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Compare Prompts</h1>
-          <p className="text-gray-600 mb-4">
-            Select prompts from problem pages to compare them side by side.
+          <p className="text-gray-600 mb-6">
+            No prompts selected for comparison. Browse problems and add prompts to compare.
           </p>
-          <a 
-            href="/problems" 
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          <Link
+            href="/problems"
+            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Browse Problems
-          </a>
+          </Link>
         </div>
       </div>
     )
@@ -34,89 +112,158 @@ export default async function ComparePage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Compare Prompts</h1>
-      
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="border border-gray-300 p-3 text-left font-medium">Field</th>
-              {prompts.map((prompt) => (
-                <th key={prompt.id} className="border border-gray-300 p-3 text-left font-medium min-w-64">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Compare Prompts</h1>
+          <p className="text-gray-600">
+            Side-by-side comparison of {prompts.length} prompts
+          </p>
+        </div>
+        
+        <button
+          onClick={clearComparison}
+          className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
+        >
+          Clear All
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {prompts.map((prompt) => {
+          const stats = prompt.prompt_stats?.[0] || {
+            upvotes: 0,
+            downvotes: 0,
+            score: 0,
+            copy_count: 0,
+            view_count: 0,
+            fork_count: 0
+          }
+
+          return (
+            <div key={prompt.id} className="bg-white border rounded-lg p-6 space-y-4">
+              {/* Header */}
+              <div>
+                <Link
+                  href={`/prompts/${prompt.id}`}
+                  className="text-lg font-semibold hover:text-blue-600 transition-colors"
+                >
                   {prompt.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">Model</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  {prompt.model || 'Not specified'}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">Status</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    prompt.status === 'production' ? 'bg-green-100 text-green-800' :
-                    prompt.status === 'tested' ? 'bg-blue-100 text-blue-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {prompt.status}
-                  </span>
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">Score</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  {prompt.prompt_stats?.[0]?.score || 0}
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">System Prompt</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  <div className="max-h-32 overflow-y-auto">
-                    <pre className="text-sm whitespace-pre-wrap">
-                      {prompt.system_prompt || 'None'}
-                    </pre>
+                </Link>
+                <div className="text-sm text-gray-500 mt-1">
+                  Model: {prompt.model}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600">↑{stats.upvotes}</span>
+                  <span className="text-red-600">↓{stats.downvotes}</span>
+                  <span className="text-gray-500">Score: {stats.score}</span>
+                </div>
+                
+                {user && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleVote(prompt.id, 1)}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        userVotes[prompt.id] === 1
+                          ? 'bg-green-600 text-white'
+                          : 'border border-green-600 text-green-600 hover:bg-green-50'
+                      }`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      onClick={() => handleVote(prompt.id, -1)}
+                      className={`px-2 py-1 text-xs rounded transition-colors ${
+                        userVotes[prompt.id] === -1
+                          ? 'bg-red-600 text-white'
+                          : 'border border-red-600 text-red-600 hover:bg-red-50'
+                      }`}
+                    >
+                      ↓
+                    </button>
                   </div>
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">User Template</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  <div className="max-h-32 overflow-y-auto">
-                    <pre className="text-sm whitespace-pre-wrap">
-                      {prompt.user_prompt_template}
-                    </pre>
-                  </div>
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border border-gray-300 p-3 font-medium bg-gray-50">Example Output</td>
-              {prompts.map((prompt) => (
-                <td key={prompt.id} className="border border-gray-300 p-3">
-                  <div className="max-h-32 overflow-y-auto">
-                    <pre className="text-sm whitespace-pre-wrap">
-                      {prompt.example_output ? JSON.stringify(prompt.example_output, null, 2) : 'None'}
-                    </pre>
-                  </div>
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+                )}
+              </div>
+
+              {/* System Prompt */}
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-2">System Prompt</div>
+                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
+                  {prompt.system_prompt}
+                </div>
+              </div>
+
+              {/* User Template */}
+              <div>
+                <div className="text-sm font-medium text-gray-700 mb-2">User Template</div>
+                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-24 overflow-y-auto">
+                  {prompt.user_prompt_template}
+                </div>
+              </div>
+
+              {/* Example I/O */}
+              {(prompt.example_input || prompt.example_output) && (
+                <div className="space-y-2">
+                  {prompt.example_input && (
+                    <div>
+                      <div className="text-xs font-medium text-gray-700 mb-1">Example Input</div>
+                      <div className="bg-blue-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
+                        {prompt.example_input}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {prompt.example_output && (
+                    <div>
+                      <div className="text-xs font-medium text-gray-700 mb-1">Example Output</div>
+                      <div className="bg-green-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
+                        {prompt.example_output}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Usage Stats */}
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>Views:</span>
+                  <span>{stats.view_count}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Copies:</span>
+                  <span>{stats.copy_count}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Forks:</span>
+                  <span>{stats.fork_count}</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                {user && (
+                  <button
+                    onClick={() => handleFork(prompt.id)}
+                    className="flex-1 px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                  >
+                    Fork
+                  </button>
+                )}
+                
+                <Link
+                  href={`/prompts/${prompt.id}`}
+                  className="flex-1 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
+                >
+                  View Details
+                </Link>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
