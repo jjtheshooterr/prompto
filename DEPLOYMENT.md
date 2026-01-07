@@ -1,96 +1,93 @@
-# Deployment Guide - Cloudflare Pages
+# Deployment Guide - Vercel
 
-This guide will help you deploy Promptvexity to Cloudflare Pages.
+This guide will help you deploy Promptvexity to Vercel (recommended for Next.js apps).
 
 ## Prerequisites
 
-1. A Cloudflare account
+1. A Vercel account (free)
 2. A GitHub repository with your code
 3. A Supabase project set up
 
-## Step 1: Install Dependencies
+## Step 1: Deploy to Vercel
 
-```bash
-npm install
-```
+### Option A: One-Click Deploy (Easiest)
+
+1. Go to [vercel.com](https://vercel.com)
+2. Click "New Project"
+3. Import your GitHub repository
+4. Vercel will automatically detect Next.js
+5. Click "Deploy"
+
+### Option B: Vercel CLI
+
+1. Install Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Deploy:
+   ```bash
+   vercel
+   ```
 
 ## Step 2: Environment Variables
 
-1. Copy `.env.example` to `.env.local` for local development
-2. Set up the following environment variables in Cloudflare Pages dashboard:
+After deployment, add environment variables in Vercel dashboard:
 
-### Required Environment Variables
+1. Go to your project in Vercel dashboard
+2. Go to **Settings** → **Environment Variables**
+3. Add these variables for **Production**, **Preview**, and **Development**:
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anonymous key
-- `NEXT_PUBLIC_SITE_URL`: Your production domain (e.g., `https://your-app.pages.dev`)
+```
+NEXT_PUBLIC_SUPABASE_URL = https://yknsbonffoaxxcwvxrls.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY = your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL = https://your-app.vercel.app
+```
 
 ## Step 3: Supabase Configuration
 
-1. In your Supabase dashboard, go to Authentication > URL Configuration
-2. Add your Cloudflare Pages domain to:
-   - Site URL: `https://your-app.pages.dev`
-   - Redirect URLs: `https://your-app.pages.dev/auth/callback`
+1. In your Supabase dashboard, go to Authentication → URL Configuration
+2. Add your Vercel domain to:
+   - **Site URL**: `https://your-app.vercel.app`
+   - **Redirect URLs**: `https://your-app.vercel.app/auth/callback`
 
-## Step 4: Deploy to Cloudflare Pages
+## Step 4: Custom Domain (Optional)
 
-### Option A: Using Cloudflare Dashboard (Recommended)
+1. In Vercel dashboard, go to **Settings** → **Domains**
+2. Add your custom domain
+3. Update `NEXT_PUBLIC_SITE_URL` to your custom domain
+4. Update Supabase auth URLs to your custom domain
 
-1. Go to [Cloudflare Pages](https://pages.cloudflare.com/)
-2. Click "Create a project"
-3. Connect your GitHub repository
-4. Configure build settings:
-   - **Framework preset**: Next.js
-   - **Build command**: `npm run pages:build`
-   - **Build output directory**: `.vercel/output/static`
-   - **Root directory**: `/` (leave empty)
-5. Add environment variables in the dashboard
-6. Click "Save and Deploy"
+## Features You Get with Vercel
 
-### Option B: Using Wrangler CLI
-
-1. Install Wrangler globally:
-   ```bash
-   npm install -g wrangler
-   ```
-
-2. Login to Cloudflare:
-   ```bash
-   wrangler login
-   ```
-
-3. Deploy:
-   ```bash
-   npm run deploy
-   ```
-
-## Step 5: Post-Deployment
-
-1. Update `NEXT_PUBLIC_SITE_URL` in your environment variables to your actual domain
-2. Test authentication flows
-3. Verify all features work correctly
+- ✅ **Automatic deployments** from GitHub
+- ✅ **Preview deployments** for pull requests
+- ✅ **Edge functions** for server actions
+- ✅ **Global CDN** with 99.99% uptime
+- ✅ **Analytics** and performance monitoring
+- ✅ **Zero configuration** - works out of the box
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Authentication not working**: Check that your site URL and redirect URLs are correctly configured in Supabase
-2. **Build failures**: Ensure all environment variables are set correctly
-3. **Server actions not working**: Make sure you're using the latest version of `@cloudflare/next-on-pages`
+1. **Environment variables not working**: Make sure they're added to all environments (Production, Preview, Development)
+2. **Authentication redirects failing**: Check that your Vercel domain is added to Supabase auth settings
+3. **Build failures**: Check the build logs in Vercel dashboard
 
 ### Build Commands
 
 - **Development**: `npm run dev`
-- **Build for Cloudflare**: `npm run pages:build`
-- **Preview locally**: `npm run preview`
-- **Deploy**: `npm run deploy`
+- **Build**: `npm run build` (automatic on Vercel)
+- **Start**: `npm run start`
 
-## Performance Optimization
+## Performance
 
-Cloudflare Pages provides:
-- Global CDN
+Vercel provides:
+- Global edge network
 - Automatic HTTPS
-- Branch previews
-- Analytics
+- Image optimization
+- Static file caching
+- Serverless functions for API routes
 
-Your Next.js app will run on Cloudflare's edge runtime, providing fast global performance.
+Your Next.js app will have excellent performance worldwide!

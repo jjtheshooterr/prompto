@@ -98,22 +98,26 @@ The database schema is already applied to your Supabase project. It includes:
 
 ## Deployment
 
-### Cloudflare Pages (Recommended)
+### Vercel (Recommended)
 
-This app is optimized for deployment on Cloudflare Pages. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+This app is optimized for deployment on Vercel, which provides the best Next.js experience.
 
-Quick deploy:
+**Quick Deploy:**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/jjtheshooterr/promptvexity)
+
+**Manual Deploy:**
 1. Push to GitHub
-2. Connect repository to Cloudflare Pages
-3. Set environment variables
+2. Connect repository to Vercel
+3. Add environment variables
 4. Deploy automatically
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
 ### Other Platforms
 
 The app can also be deployed to:
-- Vercel
 - Netlify
-- Railway
+- Railway  
 - Any Node.js hosting platform
 
 ## Contributing
