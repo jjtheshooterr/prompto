@@ -261,6 +261,33 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
 
       {/* Prompts List */}
       <div className="space-y-6">
+        {/* Pinned Prompt Section */}
+        {problem.pinned_prompt_id && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Recommended Solution
+            </h2>
+            {/* This would show the pinned prompt - for now just show a placeholder */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-yellow-800">Featured solution coming soon...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Section Headers */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold">
+            {sort === 'top' ? 'Top Rated Prompts' : 'Latest Prompts'}
+          </h2>
+          <div className="text-sm text-gray-500">
+            {prompts.length} prompt{prompts.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        {/* Prompts */}
         {prompts.map((prompt) => (
           <PromptCard
             key={prompt.id}

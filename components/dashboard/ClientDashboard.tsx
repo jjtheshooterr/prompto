@@ -30,6 +30,7 @@ export default function ClientDashboard() {
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [myPrompts, setMyPrompts] = useState<any[]>([])
+  const [topPrompts, setTopPrompts] = useState<any[]>([])
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -79,32 +80,37 @@ export default function ClientDashboard() {
       })
 
       // Load user's recent prompts
-      const { data: userPrompts } = await supabase
+      const { data: userPrompts, error: userPromptsError } = await supabase
         .from('prompts')
-        .select(`
-          id,
-          title,
-          status,
-          created_at,
-          problems (title)
-        `)
+        .select('id, title, status, created_at, problem_id')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(5)
 
+      console.log('User prompts query:', { data: userPrompts?.length, error: userPromptsError })
+
       // Fetch stats separately for user prompts
       if (userPrompts && userPrompts.length > 0) {
+        // Get problems for user prompts
+        const problemIds = [...new Set(userPrompts.map(p => p.problem_id).filter(Boolean))]
+        const { data: problemsData } = await supabase
+          .from('problems')
+          .select('id, title')
+          .in('id', problemIds)
+
         const promptIds = userPrompts.map(p => p.id)
         const { data: statsData } = await supabase
           .from('prompt_stats')
           .select('*')
           .in('prompt_id', promptIds)
 
-        // Attach stats to prompts
+        // Attach stats and problems to prompts
         const promptsWithStats = userPrompts.map(prompt => {
           const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          const problem = problemsData?.find(p => p.id === prompt.problem_id)
           return {
             ...prompt,
+            problems: problem ? { title: problem.title } : null,
             prompt_stats: stats ? [stats] : [{
               upvotes: 0,
               downvotes: 0,
@@ -119,6 +125,60 @@ export default function ClientDashboard() {
         setMyPrompts(promptsWithStats)
       } else {
         setMyPrompts([])
+      }
+
+      // Load top-rated prompts from the platform
+      const { data: topPromptsData, error: topPromptsError } = await supabase
+        .from('prompts')
+        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id')
+        .eq('is_listed', true)
+        .eq('is_hidden', false)
+        .eq('visibility', 'public')
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      console.log('Top prompts query:', { data: topPromptsData?.length, error: topPromptsError })
+
+      if (topPromptsData && topPromptsData.length > 0) {
+        // Get problems for top prompts
+        const problemIds = [...new Set(topPromptsData.map(p => p.problem_id).filter(Boolean))]
+        const { data: problemsData } = await supabase
+          .from('problems')
+          .select('id, title, slug')
+          .in('id', problemIds)
+
+        const promptIds = topPromptsData.map(p => p.id)
+        const { data: statsData } = await supabase
+          .from('prompt_stats')
+          .select('*')
+          .in('prompt_id', promptIds)
+
+        // Attach stats and problems to prompts and sort by upvotes
+        const promptsWithStats = topPromptsData.map(prompt => {
+          const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          const problem = problemsData?.find(p => p.id === prompt.problem_id)
+          return {
+            ...prompt,
+            problems: problem ? { title: problem.title, slug: problem.slug } : null,
+            prompt_stats: stats ? [stats] : [{
+              upvotes: 0,
+              downvotes: 0,
+              score: 0,
+              copy_count: 0,
+              view_count: 0,
+              fork_count: 0
+            }]
+          }
+        }).sort((a, b) => {
+          const aUpvotes = a.prompt_stats[0]?.upvotes || 0
+          const bUpvotes = b.prompt_stats[0]?.upvotes || 0
+          return bUpvotes - aUpvotes
+        })
+
+        setTopPrompts(promptsWithStats)
+      } else {
+        setTopPrompts([])
       }
 
       setLoading(false)
@@ -333,6 +393,72 @@ export default function ClientDashboard() {
                 </div>
               </div>
             )}
+
+            {/* Top Rated Prompts Section */}
+            <div className="bg-white rounded-lg shadow p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Top Rated Prompts</h2>
+                <Link href="/prompts?sort=top" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                  View All →
+                </Link>
+              </div>
+              
+              {topPrompts.length > 0 ? (
+                <div className="space-y-4">
+                  {topPrompts.map((prompt) => (
+                    <div key={prompt.id} className={`p-4 border rounded-lg hover:bg-gray-50 ${prompt.parent_prompt_id ? 'border-l-4 border-l-orange-400' : 'border-gray-200'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            {prompt.parent_prompt_id && (
+                              <div className="flex items-center gap-1 text-orange-600">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                                </svg>
+                                <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
+                              </div>
+                            )}
+                            <Link 
+                              href={`/prompts/${prompt.id}`}
+                              className="font-medium text-gray-900 hover:text-blue-600"
+                            >
+                              {prompt.title}
+                            </Link>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {prompt.problems?.title} • {new Date(prompt.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="text-green-600">↑ {prompt.prompt_stats?.[0]?.upvotes || 0}</span>
+                          <span className="text-red-600">↓ {prompt.prompt_stats?.[0]?.downvotes || 0}</span>
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                            </svg>
+                            {prompt.prompt_stats?.[0]?.fork_count || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No top rated prompts yet</h3>
+                  <p className="text-gray-600 mb-4">Be the first to create and vote on prompts!</p>
+                  <Link 
+                    href="/create/prompt"
+                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create Prompt
+                  </Link>
+                </div>
+              )}
+            </div>
 
             {/* Getting Started Section (only show if user has no activity) */}
             {stats.problemsCreated === 0 && stats.promptsSubmitted === 0 && (

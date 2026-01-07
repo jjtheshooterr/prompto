@@ -495,7 +495,6 @@ export default function PromptDetailPage() {
         isOpen={showForkModal}
         onClose={() => setShowForkModal(false)}
         promptId={promptId}
-        originalTitle={prompt.title}
         onSuccess={handleForkSuccess}
       />
 

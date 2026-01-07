@@ -33,29 +33,30 @@ export default function AllPromptsPage() {
   const [filter, setFilter] = useState<'all' | 'originals' | 'forks'>('all')
   const [sort, setSort] = useState<'newest' | 'top' | 'most_forked'>('newest')
 
+  // Handle URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const sortParam = urlParams.get('sort') as 'newest' | 'top' | 'most_forked'
+    if (sortParam && ['newest', 'top', 'most_forked'].includes(sortParam)) {
+      setSort(sortParam)
+    }
+  }, [])
+
   useEffect(() => {
     const loadPrompts = async () => {
       setLoading(true)
       const supabase = createClient()
 
+      console.log('Loading prompts with filter:', filter, 'sort:', sort)
+
+      // Use the same approach as the working homepage component
       let query = supabase
         .from('prompts')
-        .select(`
-          id,
-          title,
-          system_prompt,
-          model,
-          created_at,
-          parent_prompt_id,
-          notes,
-          problems!inner (
-            title,
-            slug
-          )
-        `)
+        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, created_by')
         .eq('is_listed', true)
         .eq('is_hidden', false)
         .eq('visibility', 'public')
+        .eq('is_deleted', false)
 
       // Apply filter
       if (filter === 'originals') {
@@ -68,35 +69,47 @@ export default function AllPromptsPage() {
       if (sort === 'newest') {
         query = query.order('created_at', { ascending: false })
       }
-      // Note: 'top' and 'most_forked' sorting will be done client-side after fetching stats
 
       query = query.limit(20)
 
-      const { data, error } = await query
+      const { data: promptsData, error } = await query
+
+      console.log('Prompts query result:', { data: promptsData?.length, error })
 
       if (error) {
         console.error('Error loading prompts:', error)
-      } else if (data) {
-        // Transform the data and fetch stats separately
-        const transformedPrompts = data.map(prompt => ({
-          ...prompt,
-          problems: Array.isArray(prompt.problems) ? prompt.problems[0] : prompt.problems
-        }))
+        setLoading(false)
+        return
+      }
+
+      if (promptsData && promptsData.length > 0) {
+        console.log('Fetched prompts data:', promptsData.length, 'prompts')
+
+        // Get problems separately
+        const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
+        const { data: problemsData } = await supabase
+          .from('problems')
+          .select('id, title, slug')
+          .in('id', problemIds)
+
+        console.log('Fetched problems data:', problemsData?.length || 0, 'problems')
 
         // Fetch stats for all prompts
-        const promptIds = transformedPrompts.map(p => p.id)
+        const promptIds = promptsData.map(p => p.id)
         const { data: statsData } = await supabase
           .from('prompt_stats')
           .select('*')
           .in('prompt_id', promptIds)
 
-        console.log('Fetched stats for prompts:', statsData)
+        console.log('Fetched stats for prompts:', statsData?.length || 0, 'stats')
 
-        // Attach stats to prompts
-        const promptsWithStats = transformedPrompts.map(prompt => {
+        // Attach stats and problems to prompts
+        const promptsWithStats = promptsData.map(prompt => {
           const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          const problem = problemsData?.find(p => p.id === prompt.problem_id)
           return {
             ...prompt,
+            problems: problem ? { title: problem.title, slug: problem.slug } : { title: 'Unknown Problem', slug: '' },
             prompt_stats: stats ? [stats] : [{
               upvotes: 0,
               downvotes: 0,
@@ -128,7 +141,11 @@ export default function AllPromptsPage() {
           })
         }
 
+        console.log('Final sorted prompts:', sortedPrompts.length)
         setPrompts(sortedPrompts)
+      } else {
+        console.log('No prompts data found')
+        setPrompts([])
       }
 
       setLoading(false)

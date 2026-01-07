@@ -1,0 +1,25 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#1D4ED8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shadowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#581C87;stop-opacity:0.8" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 3D P Shape - Main face -->
+  <path d="M4 2 L4 30 L8 30 L8 18 L18 18 C23 18 26 15 26 10 C26 5 23 2 18 2 L8 2 L8 2 Z M8 6 L18 6 C20 6 22 7 22 10 C22 13 20 14 18 14 L8 14 Z" fill="url(#mainGradient)"/>
+  
+  <!-- 3D depth effect -->
+  <path d="M6 4 L6 28 L10 26 L10 16 L20 16 C24 16 26 14 26 10 C26 6 24 4 20 4 L10 4 Z M10 8 L20 8 C21 8 22 9 22 10 C22 11 21 12 20 12 L10 12 Z" fill="url(#shadowGradient)" opacity="0.6"/>
+  
+  <!-- Accent dots for visual interest -->
+  <circle cx="28" cy="6" r="1.5" fill="#FF6B35"/>
+  <circle cx="2" cy="26" r="1" fill="#00D4FF"/>
+  <circle cx="30" cy="24" r="1" fill="#7C3AED"/>
+</svg>

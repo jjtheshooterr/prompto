@@ -7,7 +7,6 @@ interface ForkModalProps {
   isOpen: boolean
   onClose: () => void
   promptId: string
-  originalTitle: string
   onSuccess: (newPromptId: string) => void
 }
 
@@ -15,12 +14,13 @@ export default function ForkModal({
   isOpen, 
   onClose, 
   promptId, 
-  originalTitle, 
   onSuccess 
 }: ForkModalProps) {
   const [newTitle, setNewTitle] = useState('')
   const [forkReason, setForkReason] = useState('')
   const [changesSummary, setChangesSummary] = useState('')
+  const [improvementSummary, setImprovementSummary] = useState('')
+  const [bestFor, setBestFor] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isOpen) return null
@@ -87,11 +87,6 @@ export default function ForkModal({
       }
 
       // Prepare notes with attribution and changes summary
-      const notesData = {
-        forked_from: promptId,
-        fork_reason: forkReason,
-        changes_summary: changesSummary || null
-      }
       const attributedNotes = `Forked from ${promptId}. ${forkReason}${changesSummary ? ` | Changes: ${changesSummary}` : ''}`
 
       // Create forked prompt
@@ -116,7 +111,9 @@ export default function ForkModal({
           is_hidden: false,
           is_reported: false,
           report_count: 0,
-          created_by: user.id
+          created_by: user.id,
+          improvement_summary: improvementSummary || null,
+          best_for: bestFor ? bestFor.split(',').map(tag => tag.trim()).filter(tag => tag) : null
         })
         .select()
         .single()
@@ -222,6 +219,39 @@ export default function ForkModal({
             />
             <p className="text-xs text-gray-500 mt-1">
               Describe the specific changes you plan to make
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="improvementSummary" className="block text-sm font-medium text-gray-700 mb-1">
+              How does this improve the original? <span className="text-gray-400">(optional)</span>
+            </label>
+            <textarea
+              id="improvementSummary"
+              value={improvementSummary}
+              onChange={(e) => setImprovementSummary(e.target.value)}
+              placeholder="e.g., Reduces hallucination by 30%, Better handles edge cases, More consistent output format..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Explain the specific improvements this fork provides
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="bestFor" className="block text-sm font-medium text-gray-700 mb-1">
+              Best for (tags) <span className="text-gray-400">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="bestFor"
+              value={bestFor}
+              onChange={(e) => setBestFor(e.target.value)}
+              placeholder="e.g., beginners, complex data, creative writing, technical docs"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Comma-separated tags describing what this prompt works best for
             </p>
           </div>
 

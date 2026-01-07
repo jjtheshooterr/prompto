@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import GlobalSearch from '@/components/search/GlobalSearch'
@@ -59,8 +60,15 @@ export default function Header() {
     <header className="border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-blue-600">
-            Promptvexity
+          <Link href="/" className="flex items-center space-x-3">
+            <Image 
+              src="/logo.svg" 
+              alt="Promptvexity Logo" 
+              width={32} 
+              height={32}
+              className="w-8 h-8"
+            />
+            <span className="text-2xl font-bold text-blue-600">Promptvexity</span>
           </Link>
           
           {/* Search Bar - Desktop */}

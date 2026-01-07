@@ -31,27 +31,34 @@ export default function TopRatedPrompts() {
       try {
         const supabase = createClient()
         
-        // Get all public prompts
-        const { data: promptsData } = await supabase
+        // Simplified query - get prompts first
+        const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
-          .select(`
-            id,
-            title,
-            system_prompt,
-            model,
-            created_at,
-            created_by,
-            problems (
-              title,
-              slug
-            )
-          `)
+          .select('id, title, system_prompt, model, created_at, created_by, problem_id')
           .eq('is_listed', true)
           .eq('is_hidden', false)
+          .eq('is_deleted', false)
           .eq('visibility', 'public')
           .order('created_at', { ascending: false })
+          .limit(10)
+
+        console.log('Prompts query result:', { data: promptsData?.length, error: promptsError })
+
+        if (promptsError) {
+          console.error('Error fetching prompts:', promptsError)
+          return
+        }
 
         if (promptsData && promptsData.length > 0) {
+          console.log('Fetched prompts data:', promptsData.length, 'prompts')
+          
+          // Get problems separately
+          const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
+          const { data: problemsData } = await supabase
+            .from('problems')
+            .select('id, title, slug')
+            .in('id', problemIds)
+
           // Fetch stats separately for all prompts
           const promptIds = promptsData.map(p => p.id)
           const { data: statsData } = await supabase
@@ -59,29 +66,34 @@ export default function TopRatedPrompts() {
             .select('*')
             .in('prompt_id', promptIds)
 
+          console.log('Fetched stats data:', statsData?.length || 0, 'stats records')
+
           // Fetch profiles for creators
-          const creatorIds = [...new Set(promptsData.map(p => p.created_by))]
+          const creatorIds = [...new Set(promptsData.map(p => p.created_by).filter(Boolean))]
           const { data: profilesData } = await supabase
             .from('profiles')
             .select('id, username')
             .in('id', creatorIds)
 
-          // Attach stats and profiles to prompts
+          console.log('Fetched profiles data:', profilesData?.length || 0, 'profiles')
+
+          // Attach stats, profiles, and problems to prompts
           const promptsWithStats = promptsData.map(prompt => {
             const stats = statsData?.find(s => s.prompt_id === prompt.id)
             const profile = profilesData?.find(p => p.id === prompt.created_by)
+            const problem = problemsData?.find(p => p.id === prompt.problem_id)
             return {
               ...prompt,
               upvotes: stats?.upvotes || 0,
               downvotes: stats?.downvotes || 0,
               score: stats?.score || 0,
-              profiles: profile ? { username: profile.username } : null
+              profiles: profile ? { username: profile.username } : null,
+              problems: problem ? [{ title: problem.title, slug: problem.slug }] : []
             }
           })
 
           // Sort by upvotes descending, then by created_at for ties
           const topRated = promptsWithStats
-            .filter(p => p.upvotes > 0) // Only show prompts with at least 1 upvote
             .sort((a, b) => {
               if (b.upvotes !== a.upvotes) {
                 return b.upvotes - a.upvotes
@@ -90,7 +102,10 @@ export default function TopRatedPrompts() {
             })
             .slice(0, 3) // Top 3
 
+          console.log('Final top rated prompts:', topRated.length)
           setPrompts(topRated as TopRatedPrompt[])
+        } else {
+          console.log('No prompts data found')
         }
       } catch (error) {
         console.error('Failed to load top rated prompts:', error)
