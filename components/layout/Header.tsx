@@ -98,9 +98,6 @@ export default function Header() {
               <div className="text-gray-400">Loading...</div>
             ) : user ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600 hidden sm:block">
-                  {user.email}
-                </span>
                 <button
                   onClick={handleSignOut}
                   className="text-gray-600 hover:text-gray-900 transition-colors"

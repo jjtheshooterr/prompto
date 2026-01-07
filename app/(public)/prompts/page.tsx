@@ -294,18 +294,6 @@ export default function AllPromptsPage() {
           </div>
         </div>
       )}
-
-      {/* Compare Button */}
-      {prompts.length > 0 && (
-        <div className="fixed bottom-6 right-6">
-          <Link
-            href="/compare"
-            className="px-6 py-3 bg-green-600 text-white rounded-lg shadow-lg hover:bg-green-700 transition-colors"
-          >
-            Compare Selected
-          </Link>
-        </div>
-      )}
     </div>
   )
 }

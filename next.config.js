@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Server Actions are now stable in Next.js 16, no experimental config needed
+  // Cloudflare Pages with @cloudflare/next-on-pages
+  // This allows server-side features to work on Cloudflare Pages
 }
 
 module.exports = nextConfig

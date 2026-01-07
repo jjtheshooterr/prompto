@@ -96,6 +96,26 @@ The database schema is already applied to your Supabase project. It includes:
   seed.sql         # Seed data
 ```
 
+## Deployment
+
+### Cloudflare Pages (Recommended)
+
+This app is optimized for deployment on Cloudflare Pages. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
+
+Quick deploy:
+1. Push to GitHub
+2. Connect repository to Cloudflare Pages
+3. Set environment variables
+4. Deploy automatically
+
+### Other Platforms
+
+The app can also be deployed to:
+- Vercel
+- Netlify
+- Railway
+- Any Node.js hosting platform
+
 ## Contributing
 
 1. Fork the repository
