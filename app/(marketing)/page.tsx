@@ -1,24 +1,9 @@
 import Link from 'next/link'
-import { getUser } from '@/lib/actions/auth.actions'
 import TopRatedPrompts from '@/components/home/TopRatedPrompts'
 
-export default async function HomePage() {
-  const user = await getUser()
-
+export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-16">
-      {/* Debug info */}
-      {user && (
-        <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800">
-            ✅ Logged in as: {user.email} 
-            <Link href="/dashboard" className="ml-4 text-blue-600 hover:underline">
-              Go to Dashboard
-            </Link>
-          </p>
-        </div>
-      )}
-      
       <div className="text-center max-w-4xl mx-auto">
         <h1 className="text-5xl font-bold mb-6">
           Problem-First Prompt Library
@@ -34,21 +19,12 @@ export default async function HomePage() {
           >
             Browse Problems
           </Link>
-          {user ? (
-            <Link 
-              href="/dashboard" 
-              className="border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link 
-              href="/signup" 
-              className="border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Sign Up Free
-            </Link>
-          )}
+          <Link 
+            href="/login" 
+            className="border border-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            Sign Up Free
+          </Link>
         </div>
       </div>
       
