@@ -9,6 +9,7 @@ export default function Header() {
   const [user, setUser] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const getUser = async () => {
@@ -50,6 +51,10 @@ export default function Header() {
     window.location.href = '/'
   }
 
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false)
+  }
+
   return (
     <header className="border-b border-gray-200 bg-white">
       <div className="container mx-auto px-4 py-4">
@@ -63,6 +68,7 @@ export default function Header() {
             <GlobalSearch />
           </div>
           
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
               Browse Problems
@@ -93,7 +99,8 @@ export default function Header() {
             )}
           </nav>
           
-          <div className="flex items-center space-x-4">
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center space-x-4">
             {loading ? (
               <div className="text-gray-400">Loading...</div>
             ) : user ? (
@@ -122,12 +129,122 @@ export default function Header() {
               </>
             )}
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Toggle mobile menu"
+          >
+            <svg 
+              className="w-6 h-6" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
         </div>
         
         {/* Search Bar - Mobile */}
         <div className="md:hidden mt-4">
           <GlobalSearch />
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 py-4 border-t border-gray-200">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                href="/problems" 
+                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                onClick={closeMobileMenu}
+              >
+                Browse Problems
+              </Link>
+              <Link 
+                href="/prompts" 
+                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                onClick={closeMobileMenu}
+              >
+                All Prompts
+              </Link>
+              <Link 
+                href="/compare" 
+                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                onClick={closeMobileMenu}
+              >
+                Compare
+              </Link>
+              
+              {user ? (
+                <>
+                  <Link 
+                    href="/dashboard" 
+                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link 
+                    href="/workspace" 
+                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Workspace
+                  </Link>
+                  <Link 
+                    href="/create/problem" 
+                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Create Problem
+                  </Link>
+                  {userProfile?.role === 'admin' && (
+                    <Link 
+                      href="/admin/reports" 
+                      className="text-red-600 hover:text-red-700 transition-colors py-2 font-medium"
+                      onClick={closeMobileMenu}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleSignOut()
+                      closeMobileMenu()
+                    }}
+                    className="text-left text-gray-600 hover:text-gray-900 transition-colors py-2"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/login" 
+                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    onClick={closeMobileMenu}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    href="/signup" 
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
+                    onClick={closeMobileMenu}
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   )
