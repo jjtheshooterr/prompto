@@ -1,6 +1,6 @@
 'use client'
 
-import { getPublicProblemBySlug } from '@/lib/actions/problems.actions'
+import { createClient } from '@/lib/supabase/client'
 import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
 import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
@@ -25,16 +25,82 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
       
       setSort(sortParam)
       
-      const problemData = await getPublicProblemBySlug(slug)
+      // Use client-side Supabase to get problem with proper auth context
+      const supabase = createClient()
+      const { data: problemData, error } = await supabase
+        .from('problems')
+        .select(`
+          *,
+          inputs,
+          constraints,
+          success_criteria
+        `)
+        .eq('slug', slug)
+        .eq('is_deleted', false)
+        .single()
       
-      if (!problemData) {
+      if (error || !problemData) {
+        console.error('Error fetching problem:', error)
         notFound()
         return
       }
 
       setProblem(problemData)
-      const promptsData = await listPromptsByProblem(problemData.id, sortParam)
-      setPrompts(promptsData)
+      
+      // Get prompts client-side as well
+      let promptQuery = supabase
+        .from('prompts')
+        .select('*')
+        .eq('problem_id', problemData.id)
+        .eq('is_listed', true)
+        .eq('is_hidden', false)
+        .eq('is_deleted', false)
+
+      if (sortParam === 'newest') {
+        promptQuery = promptQuery.order('created_at', { ascending: false })
+      } else {
+        promptQuery = promptQuery.order('created_at', { ascending: false })
+      }
+
+      const { data: promptsData, error: promptsError } = await promptQuery
+
+      if (promptsError) {
+        console.error('Error fetching prompts:', promptsError)
+        setPrompts([])
+      } else {
+        // Get stats for prompts if needed
+        const promptIds = promptsData?.map(p => p.id) || []
+        if (promptIds.length > 0) {
+          const { data: statsData } = await supabase
+            .from('prompt_stats')
+            .select('*')
+            .in('prompt_id', promptIds)
+
+          // Attach stats to prompts
+          const promptsWithStats = (promptsData || []).map(prompt => {
+            const stats = statsData?.find(s => s.prompt_id === prompt.id)
+            return {
+              ...prompt,
+              upvotes: stats?.upvotes || 0,
+              downvotes: stats?.downvotes || 0,
+              score: (stats?.upvotes || 0) - (stats?.downvotes || 0),
+              views: stats?.views || 0,
+              copies: stats?.copies || 0,
+              forks: stats?.forks || 0
+            }
+          })
+
+          // Sort by score if 'top' sort
+          if (sortParam === 'top') {
+            promptsWithStats.sort((a, b) => b.upvotes - a.upvotes)
+          }
+
+          setPrompts(promptsWithStats)
+        } else {
+          setPrompts([])
+        }
+      }
+      
       setLoading(false)
     }
 
@@ -141,9 +207,9 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
 
         {problem.tags && problem.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
-            {problem.tags.map((tag: string) => (
+            {problem.tags.map((tag: string, index: number) => (
               <span
-                key={tag}
+                key={`${tag}-${index}`}
                 className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full"
               >
                 {tag}

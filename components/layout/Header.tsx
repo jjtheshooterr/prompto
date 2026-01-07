@@ -78,6 +78,9 @@ export default function Header() {
                 <Link href="/create/problem" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Create Problem
                 </Link>
+                <Link href="/workspace" className="text-gray-600 hover:text-gray-900 transition-colors">
+                  Workspace
+                </Link>
                 <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
                   Dashboard
                 </Link>

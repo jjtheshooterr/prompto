@@ -13,13 +13,13 @@ interface TopRatedPrompt {
   upvotes: number
   downvotes: number
   score: number
-  problems?: {
+  problems: {
     title: string
     slug: string
-  }
+  }[]
   profiles?: {
     username: string
-  }
+  } | null
 }
 
 export default function TopRatedPrompts() {
@@ -90,7 +90,7 @@ export default function TopRatedPrompts() {
             })
             .slice(0, 3) // Top 3
 
-          setPrompts(topRated)
+          setPrompts(topRated as TopRatedPrompt[])
         }
       } catch (error) {
         console.error('Failed to load top rated prompts:', error)
@@ -177,9 +177,9 @@ export default function TopRatedPrompts() {
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <div className="flex flex-col gap-1">
                   <span>by {prompt.profiles?.username || 'Anonymous'}</span>
-                  {prompt.problems && (
+                  {prompt.problems && prompt.problems.length > 0 && (
                     <span className="text-blue-600">
-                      {prompt.problems.title}
+                      {prompt.problems[0].title}
                     </span>
                   )}
                 </div>

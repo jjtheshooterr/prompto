@@ -85,7 +85,11 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       const title = formData.get('title') as string
       const description = formData.get('description') as string
       const goal = formData.get('goal') as string
-      const tags = (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean)
+      const tags = (formData.get('tags') as string)
+        .split(',')
+        .map(tag => tag.trim().toLowerCase())
+        .filter(Boolean)
+        .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
       const industry = formData.get('industry') as string
       const visibility = formData.get('visibility') as string || 'public'
 
@@ -427,9 +431,19 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             name="tags"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="sql, database, query, natural-language (comma-separated)"
+            onBlur={(e) => {
+              // Clean up tags on blur
+              const cleanTags = e.target.value
+                .split(',')
+                .map(tag => tag.trim().toLowerCase())
+                .filter(Boolean)
+                .filter((tag, index, array) => array.indexOf(tag) === index)
+                .join(', ')
+              e.target.value = cleanTags
+            }}
           />
           <p className="text-sm text-gray-500 mt-1">
-            Separate tags with commas. Use lowercase and hyphens for multi-word tags.
+            Separate tags with commas. Duplicates will be automatically removed. Use lowercase and hyphens for multi-word tags.
           </p>
         </div>
 

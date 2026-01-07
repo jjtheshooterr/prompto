@@ -13,9 +13,9 @@ interface TrendingProblem {
   created_at: string
   prompt_count: number
   total_votes: number
-  profiles?: {
+  profiles: {
     username: string
-  }
+  }[]
 }
 
 export default function TrendingProblems() {
@@ -89,7 +89,7 @@ export default function TrendingProblems() {
             return scoreB - scoreA
           })
 
-          setProblems(sorted)
+          setProblems(sorted as TrendingProblem[])
         }
       } catch (error) {
         console.error('Failed to load trending problems:', error)
@@ -173,7 +173,7 @@ export default function TrendingProblems() {
               </p>
               
               <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>by {problem.profiles?.username || 'Anonymous'}</span>
+                <span>by {problem.profiles?.[0]?.username || 'Anonymous'}</span>
                 <span>{new Date(problem.created_at).toLocaleDateString()}</span>
               </div>
             </Link>

@@ -2,10 +2,10 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import CreatePromptClient from './CreatePromptClient'
 
-export default function CreatePromptPage() {
+function CreatePromptContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const problemId = searchParams.get('problem')
@@ -54,4 +54,16 @@ export default function CreatePromptPage() {
   }
 
   return <CreatePromptClient user={user} problemId={problemId} />
+}
+
+export default function CreatePromptPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="text-center">Loading...</div>
+      </div>
+    }>
+      <CreatePromptContent />
+    </Suspense>
+  )
 }

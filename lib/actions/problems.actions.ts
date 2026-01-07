@@ -96,6 +96,34 @@ export async function getPublicProblemBySlug(slug: string) {
   return data
 }
 
+// New function that handles all problem access (public, unlisted, private with membership)
+export async function getProblemBySlug(slug: string) {
+  const supabase = await createClient()
+  
+  // RLS policies will automatically handle:
+  // - Public problems: visible to everyone
+  // - Unlisted problems: visible to everyone with link
+  // - Private problems: visible to owner and members only
+  const { data, error } = await supabase
+    .from('problems')
+    .select(`
+      *,
+      inputs,
+      constraints,
+      success_criteria
+    `)
+    .eq('slug', slug)
+    .eq('is_deleted', false)
+    .single()
+
+  if (error) {
+    console.error('Error fetching problem:', error)
+    return null
+  }
+
+  return data
+}
+
 export async function createProblem(formData: FormData) {
   try {
     const supabase = await createClient()
@@ -122,7 +150,11 @@ export async function createProblem(formData: FormData) {
 
   const title = formData.get('title') as string
   const description = formData.get('description') as string
-  const tags = (formData.get('tags') as string).split(',').map(tag => tag.trim()).filter(Boolean)
+  const tags = (formData.get('tags') as string)
+    .split(',')
+    .map(tag => tag.trim().toLowerCase())
+    .filter(Boolean)
+    .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
   const industry = formData.get('industry') as string
   const visibility = formData.get('visibility') as string || 'public'
 
@@ -178,13 +210,19 @@ export async function createProblem(formData: FormData) {
 
   // If creating a private problem, add the owner as a member
   if (visibility === 'private') {
-    await supabase
+    const { error: memberError } = await supabase
       .from('problem_members')
       .insert({
         problem_id: data.id,
         user_id: user.id,
         role: 'owner'
       })
+    
+    if (memberError) {
+      console.error('Error adding owner as member:', memberError)
+      // Don't throw error here as the problem was created successfully
+      // The owner can still access it through the owner_id check in RLS
+    }
   }
 
   revalidatePath('/problems')

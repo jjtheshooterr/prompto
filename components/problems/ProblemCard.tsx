@@ -38,9 +38,9 @@ export default function ProblemCard({ problem }: ProblemCardProps) {
         
         {problem.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-4">
-            {problem.tags.slice(0, 3).map((tag) => (
+            {problem.tags.slice(0, 3).map((tag, index) => (
               <span
-                key={tag}
+                key={`${tag}-${index}`}
                 className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
               >
                 {tag}

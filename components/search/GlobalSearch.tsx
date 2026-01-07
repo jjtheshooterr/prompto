@@ -81,8 +81,8 @@ export default function GlobalSearch() {
             id: p.id,
             type: 'prompt' as const,
             title: p.title,
-            problem_title: p.problems?.title,
-            slug: p.problems?.slug
+            problem_title: p.problems?.[0]?.title,
+            slug: p.problems?.[0]?.slug
           }))
         ]
 
