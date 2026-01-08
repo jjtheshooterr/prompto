@@ -113,14 +113,18 @@ export default function ComparePage() {
         // Check if vote exists first
         console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
         
-        const { data: existingVote } = await supabase
+        const { data: existingVote, error: voteError } = await supabase
           .from('votes')
           .select('*')
           .eq('prompt_id', promptId)
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
         let error = null
+
+        if (voteError) {
+          console.error('Error checking existing vote:', voteError)
+        }
 
         if (existingVote) {
           // Update existing vote

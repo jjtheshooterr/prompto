@@ -84,14 +84,18 @@ export default function PromptDetailPage() {
         // Check if vote exists first
         console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
         
-        const { data: existingVote } = await supabase
+        const { data: existingVote, error: voteError } = await supabase
           .from('votes')
           .select('*')
           .eq('prompt_id', promptId)
           .eq('user_id', user.id)
-          .single()
+          .maybeSingle()
 
         let error = null
+
+        if (voteError) {
+          console.error('Error checking existing vote:', voteError)
+        }
 
         if (existingVote) {
           // Update existing vote
@@ -199,13 +203,17 @@ export default function PromptDetailPage() {
 
     // Get user's vote if logged in
     if (currentUser) {
-      const { data: voteData } = await supabase
+      const { data: voteData, error: voteError } = await supabase
         .from('votes')
         .select('value')
         .eq('prompt_id', promptId)
         .eq('user_id', currentUser.id)
-        .single()
+        .maybeSingle()
 
+      if (voteError) {
+        console.error('Error fetching user vote:', voteError)
+      }
+      
       setUserVote(voteData?.value || null)
     }
   }
