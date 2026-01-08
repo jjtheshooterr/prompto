@@ -170,8 +170,17 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
 
       <div className="mb-4">
         <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
-        <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3">
+        <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3 relative group">
           {prompt.system_prompt}
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(prompt.system_prompt)
+              alert('System prompt copied!')
+            }}
+            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+          >
+            Copy
+          </button>
         </div>
       </div>
 

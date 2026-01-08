@@ -160,13 +160,10 @@ export default function PromptDetailPage() {
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     setUser(currentUser)
 
-    // Get prompt with fresh stats using LEFT JOIN approach
+    // Get prompt with fresh stats using separate queries
     const { data: promptData, error: promptError } = await supabase
       .from('prompts')
-      .select(`
-        *,
-        problems (title, slug)
-      `)
+      .select('*')
       .eq('id', promptId)
       .single()
 
@@ -174,6 +171,17 @@ export default function PromptDetailPage() {
     console.log('Prompt query error:', promptError)
 
     if (promptData) {
+      // Fetch problem separately
+      let problemData = null
+      if (promptData.problem_id) {
+        const { data: problem } = await supabase
+          .from('problems')
+          .select('title, slug')
+          .eq('id', promptData.problem_id)
+          .single()
+        problemData = problem
+      }
+
       // Fetch stats separately to avoid nested query issues
       const { data: statsData, error: statsError } = await supabase
         .from('prompt_stats')
@@ -197,6 +205,9 @@ export default function PromptDetailPage() {
           fork_count: 0
         }]
       }
+      
+      // Add problem data to prompt
+      promptData.problems = problemData
       
       setPrompt(promptData)
     }

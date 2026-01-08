@@ -32,6 +32,31 @@ export default function HomePage() {
       <div className="mt-16">
         <TopRatedPrompts />
       </div>
+
+      {/* New User Guide Section */}
+      <div className="mt-16 bg-blue-50 rounded-lg p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold mb-4">New here? Start with these popular problems</h2>
+          <p className="text-gray-600">Jump right in with problems that have proven, tested prompts</p>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Link href="/problems/generate-sql-queries" className="bg-white p-6 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="font-semibold mb-2">Generate SQL Queries</h3>
+            <p className="text-sm text-gray-600 mb-3">Convert natural language to SQL with 5+ tested prompts</p>
+            <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
+          </Link>
+          <Link href="/problems/code-review" className="bg-white p-6 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="font-semibold mb-2">Code Review Assistant</h3>
+            <p className="text-sm text-gray-600 mb-3">Automated code review with bug detection</p>
+            <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
+          </Link>
+          <Link href="/problems/email-personalization" className="bg-white p-6 rounded-lg hover:shadow-md transition-shadow">
+            <h3 className="font-semibold mb-2">Email Personalization</h3>
+            <p className="text-sm text-gray-600 mb-3">Sales outreach that converts better</p>
+            <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
+          </Link>
+        </div>
+      </div>
       
       <div className="mt-16 grid md:grid-cols-3 gap-8">
         <div className="text-center">
