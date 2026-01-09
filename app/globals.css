@@ -258,16 +258,7 @@ body {
 }
 
 .floatingCard {
-  transform: translateY(-20px);
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
-}
-
-.floatingCard:nth-child(2) {
-  transform: translateY(-10px) translateX(10px);
-}
-
-.floatingCard:nth-child(3) {
-  transform: translateY(-30px) translateX(-5px);
 }
 
 /* Comparison Visual */

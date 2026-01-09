@@ -32,7 +32,7 @@ export default function TopRatedPrompts() {
     const loadTopRatedPrompts = async () => {
       try {
         const supabase = createClient()
-        
+
         // Simplified query - get prompts first
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
@@ -53,7 +53,7 @@ export default function TopRatedPrompts() {
 
         if (promptsData && promptsData.length > 0) {
           console.log('Fetched prompts data:', promptsData.length, 'prompts')
-          
+
           // Get problems separately
           const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
           const { data: problemsData } = await supabase
@@ -141,27 +141,27 @@ export default function TopRatedPrompts() {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Top Rated Prompts</h2>
-        <Link 
-          href="/prompts?sort=top" 
+        <Link
+          href="/prompts?sort=top"
           className="text-blue-600 hover:text-blue-700 font-medium"
         >
           View All →
         </Link>
       </div>
-      
+
       {prompts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
           {prompts.map((prompt, index) => (
             <Link
               key={prompt.id}
               href={`/prompts/${prompt.id}`}
-              className={`block h-full card p-6 relative flex flex-col ${index === 0 ? 'floatingCard' : ''}`}
+              className={`block card p-6 relative flex flex-col h-full ${index === 0 ? 'floatingCard' : ''}`}
             >
               {/* Ranking badge */}
               <div className="rankBadge absolute -top-2 -left-2">
                 {index + 1}
               </div>
-              
+
               {/* Top row - header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function TopRatedPrompts() {
                     {prompt.model}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-sm">
+                <div className="flex items-center gap-3 text-sm shrink-0">
                   <span className="flex items-center gap-1 text-green-600 font-medium">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -186,19 +186,19 @@ export default function TopRatedPrompts() {
                   )}
                 </div>
               </div>
-              
+
               {/* Main content - flexible */}
-              <div className="flex-1 flex flex-col min-h-0">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">
-                  {prompt.title}
+              <div className="flex-grow flex flex-col">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-snug">
+                  {prompt.title.length > 60 ? prompt.title.substring(0, 60) + '...' : prompt.title}
                 </h3>
-                
-                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-3 flex-1">
-                  {prompt.system_prompt}
+
+                <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                  {prompt.system_prompt.length > 120 ? prompt.system_prompt.substring(0, 120) + '...' : prompt.system_prompt}
                 </p>
-                
+
                 {/* Signal density - ONE micro-signal per card */}
-                <div className="mt-auto text-xs text-slate-500">
+                <div className="text-xs text-slate-500 mb-4">
                   {prompt.best_for && prompt.best_for.length > 0 ? (
                     <span>Best for: {prompt.best_for.slice(0, 2).join(', ')}</span>
                   ) : (
@@ -206,9 +206,9 @@ export default function TopRatedPrompts() {
                   )}
                 </div>
               </div>
-              
-              {/* Footer - pinned */}
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-end justify-between text-xs text-slate-500">
+
+              {/* Footer - pinned at bottom */}
+              <div className="pt-4 mt-auto border-t border-slate-100 flex items-end justify-between text-xs text-slate-500">
                 <div className="min-w-0 flex flex-col gap-1">
                   <div className="truncate">by {prompt.profiles?.username || 'Anonymous'}</div>
                   {prompt.problems && prompt.problems.length > 0 && (
@@ -229,7 +229,7 @@ export default function TopRatedPrompts() {
           </svg>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No top rated prompts yet</h3>
           <p className="text-gray-600 mb-4">Be the first to create and vote on prompts!</p>
-          <Link 
+          <Link
             href="/create/prompt"
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
