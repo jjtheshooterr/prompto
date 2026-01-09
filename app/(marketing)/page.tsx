@@ -6,11 +6,11 @@ export default function HomePage() {
     <div className="bg-slate-50">
       {/* Hero Section with Asymmetric Layout */}
       <div className="hero">
-        <div className="container mx-auto px-4 py-20 relative z-10">
-          <div className="heroAsymmetric">
+        <div className="container mx-auto px-4 py-20 md:py-24 relative z-10">
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] items-center">
             {/* Left: Content */}
-            <div className="text-left">
-              <div className="label mb-4">Prompt Evolution Platform</div>
+            <div className="text-center lg:text-left pv-animate-in pv-animate-delay-1">
+              <div className="text-[11px] tracking-[0.22em] uppercase text-slate-500/80 mb-4">Prompt Evolution Platform</div>
               <h1 className="heroHeadline mb-6 text-slate-900">
                 Solve real problems with prompts that are tested, compared, and improved.
               </h1>
@@ -21,7 +21,7 @@ export default function HomePage() {
               <p className="text-sm text-slate-500 mb-8">
                 Ranked by community testing, forks, and documented improvements.
               </p>
-              <div className="flex gap-4 mb-12">
+              <div className="flex gap-4 justify-center lg:justify-start mb-12">
                 <Link 
                   href="/problems" 
                   className="btnPrimary text-white font-medium"
@@ -38,10 +38,10 @@ export default function HomePage() {
             </div>
             
             {/* Right: Process Evolution Visual */}
-            <div className="relative">
+            <div className="relative lg:translate-x-6 lg:-translate-y-2 pv-animate-in pv-animate-delay-2">
               {/* Hero Moment: Prompt Evolution Visualization */}
               <div className="comparisonVisual mb-8">
-                <div className="promptCard">
+                <div className="promptCard pv-animate-in pv-animate-delay-2">
                   <div className="text-xs text-slate-500 mb-2">Original Prompt</div>
                   <div className="text-sm font-medium text-slate-700">Generate SQL for user queries</div>
                   <div className="text-xs text-slate-400 mt-2">Basic approach</div>
@@ -49,8 +49,8 @@ export default function HomePage() {
                 
                 <div className="diffLine"></div>
                 
-                <div className="promptCard highlighted">
-                  <div className="text-xs text-blue-600 mb-2">Improved via 3 forks</div>
+                <div className="promptCard highlighted pv-improved-card pv-animate-in pv-animate-delay-3">
+                  <div className="text-xs text-blue-600 mb-2 pv-pulse-once">Improved via 3 forks</div>
                   <div className="text-sm font-medium text-slate-700">Generate SQL with error handling</div>
                   <div className="text-xs text-green-600 mt-2">+Edge cases +Validation</div>
                 </div>
@@ -64,6 +64,33 @@ export default function HomePage() {
               
               {/* Process Evolution Path */}
               <div className="processPath relative h-16 mb-4">
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 300 60">
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "320"} as React.CSSProperties}
+                    d="M30 30 Q100 30 150 30 Q200 30 270 30"
+                    stroke="rgba(37,99,235,0.4)"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "260", animationDelay: "80ms"} as React.CSSProperties}
+                    d="M150 30 L180 20"
+                    stroke="rgba(245,158,11,0.6)"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "340", animationDelay: "140ms"} as React.CSSProperties}
+                    d="M180 20 Q220 20 260 25"
+                    stroke="rgba(34,197,94,0.6)"
+                    strokeWidth="2"
+                    fill="none"
+                  />
+                </svg>
+                
                 <div className="flex justify-between items-center relative z-10">
                   <div className="processNode problem active">
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,9 +132,9 @@ export default function HomePage() {
       
       {/* Top Rated Prompts Section - Floating */}
       <div className="floatingSection depthLayer1">
-        <div className="container mx-auto px-4 py-16">
+        <div className="container mx-auto px-4 pt-16 md:pt-20 py-16">
           <div className="text-center mb-12">
-            <div className="label mb-2">Community Validated</div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-slate-500/80 mb-2">Community Validated</div>
             <h2 className="text-3xl font-semibold mb-4 text-slate-900">Top-Rated Prompts (By Real Problems)</h2>
             <p className="text-slate-600">Ranked by community testing, forks, and votes — not hype.</p>
           </div>
@@ -118,10 +145,11 @@ export default function HomePage() {
       <div className="section-divider"></div>
 
       {/* Why Different Section - Framed */}
-      <div className="bg-white py-16">
+      <div className="bg-white py-16 md:py-20">
         <div className="container mx-auto px-4">
           <div className="sectionFrame">
             <div className="text-center mb-12">
+              <div className="text-[11px] tracking-[0.22em] uppercase text-slate-500/80 mb-2">Transparency Over Hype</div>
               <h2 className="text-3xl font-semibold mb-4 text-slate-900 forkLine">Why Promptvexity Is Different</h2>
             </div>
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -169,44 +197,44 @@ export default function HomePage() {
       <div className="section-divider"></div>
 
       {/* New User Guide Section */}
-      <div className="container mx-auto px-4 py-16 depthLayer3">
+      <div className="container mx-auto px-4 py-16 md:py-20 depthLayer3">
         <div className="bg-blue-50 rounded-lg p-8">
           <div className="text-center mb-8">
-            <div className="label mb-2">Start Here</div>
+            <div className="text-[11px] tracking-[0.22em] uppercase text-slate-500/80 mb-2">Start Here</div>
             <h2 className="text-3xl font-semibold mb-4 text-slate-900">New here? Start with proven problems</h2>
             <p className="text-slate-600">These problems already have tested prompts and active improvements.</p>
             <p className="text-sm text-slate-500 mt-2">Pinned prompts reflect current best solutions — not permanent answers.</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Link href="/problems/generate-sql-queries" className="card p-6 hover:shadow-md transition-shadow">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+            <Link href="/problems/generate-sql-queries" className="card p-6 hover:shadow-md transition-shadow flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-slate-900">Generate SQL Queries</h3>
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-medium">Recommended</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">Convert natural language to working SQL with proper syntax</p>
-              <div className="flex items-center justify-between">
+              <p className="text-sm text-slate-600 mb-3 flex-1">Convert natural language to working SQL with proper syntax</p>
+              <div className="flex items-center justify-between mt-auto">
                 <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
                 <span className="text-xs text-slate-500">7 prompts</span>
               </div>
             </Link>
-            <Link href="/problems/code-review" className="card p-6 hover:shadow-md transition-shadow">
+            <Link href="/problems/code-review" className="card p-6 hover:shadow-md transition-shadow flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-slate-900">Code Review Assistant</h3>
                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">Best for: Teams</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">Catch bugs and improve code quality systematically</p>
-              <div className="flex items-center justify-between">
+              <p className="text-sm text-slate-600 mb-3 flex-1">Catch bugs and improve code quality systematically</p>
+              <div className="flex items-center justify-between mt-auto">
                 <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
                 <span className="text-xs text-slate-500">4 prompts</span>
               </div>
             </Link>
-            <Link href="/problems/email-personalization" className="card p-6 hover:shadow-md transition-shadow">
+            <Link href="/problems/email-personalization" className="card p-6 hover:shadow-md transition-shadow flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-slate-900">Email Personalization</h3>
                 <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded font-medium">Most Forked</span>
               </div>
-              <p className="text-sm text-slate-600 mb-3">Sales outreach that adapts to recipient context</p>
-              <div className="flex items-center justify-between">
+              <p className="text-sm text-slate-600 mb-3 flex-1">Sales outreach that adapts to recipient context</p>
+              <div className="flex items-center justify-between mt-auto">
                 <span className="text-blue-600 text-sm font-medium">View Prompts →</span>
                 <span className="text-xs text-slate-500">6 prompts</span>
               </div>
@@ -218,11 +246,11 @@ export default function HomePage() {
       <div className="section-divider"></div>
 
       {/* How It Works Section - Process Evolution */}
-      <div className="bg-white py-16 depthLayer2">
+      <div className="bg-white py-16 md:py-20 depthLayer2">
         <div className="container mx-auto px-4">
           <div className="sectionFrame">
             <div className="text-center mb-16">
-              <div className="label mb-2">The Evolution Process</div>
+              <div className="text-[11px] tracking-[0.22em] uppercase text-slate-500/80 mb-2">The Evolution Process</div>
               <h2 className="text-3xl font-semibold mb-4 text-slate-900 forkLine">How Prompts Evolve on Promptvexity</h2>
               <p className="text-slate-600 max-w-2xl mx-auto">
                 Watch how prompts branch, improve, and adapt through community collaboration
@@ -245,17 +273,39 @@ export default function HomePage() {
                   
                   {/* Active evolution path */}
                   <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "400"} as React.CSSProperties}
                     d="M50 60 Q200 60 350 60" 
                     stroke="url(#evolutionGradient)" 
                     strokeWidth="3" 
                     fill="none"
-                    className="animate-pulse"
                   />
                   
                   {/* Fork branches */}
-                  <path d="M350 60 L400 40" stroke="rgba(245,158,11,0.6)" strokeWidth="2" fill="none" />
-                  <path d="M350 60 L400 80" stroke="rgba(245,158,11,0.6)" strokeWidth="2" fill="none" />
-                  <path d="M400 40 Q500 40 600 50" stroke="rgba(34,197,94,0.6)" strokeWidth="2" fill="none" />
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "60", animationDelay: "200ms"} as React.CSSProperties}
+                    d="M350 60 L400 40" 
+                    stroke="rgba(245,158,11,0.6)" 
+                    strokeWidth="2" 
+                    fill="none" 
+                  />
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "60", animationDelay: "240ms"} as React.CSSProperties}
+                    d="M350 60 L400 80" 
+                    stroke="rgba(245,158,11,0.6)" 
+                    strokeWidth="2" 
+                    fill="none" 
+                  />
+                  <path 
+                    className="pv-line-draw"
+                    style={{"--pv-dash": "220", animationDelay: "300ms"} as React.CSSProperties}
+                    d="M400 40 Q500 40 600 50" 
+                    stroke="rgba(34,197,94,0.6)" 
+                    strokeWidth="2" 
+                    fill="none" 
+                  />
                   
                   {/* Gradient definition */}
                   <defs>
@@ -318,7 +368,7 @@ export default function HomePage() {
       <div className="section-divider"></div>
 
       {/* Philosophy Section */}
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 pt-14 md:pt-16 py-16">
         <div className="text-center max-w-3xl mx-auto">
           <p className="text-lg text-slate-600 leading-relaxed">
             Prompt engineering isn't magic. Prompts change. Models change. Context matters.

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ReportModal from '@/components/moderation/ReportModal'
+import { toast } from 'sonner'
 
 interface PromptCardProps {
   prompt: any
@@ -19,6 +20,26 @@ interface ParentPrompt {
 export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = false }: PromptCardProps) {
   const [parentPrompt, setParentPrompt] = useState<ParentPrompt | null>(null)
   const [showReportModal, setShowReportModal] = useState(false)
+  const [isInComparison, setIsInComparison] = useState(false)
+
+  // Check if prompt is in comparison
+  useEffect(() => {
+    const checkComparison = () => {
+      const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+      setIsInComparison(selected.includes(prompt.id))
+    }
+    
+    checkComparison()
+    
+    // Listen for comparison updates
+    window.addEventListener('compareUpdated', checkComparison)
+    window.addEventListener('storage', checkComparison)
+    
+    return () => {
+      window.removeEventListener('compareUpdated', checkComparison)
+      window.removeEventListener('storage', checkComparison)
+    }
+  }, [prompt.id])
 
   const stats = prompt.prompt_stats?.[0] || {
     upvotes: 0,
@@ -72,8 +93,10 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
   }, [prompt.parent_prompt_id])
 
   return (
-    <div className={`card p-6 ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
-      <div className="flex justify-between items-start mb-4">
+    <div className={`card p-6 flex flex-col h-full ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
+      {/* Main content area - flexible */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           {/* Fork indicator and title */}
           <div className="flex items-center gap-2 mb-1">
@@ -168,23 +191,25 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         </div>
       </div>
 
-      <div className="mb-4">
-        <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
-        <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3 relative group">
-          {prompt.system_prompt}
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(prompt.system_prompt)
-              alert('System prompt copied!')
-            }}
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
-          >
-            Copy
-          </button>
+        <div className="mb-4 flex-1">
+          <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
+          <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3 relative group">
+            {prompt.system_prompt}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(prompt.system_prompt)
+                toast('System prompt copied')
+              }}
+              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700"
+            >
+              Copy
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-between items-center">
+      {/* Footer - pinned to bottom */}
+      <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
         <div className="flex gap-4 text-sm text-gray-500">
           <span>{stats.view_count} views</span>
           <span>{stats.copy_count} copies</span>
@@ -202,10 +227,14 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         <div className="flex gap-2">
           {onAddToCompare && (
             <button
-              className="btnSecondary text-slate-700 text-sm"
+              className={`text-sm transition-colors ${
+                isInComparison 
+                  ? 'btnPrimary text-white' 
+                  : 'btnSecondary text-slate-700'
+              }`}
               onClick={() => onAddToCompare(prompt.id)}
             >
-              Compare
+              {isInComparison ? '✓ In Comparison' : 'Compare'}
             </button>
           )}
           <Link

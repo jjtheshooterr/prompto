@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface Prompt {
   id: string
@@ -159,7 +160,16 @@ export default function AllPromptsPage() {
     if (!selected.includes(promptId)) {
       selected.push(promptId)
       localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      alert('Added to comparison!')
+      // Dispatch custom event to update header badge
+      window.dispatchEvent(new CustomEvent('compareUpdated'))
+      toast.success(`Added to comparison (${selected.length} total)`, {
+        action: {
+          label: 'View Comparison',
+          onClick: () => window.location.href = '/compare'
+        }
+      })
+    } else {
+      toast('Already in comparison')
     }
   }
 

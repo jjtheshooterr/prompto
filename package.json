@@ -16,10 +16,12 @@
   "dependencies": {
     "@supabase/ssr": "^0.1.0",
     "@supabase/supabase-js": "^2.39.0",
+    "@tailwindcss/line-clamp": "^0.4.4",
     "autoprefixer": "^10.4.23",
     "next": "15.5.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "sonner": "^2.0.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {

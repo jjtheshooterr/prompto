@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { REPORT_REASONS } from '@/types/reports'
+import { toast } from 'sonner'
 
 interface ReportModalProps {
   isOpen: boolean
@@ -29,7 +30,7 @@ export default function ReportModal({
     e.preventDefault()
     
     if (!reason) {
-      alert('Please select a reason for reporting')
+      toast('Please select a reason for reporting')
       return
     }
 
@@ -41,7 +42,7 @@ export default function ReportModal({
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        alert('You must be logged in to report content')
+        toast('Please log in to report content')
         return
       }
 
@@ -62,13 +63,13 @@ export default function ReportModal({
 
       // Note: Report count will be calculated dynamically from reports table
 
-      alert('Report submitted successfully. Thank you for helping keep our community safe.')
+      toast('Report submitted successfully')
       onClose()
       setReason('')
       setDetails('')
     } catch (error) {
       console.error('Report failed:', error)
-      alert(`Failed to submit report: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error('Could not submit report')
     } finally {
       setSubmitting(false)
     }

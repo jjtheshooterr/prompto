@@ -7,6 +7,7 @@ import ForkLineage from '@/components/prompts/ForkLineage'
 import ReportModal from '@/components/moderation/ReportModal'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export default function PromptDetailPage() {
   const params = useParams()
@@ -57,7 +58,7 @@ export default function PromptDetailPage() {
 
   const handleVote = async (value: 1 | -1) => {
     if (!user) {
-      alert('Please log in to vote')
+      toast('Please log in to vote')
       return
     }
 
@@ -75,7 +76,7 @@ export default function PromptDetailPage() {
 
         if (error) {
           console.error('Failed to clear vote:', error)
-          alert(`Failed to clear vote: ${error.message || JSON.stringify(error)}`)
+          toast.error('Could not clear vote')
           return
         }
 
@@ -122,7 +123,7 @@ export default function PromptDetailPage() {
         if (error) {
           console.error('Failed to vote:', error)
           console.error('Error details:', JSON.stringify(error, null, 2))
-          alert(`Failed to vote: ${error.message || 'Unknown error'}`)
+          toast.error('Could not record vote')
           return
         }
 
@@ -149,7 +150,7 @@ export default function PromptDetailPage() {
       }, 500)
     } catch (error) {
       console.error('Vote failed:', error)
-      alert(`Vote failed: ${error instanceof Error ? error.message : JSON.stringify(error)}`)
+      toast.error('Vote failed')
     }
   }
 
@@ -258,7 +259,7 @@ export default function PromptDetailPage() {
       }
     }
     
-    alert('Prompt copied to clipboard!')
+    toast('Prompt copied to clipboard')
   }
 
   const handleForkSuccess = (newPromptId: string) => {
@@ -271,7 +272,16 @@ export default function PromptDetailPage() {
     if (!selected.includes(promptId)) {
       selected.push(promptId)
       localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      alert('Added to comparison!')
+      // Dispatch custom event to update header badge
+      window.dispatchEvent(new CustomEvent('compareUpdated'))
+      toast.success(`Added to comparison (${selected.length} total)`, {
+        action: {
+          label: 'View Comparison',
+          onClick: () => window.location.href = '/compare'
+        }
+      })
+    } else {
+      toast('Already in comparison')
     }
   }
 

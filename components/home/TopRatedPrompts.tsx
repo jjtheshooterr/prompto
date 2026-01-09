@@ -150,18 +150,19 @@ export default function TopRatedPrompts() {
       </div>
       
       {prompts.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {prompts.map((prompt, index) => (
             <Link
               key={prompt.id}
               href={`/prompts/${prompt.id}`}
-              className={`block card p-6 relative ${index === 0 ? 'floatingCard' : ''}`}
+              className={`block h-full card p-6 relative flex flex-col ${index === 0 ? 'floatingCard' : ''}`}
             >
               {/* Ranking badge */}
               <div className="rankBadge absolute -top-2 -left-2">
                 {index + 1}
               </div>
               
+              {/* Top row - header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-1 text-xs rounded font-medium bg-slate-100 text-slate-700">
@@ -186,37 +187,37 @@ export default function TopRatedPrompts() {
                 </div>
               </div>
               
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                {prompt.title}
-              </h3>
-              
-              <p className="text-gray-600 text-sm line-clamp-3 mb-3">
-                {prompt.system_prompt}
-              </p>
-              
-              {/* Signal density - ONE micro-signal per card */}
-              <div className="mb-3">
-                {prompt.best_for && prompt.best_for.length > 0 ? (
-                  <p className="text-xs text-slate-500">
-                    Best for: {prompt.best_for.slice(0, 2).join(', ')}
-                  </p>
-                ) : (
-                  <p className="text-xs text-slate-500">
-                    Improved via {Math.floor(Math.random() * 4) + 2} forks
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <div className="flex flex-col gap-1">
-                  <span>by {prompt.profiles?.username || 'Anonymous'}</span>
-                  {prompt.problems && prompt.problems.length > 0 && (
-                    <span className="text-blue-600">
-                      {prompt.problems[0].title}
-                    </span>
+              {/* Main content - flexible */}
+              <div className="flex-1 flex flex-col min-h-0">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-snug line-clamp-2">
+                  {prompt.title}
+                </h3>
+                
+                <p className="text-gray-600 text-sm leading-relaxed line-clamp-3 mb-3 flex-1">
+                  {prompt.system_prompt}
+                </p>
+                
+                {/* Signal density - ONE micro-signal per card */}
+                <div className="mt-auto text-xs text-slate-500">
+                  {prompt.best_for && prompt.best_for.length > 0 ? (
+                    <span>Best for: {prompt.best_for.slice(0, 2).join(', ')}</span>
+                  ) : (
+                    <span>Improved via {Math.floor(Math.random() * 4) + 2} forks</span>
                   )}
                 </div>
-                <span>{new Date(prompt.created_at).toLocaleDateString()}</span>
+              </div>
+              
+              {/* Footer - pinned */}
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-end justify-between text-xs text-slate-500">
+                <div className="min-w-0 flex flex-col gap-1">
+                  <div className="truncate">by {prompt.profiles?.username || 'Anonymous'}</div>
+                  {prompt.problems && prompt.problems.length > 0 && (
+                    <div className="text-blue-600 truncate">
+                      {prompt.problems[0].title}
+                    </div>
+                  )}
+                </div>
+                <div className="shrink-0 text-slate-400">{new Date(prompt.created_at).toLocaleDateString()}</div>
               </div>
             </Link>
           ))}

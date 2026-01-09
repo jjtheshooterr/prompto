@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { toast } from 'sonner'
 
 interface ForkModalProps {
   isOpen: boolean
@@ -29,12 +30,12 @@ export default function ForkModal({
     e.preventDefault()
     
     if (!newTitle.trim()) {
-      alert('Please provide a title for your fork')
+      toast('Please provide a title for your fork')
       return
     }
     
     if (!forkReason.trim()) {
-      alert('Please provide a reason for forking (required)')
+      toast('Please provide a reason for forking')
       return
     }
 
@@ -46,7 +47,7 @@ export default function ForkModal({
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
-        alert('You must be logged in to fork prompts')
+        toast('Please log in to fork prompts')
         return
       }
 
@@ -159,7 +160,7 @@ export default function ForkModal({
       onClose()
     } catch (error) {
       console.error('Fork failed:', error)
-      alert(`Failed to fork prompt: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error('Could not fork prompt')
     } finally {
       setIsSubmitting(false)
     }

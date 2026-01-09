@@ -6,6 +6,7 @@ import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 interface ProblemDetailPageProps {
   params: Promise<{ slug: string }>
@@ -112,7 +113,16 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
     if (!selected.includes(promptId)) {
       selected.push(promptId)
       localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      alert('Added to comparison!')
+      // Dispatch custom event to update header badge
+      window.dispatchEvent(new CustomEvent('compareUpdated'))
+      toast.success(`Added to comparison (${selected.length} total)`, {
+        action: {
+          label: 'View Comparison',
+          onClick: () => window.location.href = '/compare'
+        }
+      })
+    } else {
+      toast('Already in comparison')
     }
   }
 

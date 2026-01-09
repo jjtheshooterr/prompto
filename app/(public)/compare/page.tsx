@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 export default function ComparePage() {
   const [prompts, setPrompts] = useState<any[]>([])
@@ -24,40 +25,71 @@ export default function ComparePage() {
       const storageIds = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
       const promptIds = [...new Set([...urlIds, ...storageIds])].filter(Boolean)
 
+      console.log('Compare page - URL IDs:', urlIds)
+      console.log('Compare page - Storage IDs:', storageIds)
+      console.log('Compare page - Final prompt IDs:', promptIds)
+      console.log('Compare page - localStorage raw:', localStorage.getItem('comparePrompts'))
+
       if (promptIds.length === 0) {
+        console.log('No prompt IDs found for comparison')
         setLoading(false)
         return
       }
 
-      // Fetch prompts client-side
-      const { data: promptsData } = await supabase
+      // Fetch prompts client-side using separate queries to avoid relationship issues
+      const { data: promptsData, error: promptsError } = await supabase
         .from('prompts')
-        .select(`
-          *,
-          problems (
-            id,
-            title,
-            goal,
-            inputs,
-            constraints,
-            success_criteria
-          ),
-          prompt_stats (
-            upvotes,
-            downvotes,
-            score,
-            copy_count,
-            view_count,
-            fork_count
-          )
-        `)
+        .select('*')
         .in('id', promptIds)
 
-      setPrompts(promptsData || [])
+      console.log('Compare prompts query:', { data: promptsData?.length, error: promptsError })
 
-      // Set problem data from the first prompt (assuming all prompts are for the same problem)
-      if (promptsData && promptsData.length > 0 && promptsData[0].problems) {
-        setProblem(promptsData[0].problems)
+      if (promptsError) {
+        console.error('Error loading prompts for comparison:', promptsError)
+        setLoading(false)
+        return
+      }
+
+      if (promptsData && promptsData.length > 0) {
+        // Get problems separately
+        const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
+        const { data: problemsData } = await supabase
+          .from('problems')
+          .select('id, title, goal, inputs, constraints, success_criteria')
+          .in('id', problemIds)
+
+        // Fetch stats separately
+        const { data: statsData } = await supabase
+          .from('prompt_stats')
+          .select('*')
+          .in('prompt_id', promptIds)
+
+        // Attach stats and problems to prompts
+        const promptsWithData = promptsData.map(prompt => {
+          const stats = statsData?.find(s => s.prompt_id === prompt.id)
+          const problem = problemsData?.find(p => p.id === prompt.problem_id)
+          return {
+            ...prompt,
+            problems: problem,
+            prompt_stats: stats ? [stats] : [{
+              upvotes: 0,
+              downvotes: 0,
+              score: 0,
+              copy_count: 0,
+              view_count: 0,
+              fork_count: 0
+            }]
+          }
+        })
+
+        setPrompts(promptsWithData)
+
+        // Set problem data from the first prompt (assuming all prompts are for the same problem)
+        if (promptsWithData.length > 0 && promptsWithData[0].problems) {
+          setProblem(promptsWithData[0].problems)
+        }
+      } else {
+        setPrompts([])
       }
 
       // Get user votes if logged in
@@ -83,7 +115,7 @@ export default function ComparePage() {
 
   const handleVote = async (promptId: string, value: 1 | -1) => {
     if (!user) {
-      alert('Please log in to vote')
+      toast('Please log in to vote')
       return
     }
 
@@ -101,7 +133,7 @@ export default function ComparePage() {
 
         if (error) {
           console.error('Failed to clear vote:', error)
-          alert(`Failed to clear vote: ${error.message || JSON.stringify(error)}`)
+          toast.error('Could not clear vote')
           return
         }
 
@@ -150,7 +182,7 @@ export default function ComparePage() {
 
         if (error) {
           console.error('Failed to vote:', error)
-          alert(`Failed to vote: ${error.message || JSON.stringify(error)}`)
+          toast.error('Could not record vote')
           return
         }
 
@@ -174,7 +206,7 @@ export default function ComparePage() {
       }
     } catch (error) {
       console.error('Vote failed:', error)
-      alert(`Vote failed: ${error instanceof Error ? error.message : JSON.stringify(error)}`)
+      toast.error('Vote failed')
     }
   }
 
@@ -202,13 +234,40 @@ export default function ComparePage() {
   }
 
   if (prompts.length === 0) {
+    const storageIds = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+    
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
           <h1 className="text-2xl font-bold mb-4">Compare Prompts</h1>
-          <p className="text-gray-600 mb-6">
-            No prompts selected for comparison. Browse problems and add prompts to compare.
-          </p>
+          {storageIds.length > 0 ? (
+            <div>
+              <p className="text-gray-600 mb-4">
+                Found {storageIds.length} prompt(s) in comparison, but couldn't load them from the database.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                This might be due to deleted prompts or permission issues.
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('comparePrompts')
+                  window.location.reload()
+                }}
+                className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors mr-4"
+              >
+                Clear Comparison
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-gray-600 mb-4">
+                No prompts selected for comparison.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Browse problems and click "Compare" on prompts to add them here.
+              </p>
+            </div>
+          )}
           <Link
             href="/problems"
             className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -230,12 +289,26 @@ export default function ComparePage() {
           </p>
         </div>
         
-        <button
-          onClick={clearComparison}
-          className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
-        >
-          Clear All
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              // Add a test prompt for debugging
+              const testIds = ['f73f7f17-0268-4630-bd9a-89088fc85370', 'faf187f0-2b00-4818-a237-bd655566fd11']
+              localStorage.setItem('comparePrompts', JSON.stringify(testIds))
+              window.dispatchEvent(new CustomEvent('compareUpdated'))
+              window.location.reload()
+            }}
+            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+          >
+            Test Compare
+          </button>
+          <button
+            onClick={clearComparison}
+            className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
+          >
+            Clear All
+          </button>
+        </div>
       </div>
 
       {/* Problem Context */}
