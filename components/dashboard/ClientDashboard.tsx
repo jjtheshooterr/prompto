@@ -82,7 +82,7 @@ export default function ClientDashboard() {
       // Load user's recent prompts
       const { data: userPrompts, error: userPromptsError } = await supabase
         .from('prompts')
-        .select('id, title, status, created_at, problem_id')
+        .select('id, title, status, created_at, problem_id, best_for, improvement_summary')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(5)
@@ -130,7 +130,7 @@ export default function ClientDashboard() {
       // Load top-rated prompts from the platform
       const { data: topPromptsData, error: topPromptsError } = await supabase
         .from('prompts')
-        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id')
+        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, best_for, improvement_summary')
         .eq('is_listed', true)
         .eq('is_hidden', false)
         .eq('visibility', 'public')

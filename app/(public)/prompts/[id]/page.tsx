@@ -160,7 +160,7 @@ export default function PromptDetailPage() {
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     setUser(currentUser)
 
-    // Get prompt with fresh stats using separate queries
+    // Get prompt with fresh stats using separate queries to avoid relationship conflicts
     const { data: promptData, error: promptError } = await supabase
       .from('prompts')
       .select('*')
@@ -171,7 +171,7 @@ export default function PromptDetailPage() {
     console.log('Prompt query error:', promptError)
 
     if (promptData) {
-      // Fetch problem separately
+      // Fetch problem separately to avoid relationship conflicts
       let problemData = null
       if (promptData.problem_id) {
         const { data: problem } = await supabase

@@ -52,7 +52,7 @@ export default function AllPromptsPage() {
       // Use the same approach as the working homepage component
       let query = supabase
         .from('prompts')
-        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, created_by')
+        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, created_by, best_for, improvement_summary')
         .eq('is_listed', true)
         .eq('is_hidden', false)
         .eq('visibility', 'public')

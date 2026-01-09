@@ -72,7 +72,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
   }, [prompt.parent_prompt_id])
 
   return (
-    <div className={`bg-white rounded-lg shadow p-6 ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
+    <div className={`card p-6 ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           {/* Fork indicator and title */}
@@ -202,7 +202,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         <div className="flex gap-2">
           {onAddToCompare && (
             <button
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+              className="btnSecondary text-slate-700 text-sm"
               onClick={() => onAddToCompare(prompt.id)}
             >
               Compare
@@ -210,7 +210,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
           )}
           <Link
             href={`/prompts/${prompt.id}`}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="btnPrimary text-white text-sm"
           >
             View Details
           </Link>

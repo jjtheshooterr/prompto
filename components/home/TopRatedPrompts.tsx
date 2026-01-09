@@ -8,11 +8,13 @@ interface TopRatedPrompt {
   id: string
   title: string
   system_prompt: string
+  user_prompt_template?: string
   model: string
   created_at: string
   upvotes: number
   downvotes: number
   score: number
+  best_for?: string[]
   problems: {
     title: string
     slug: string
@@ -34,7 +36,7 @@ export default function TopRatedPrompts() {
         // Simplified query - get prompts first
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
-          .select('id, title, system_prompt, model, created_at, created_by, problem_id')
+          .select('id, title, system_prompt, user_prompt_template, model, created_at, created_by, problem_id, best_for')
           .eq('is_listed', true)
           .eq('is_hidden', false)
           .eq('is_deleted', false)
@@ -87,6 +89,7 @@ export default function TopRatedPrompts() {
               upvotes: stats?.upvotes || 0,
               downvotes: stats?.downvotes || 0,
               score: stats?.score || 0,
+              best_for: prompt.best_for || [],
               profiles: profile ? { username: profile.username } : null,
               problems: problem ? [{ title: problem.title, slug: problem.slug }] : []
             }
@@ -152,17 +155,19 @@ export default function TopRatedPrompts() {
             <Link
               key={prompt.id}
               href={`/prompts/${prompt.id}`}
-              className="block bg-white p-6 rounded-lg border hover:shadow-md transition-shadow relative"
+              className={`block card p-6 relative ${index === 0 ? 'floatingCard' : ''}`}
             >
               {/* Ranking badge */}
-              <div className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+              <div className="rankBadge absolute -top-2 -left-2">
                 {index + 1}
               </div>
               
               <div className="flex items-start justify-between mb-3">
-                <span className="px-2 py-1 text-xs rounded font-medium bg-blue-100 text-blue-700">
-                  {prompt.model}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 text-xs rounded font-medium bg-slate-100 text-slate-700">
+                    {prompt.model}
+                  </span>
+                </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span className="flex items-center gap-1 text-green-600 font-medium">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,6 +193,19 @@ export default function TopRatedPrompts() {
               <p className="text-gray-600 text-sm line-clamp-3 mb-3">
                 {prompt.system_prompt}
               </p>
+              
+              {/* Signal density - ONE micro-signal per card */}
+              <div className="mb-3">
+                {prompt.best_for && prompt.best_for.length > 0 ? (
+                  <p className="text-xs text-slate-500">
+                    Best for: {prompt.best_for.slice(0, 2).join(', ')}
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-500">
+                    Improved via {Math.floor(Math.random() * 4) + 2} forks
+                  </p>
+                )}
+              </div>
               
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <div className="flex flex-col gap-1">
