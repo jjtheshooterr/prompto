@@ -13,7 +13,7 @@ export default function PromptDetailPage() {
   const params = useParams()
   const router = useRouter()
   const promptId = params.id as string
-  
+
   const [prompt, setPrompt] = useState<any>(null)
   const [userVote, setUserVote] = useState<number | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -28,7 +28,7 @@ export default function PromptDetailPage() {
       // Track view event client-side
       if (user) {
         const supabase = createClient()
-        
+
         // Insert view event
         try {
           await supabase
@@ -84,7 +84,7 @@ export default function PromptDetailPage() {
       } else {
         // Check if vote exists first
         console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
-        
+
         const { data: existingVote, error: voteError } = await supabase
           .from('votes')
           .select('*')
@@ -156,7 +156,7 @@ export default function PromptDetailPage() {
 
   const loadData = async () => {
     const supabase = createClient()
-    
+
     // Get user
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     setUser(currentUser)
@@ -189,10 +189,10 @@ export default function PromptDetailPage() {
         .select('*')
         .eq('prompt_id', promptId)
         .single()
-      
+
       console.log('Stats query result:', statsData)
       console.log('Stats query error:', statsError)
-      
+
       if (statsData) {
         promptData.prompt_stats = [statsData]
       } else {
@@ -206,10 +206,10 @@ export default function PromptDetailPage() {
           fork_count: 0
         }]
       }
-      
+
       // Add problem data to prompt
       promptData.problems = problemData
-      
+
       setPrompt(promptData)
     }
 
@@ -225,7 +225,7 @@ export default function PromptDetailPage() {
       if (voteError) {
         console.error('Error fetching user vote:', voteError)
       }
-      
+
       setUserVote(voteData?.value || null)
     }
   }
@@ -233,11 +233,11 @@ export default function PromptDetailPage() {
   const handleCopy = async () => {
     const text = `${prompt.system_prompt}\n\n${prompt.user_prompt_template}`
     await navigator.clipboard.writeText(text)
-    
+
     if (user) {
       // Track copy event client-side
       const supabase = createClient()
-      
+
       // Insert copy event
       try {
         await supabase
@@ -258,7 +258,7 @@ export default function PromptDetailPage() {
         console.warn('RPC failed for copy count:', rpcError)
       }
     }
-    
+
     toast('Prompt copied to clipboard')
   }
 
@@ -319,8 +319,8 @@ export default function PromptDetailPage() {
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/problems" className="hover:text-gray-700">Problems</Link>
         <span>/</span>
-        <Link 
-          href={`/problems/${prompt.problems?.slug}`} 
+        <Link
+          href={`/problems/${prompt.problems?.slug}`}
           className="hover:text-gray-700"
         >
           {prompt.problems?.title}
@@ -332,7 +332,7 @@ export default function PromptDetailPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
-        
+
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-gray-500">
             Model: {prompt.model} • Created {new Date(prompt.created_at).toLocaleDateString()}
@@ -342,34 +342,32 @@ export default function PromptDetailPage() {
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Vote buttons */}
             {user && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleVote(1)}
-                  className={`px-3 py-1 rounded transition-colors ${
-                    userVote === 1
+                  className={`px-3 py-1 rounded transition-colors ${userVote === 1
                       ? 'bg-green-600 text-white'
                       : 'border border-green-600 text-green-600 hover:bg-green-50'
-                  }`}
+                    }`}
                 >
                   ↑ {stats.upvotes}
                 </button>
                 <button
                   onClick={() => handleVote(-1)}
-                  className={`px-3 py-1 rounded transition-colors ${
-                    userVote === -1
+                  className={`px-3 py-1 rounded transition-colors ${userVote === -1
                       ? 'bg-red-600 text-white'
                       : 'border border-red-600 text-red-600 hover:bg-red-50'
-                  }`}
+                    }`}
                 >
                   ↓ {stats.downvotes}
                 </button>
               </div>
             )}
-            
+
             <div className="text-sm text-gray-500">
               Score: {stats.score}
             </div>
@@ -384,7 +382,7 @@ export default function PromptDetailPage() {
           >
             Copy Prompt
           </button>
-          
+
           {user && (
             <button
               onClick={() => setShowForkModal(true)}
@@ -393,7 +391,7 @@ export default function PromptDetailPage() {
               Fork
             </button>
           )}
-          
+
           <button
             onClick={handleAddToCompare}
             className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -444,18 +442,22 @@ export default function PromptDetailPage() {
                   <h3 className="text-lg font-semibold mb-3">Example Input</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {prompt.example_input}
+                      {typeof prompt.example_input === 'string'
+                        ? prompt.example_input
+                        : (prompt.example_input?.text || JSON.stringify(prompt.example_input, null, 2))}
                     </pre>
                   </div>
                 </div>
               )}
-              
+
               {prompt.example_output && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Example Output</h3>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {prompt.example_output}
+                      {typeof prompt.example_output === 'string'
+                        ? prompt.example_output
+                        : (prompt.example_output?.text || JSON.stringify(prompt.example_output, null, 2))}
                     </pre>
                   </div>
                 </div>
@@ -474,8 +476,8 @@ export default function PromptDetailPage() {
           )}
 
           {/* Fork Lineage */}
-          <ForkLineage 
-            promptId={promptId} 
+          <ForkLineage
+            promptId={promptId}
             parentPromptId={prompt.parent_prompt_id}
           />
         </div>

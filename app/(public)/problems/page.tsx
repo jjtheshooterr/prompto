@@ -1,21 +1,28 @@
 import { listProblems } from '@/lib/actions/problems.actions'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import QualitySignals from '@/components/problems/QualitySignals'
+import Pagination from '@/components/ui/Pagination'
 
 interface ProblemsPageProps {
   searchParams: Promise<{
     search?: string
     industry?: string
     sort?: 'newest' | 'top'
+    page?: string
   }>
 }
 
 export default async function ProblemsPage({ searchParams }: ProblemsPageProps) {
   const params = await searchParams
-  const problems = await listProblems({
+  const currentPage = Number(params.page) || 1
+  const limit = 12
+
+  const { data: problems, total, pages } = await listProblems({
     search: params.search || '',
     industry: params.industry || '',
-    sort: params.sort || 'newest'
+    sort: params.sort || 'newest',
+    page: currentPage,
+    limit
   })
 
   return (
@@ -39,7 +46,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          
+
           <select
             name="industry"
             defaultValue={params.industry}
@@ -112,7 +119,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             )}
 
             <div className="flex justify-between items-center text-sm text-gray-500">
-              <span>{problem.industry}</span>
+              <span className="capitalize">{problem.industry || 'General'}</span>
               <span>
                 {Array.isArray(problem.prompts) ? problem.prompts.length : 0} prompts
               </span>
@@ -121,11 +128,18 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             <div className="mt-4 text-xs text-gray-400">
               {new Date(problem.created_at).toLocaleDateString()}
             </div>
+
+            <QualitySignals
+              hasPinnedPrompt={problem.has_pinned_prompt}
+              activeForks={problem.active_forks_count || 0}
+              lastUpdated={problem.updated_at}
+              promptCount={Array.isArray(problem.prompts) ? problem.prompts.length : 0}
+            />
           </Link>
         ))}
       </div>
 
-      {problems.length === 0 && (
+      {problems.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">No problems found matching your criteria.</p>
           <Link
@@ -135,6 +149,8 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             Create the First Problem
           </Link>
         </div>
+      ) : (
+        <Pagination currentPage={currentPage} totalPages={pages} />
       )}
     </div>
   )

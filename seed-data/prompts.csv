@@ -1,0 +1,241 @@
+problem_slug,slug,title,system_prompt,is_pinned,parent_prompt_slug,model
+write-high-converting-landing-page,landing-page-core,Core SaaS Landing Page Prompt,"You are a SaaS copywriter. Write a high-converting landing page using sections: Hero, Problem, Solution, Benefits, Social Proof, Objections, CTA. Use placeholders if data is missing.",true,,gpt-4
+write-high-converting-landing-page,landing-page-message-test,Landing Page Message Testing,"Generate 5 positioning angles, choose the strongest, then write a full landing page and explain why this angle wins.",false,landing-page-core,gpt-4
+write-high-converting-landing-page,landing-page-short,Short-Form Landing Page,"Write a concise landing page optimized for fast scanning and conversions.",false,landing-page-core,gpt-4
+seo-blog-post-outline,seo-outline-core,SEO Outline by Search Intent,"Create an SEO outline using keyword intent. Include H1-H3s, FAQs, target word count, and internal links.",true,,gpt-4
+seo-blog-post-outline,seo-outline-gap,SEO Outline with Content Gaps,"Analyze likely competitor gaps and build an outline that fills them.",false,seo-outline-core,gpt-4
+seo-blog-post-outline,seo-outline-snippet,SEO Outline for Featured Snippets,"Optimize outline sections specifically for featured snippets.",false,seo-outline-core,gpt-4
+cold-email-personalized,cold-email-core,Personalized Cold Email,"Write a personalized cold email under 120 words with a clear reason to care and soft CTA.",true,,gpt-4
+cold-email-personalized,cold-email-a-b,Cold Email A/B Variants,"Generate two variants: direct and friendly. Explain intent differences.",false,cold-email-core,gpt-4
+cold-email-personalized,cold-email-followup,Cold Email Follow-Up,"Write a polite follow-up email referencing the original message.",false,cold-email-core,gpt-4
+react-bug-triage,react-debug-core,React Debugging Prompt,"Given a console error and component snippet, identify root cause, fix, and prevention checklist.",true,,gpt-4
+react-bug-triage,react-debug-hooks,React Hooks Edge Cases,"Debug issues related to hooks, dependencies, and stale state.",false,react-debug-core,gpt-4
+react-bug-triage,react-debug-performance,React Performance Debug,"Identify unnecessary re-renders and performance bottlenecks.",false,react-debug-core,gpt-4
+supabase-rls-generator,rls-core,Supabase RLS Generator,"Generate SELECT, INSERT, UPDATE, DELETE RLS policies for a multi-tenant Supabase app.",true,,gpt-4
+supabase-rls-generator,rls-admin,Advanced RLS with Admin Roles,"Extend RLS with admin roles and least-privilege access.",false,rls-core,gpt-4
+supabase-rls-generator,rls-soft-delete,RLS with Soft Deletes,"Add soft-delete logic while preserving security.",false,rls-core,gpt-4
+youtube-title-thumbnail,yt-core,YouTube Title + Thumbnail Pack,"Generate 12 YouTube titles and 12 thumbnail hooks optimized for CTR.",true,,gpt-4
+youtube-title-thumbnail,yt-curiosity,Curiosity-Driven Titles,"Generate curiosity-based titles without clickbait.",false,yt-core,gpt-4
+youtube-title-thumbnail,yt-education,Educational YouTube Titles,"Generate titles optimized for learning-focused audiences.",false,yt-core,gpt-4
+shorts-script-hooks,shorts-core,Viral Shorts Script,"Write a 30–45s Shorts script with hook, payoff, and pattern interrupts.",true,,gpt-4
+shorts-script-hooks,shorts-editing,Shorts Editing Notes,"Add b-roll, captions, and pacing suggestions.",false,shorts-core,gpt-4
+shorts-script-hooks,shorts-hooks-only,Shorts Hook Generator,"Generate 10 opening hooks for Shorts.",false,shorts-core,gpt-4
+meeting-notes-actions,meeting-core,Meeting Notes to Actions,"Convert raw notes into a table with owner, task, due date, and risks.",true,,gpt-4
+meeting-notes-actions,meeting-summary,Meeting Summary Generator,"Write a concise executive summary from meeting notes.",false,meeting-core,gpt-4
+meeting-notes-actions,meeting-followups,Meeting Follow-Up Email,"Generate a follow-up email summarizing action items.",false,meeting-core,gpt-4
+saas-pricing-strategy,pricing-core,SaaS Pricing Strategy,"Design a 3-tier pricing strategy with feature differentiation and psychological anchoring.",true,,gpt-4
+saas-pricing-strategy,pricing-value,Value-Based Pricing,"Create pricing based on customer value metrics rather than cost-plus.",false,pricing-core,gpt-4
+saas-pricing-strategy,pricing-freemium,Freemium Pricing Model,"Design a freemium model with clear upgrade triggers.",false,pricing-core,gpt-4
+sql-query-optimizer,sql-optimize-core,SQL Query Optimizer,"Analyze a slow SQL query and provide optimized version with explanation.",true,,gpt-4
+sql-query-optimizer,sql-index,SQL Index Recommendations,"Suggest optimal indexes for query performance.",false,sql-optimize-core,gpt-4
+sql-query-optimizer,sql-explain,SQL Execution Plan Analysis,"Interpret EXPLAIN output and identify bottlenecks.",false,sql-optimize-core,gpt-4
+resume-bullet-metrics,resume-core,Resume Bullet with Metrics,"Rewrite resume bullets using the XYZ formula: Accomplished [X] as measured by [Y] by doing [Z].",true,,gpt-4
+resume-bullet-metrics,resume-action,Action-Driven Resume Bullets,"Start each bullet with strong action verbs and quantify impact.",false,resume-core,gpt-4
+resume-bullet-metrics,resume-star,STAR Method Resume Bullets,"Use Situation, Task, Action, Result framework for bullets.",false,resume-core,gpt-4
+customer-support-reply,support-core,Calm Support Reply,"Write an empathetic support reply that de-escalates and solves the issue.",true,,gpt-4
+customer-support-reply,support-refund,Refund Request Response,"Handle refund requests professionally while protecting company interests.",false,support-core,gpt-4
+customer-support-reply,support-bug,Bug Report Response,"Acknowledge bug reports and set clear expectations.",false,support-core,gpt-4
+feature-requirements-doc,prd-core,Product Requirements Document,"Create a PRD with problem statement, user stories, acceptance criteria, and success metrics.",true,,gpt-4
+feature-requirements-doc,prd-technical,Technical PRD,"Add technical specifications, API contracts, and data models to PRD.",false,prd-core,gpt-4
+feature-requirements-doc,prd-one-pager,One-Page PRD,"Condense PRD into a single-page executive format.",false,prd-core,gpt-4
+api-documentation,api-docs-core,API Documentation,"Write clear API documentation with endpoints, parameters, examples, and error codes.",true,,gpt-4
+api-documentation,api-openapi,OpenAPI Specification,"Generate OpenAPI/Swagger spec from API description.",false,api-docs-core,gpt-4
+api-documentation,api-sdk,SDK Documentation,"Write SDK documentation with code examples in multiple languages.",false,api-docs-core,gpt-4
+prompt-evaluation,prompt-eval-core,Prompt Evaluation Framework,"Compare multiple prompt outputs using criteria: accuracy, clarity, completeness, and efficiency.",true,,gpt-4
+prompt-evaluation,prompt-benchmark,Prompt Benchmarking,"Create a systematic benchmark for prompt performance.",false,prompt-eval-core,gpt-4
+prompt-evaluation,prompt-ab-test,Prompt A/B Testing,"Design an A/B test framework for prompt optimization.",false,prompt-eval-core,gpt-4
+job-description,job-desc-core,Compelling Job Description,"Write a job description that attracts qualified candidates with clear responsibilities and benefits.",true,,gpt-4
+job-description,job-desc-dei,Inclusive Job Description,"Remove biased language and make job description more inclusive.",false,job-desc-core,gpt-4
+job-description,job-desc-remote,Remote Job Description,"Optimize job description for remote-first roles.",false,job-desc-core,gpt-4
+linkedin-post,linkedin-core,Engaging LinkedIn Post,"Write a LinkedIn post that drives engagement using storytelling and clear takeaways.",true,,gpt-4
+linkedin-post,linkedin-thought,Thought Leadership Post,"Position yourself as an expert with insights and analysis.",false,linkedin-core,gpt-4
+linkedin-post,linkedin-carousel,LinkedIn Carousel Post,"Create a multi-slide carousel post with key points.",false,linkedin-core,gpt-4
+ad-copy-variants,ad-copy-core,Ad Copy Variants,"Generate 5 ad copy variants for A/B testing with different hooks and CTAs.",true,,gpt-4
+ad-copy-variants,ad-copy-pain,Pain-Point Ad Copy,"Focus on customer pain points and urgent solutions.",false,ad-copy-core,gpt-4
+ad-copy-variants,ad-copy-benefit,Benefit-Driven Ad Copy,"Emphasize benefits and transformation over features.",false,ad-copy-core,gpt-4
+ux-microcopy,ux-copy-core,UX Microcopy,"Write helpful, concise microcopy for buttons, tooltips, and empty states.",true,,gpt-4
+ux-copy-variants,ux-copy-onboarding,Onboarding Microcopy,"Guide users through onboarding with clear, encouraging copy.",false,ux-copy-core,gpt-4
+ux-copy-empty,ux-copy-empty-states,Empty State Microcopy,"Turn empty states into opportunities with actionable copy.",false,ux-copy-core,gpt-4
+error-messages,error-core,Helpful Error Messages,"Write error messages that explain what happened, why, and how to fix it.",true,,gpt-4
+error-messages,error-technical,Technical Error Messages,"Balance technical accuracy with user-friendliness.",false,error-core,gpt-4
+error-messages,error-validation,Form Validation Messages,"Write clear validation messages that guide users to correct input.",false,error-core,gpt-4
+email-follow-up,followup-core,Follow-Up Email,"Write a polite follow-up email that gets responses without being pushy.",true,,gpt-4
+email-follow-up,followup-sequence,Follow-Up Sequence,"Create a 3-email follow-up sequence with increasing urgency.",false,followup-core,gpt-4
+email-follow-up,followup-value,Value-Add Follow-Up,"Include additional value in follow-up to re-engage.",false,followup-core,gpt-4
+sales-call-script,sales-script-core,Discovery Call Script,"Create a discovery call script that qualifies leads and uncovers pain points.",true,,gpt-4
+sales-call-script,sales-script-demo,Demo Call Script,"Structure a product demo that addresses specific customer needs.",false,sales-script-core,gpt-4
+sales-call-script,sales-script-objection,Objection Handling Script,"Prepare responses to common sales objections.",false,sales-script-core,gpt-4
+proposal-outline,proposal-core,Client Proposal Outline,"Create a winning proposal with problem, solution, timeline, and pricing.",true,,gpt-4
+proposal-outline,proposal-executive,Executive Proposal Summary,"Write a concise executive summary for proposals.",false,proposal-core,gpt-4
+proposal-outline,proposal-sow,Statement of Work,"Detail scope, deliverables, and terms in SOW format.",false,proposal-core,gpt-4
+content-calendar,content-cal-core,30-Day Content Calendar,"Plan a month of content with topics, formats, and distribution channels.",true,,gpt-4
+content-calendar,content-cal-seo,SEO Content Calendar,"Build content calendar around keyword clusters and search intent.",false,content-cal-core,gpt-4
+content-calendar,content-cal-social,Social Media Calendar,"Create a social-first content calendar with platform-specific content.",false,content-cal-core,gpt-4
+twitter-thread,twitter-core,Viral Twitter Thread,"Write a Twitter thread with a strong hook, value, and clear structure.",true,,gpt-4
+twitter-thread,twitter-educational,Educational Twitter Thread,"Break down complex topics into digestible thread format.",false,twitter-core,gpt-4
+twitter-thread,twitter-storytelling,Story-Based Twitter Thread,"Use narrative structure to engage and teach.",false,twitter-core,gpt-4
+blog-introduction,blog-intro-core,Compelling Blog Introduction,"Write a blog intro that hooks readers and promises value.",true,,gpt-4
+blog-introduction,blog-intro-question,Question-Based Introduction,"Start with a provocative question that resonates.",false,blog-intro-core,gpt-4
+blog-introduction,blog-intro-story,Story-Based Introduction,"Open with a relatable story or anecdote.",false,blog-intro-core,gpt-4
+case-study,case-study-core,Customer Case Study,"Write a case study using before/after framework with metrics.",true,,gpt-4
+case-study,case-study-video,Video Case Study Script,"Create a script for video case study testimonial.",false,case-study-core,gpt-4
+case-study,case-study-technical,Technical Case Study,"Deep-dive into technical implementation and results.",false,case-study-core,gpt-4
+value-proposition,value-prop-core,Clear Value Proposition,"Define a value proposition that differentiates and resonates.",true,,gpt-4
+value-proposition,value-prop-canvas,Value Proposition Canvas,"Use the canvas framework to map value to customer jobs.",false,value-prop-core,gpt-4
+value-proposition,value-prop-test,Value Proposition Testing,"Create variants to test with target audience.",false,value-prop-core,gpt-4
+competitive-analysis,competitive-core,Competitive Analysis,"Analyze competitors across features, pricing, positioning, and gaps.",true,,gpt-4
+competitive-analysis,competitive-swot,SWOT Analysis,"Perform SWOT analysis for competitive positioning.",false,competitive-core,gpt-4
+competitive-analysis,competitive-matrix,Competitive Matrix,"Create a visual comparison matrix of competitors.",false,competitive-core,gpt-4
+feature-prioritization,feature-priority-core,Feature Prioritization,"Prioritize features using RICE framework (Reach, Impact, Confidence, Effort).",true,,gpt-4
+feature-prioritization,feature-priority-kano,Kano Model Prioritization,"Use Kano model to categorize features by customer satisfaction.",false,feature-priority-core,gpt-4
+feature-prioritization,feature-priority-moscow,MoSCoW Prioritization,"Categorize features as Must-have, Should-have, Could-have, Won't-have.",false,feature-priority-core,gpt-4
+roadmap-planning,roadmap-core,Product Roadmap,"Create a quarterly product roadmap with themes and milestones.",true,,gpt-4
+roadmap-planning,roadmap-now-next,Now-Next-Later Roadmap,"Use flexible roadmap format focused on outcomes.",false,roadmap-core,gpt-4
+roadmap-planning,roadmap-okr,OKR-Aligned Roadmap,"Align roadmap initiatives with company OKRs.",false,roadmap-core,gpt-4
+onboarding-emails,onboarding-core,Onboarding Email Sequence,"Create a 5-email onboarding sequence that drives activation.",true,,gpt-4
+onboarding-emails,onboarding-saas,SaaS Onboarding Emails,"Guide users to first value moment in SaaS product.",false,onboarding-core,gpt-4
+onboarding-emails,onboarding-educational,Educational Onboarding,"Teach product features progressively through email.",false,onboarding-core,gpt-4
+churn-reduction,churn-core,Churn Reduction Strategy,"Identify churn signals and create intervention strategies.",true,,gpt-4
+churn-reduction,churn-winback,Win-Back Campaign,"Design campaign to re-engage churned customers.",false,churn-core,gpt-4
+churn-reduction,churn-survey,Churn Survey,"Create exit survey to understand churn reasons.",false,churn-core,gpt-4
+pricing-page-copy,pricing-page-core,Pricing Page Copy,"Write pricing page copy that increases conversions and reduces friction.",true,,gpt-4
+pricing-page-copy,pricing-page-faq,Pricing FAQ,"Address common pricing objections in FAQ format.",false,pricing-page-core,gpt-4
+pricing-page-copy,pricing-page-comparison,Pricing Comparison Table,"Create clear comparison table highlighting value.",false,pricing-page-core,gpt-4
+affiliate-review,affiliate-core,Affiliate Product Review,"Write an honest affiliate review that drives conversions.",true,,gpt-4
+affiliate-review,affiliate-comparison,Affiliate Comparison Review,"Compare multiple products to help readers choose.",false,affiliate-core,gpt-4
+affiliate-review,affiliate-tutorial,Affiliate Tutorial Review,"Combine review with how-to tutorial for added value.",false,affiliate-core,gpt-4
+faq-generator,faq-core,Product FAQ Generator,"Generate comprehensive FAQs that reduce objections and support tickets.",true,,gpt-4
+faq-generator,faq-seo,SEO-Optimized FAQ,"Structure FAQs for featured snippets and search visibility.",false,faq-core,gpt-4
+faq-generator,faq-technical,Technical FAQ,"Answer technical questions for developer audience.",false,faq-core,gpt-4
+support-macro,macro-core,Support Macros,"Create templated responses for common support issues.",true,,gpt-4
+support-macro,macro-personalized,Personalized Support Macros,"Add personalization variables to maintain human touch.",false,macro-core,gpt-4
+support-macro,macro-escalation,Escalation Macros,"Handle escalations with empathy and clear next steps.",false,macro-core,gpt-4
+knowledge-base,kb-core,Knowledge Base Article,"Write clear, searchable knowledge base articles with screenshots.",true,,gpt-4
+knowledge-base,kb-troubleshooting,Troubleshooting Guide,"Create step-by-step troubleshooting articles.",false,kb-core,gpt-4
+knowledge-base,kb-video,Video Tutorial Script,"Write scripts for video knowledge base content.",false,kb-core,gpt-4
+release-notes,release-core,Product Release Notes,"Write release notes that communicate value, not just features.",true,,gpt-4
+release-notes,release-technical,Technical Release Notes,"Detail technical changes for developer audience.",false,release-core,gpt-4
+release-notes,release-marketing,Marketing Release Notes,"Frame releases as customer benefits for marketing.",false,release-core,gpt-4
+bug-report,bug-report-core,Clear Bug Report,"Write a bug report with steps to reproduce, expected vs actual behavior, and environment.",true,,gpt-4
+bug-report,bug-report-template,Bug Report Template,"Create a standardized bug report template.",false,bug-report-core,gpt-4
+bug-report,bug-report-priority,Bug Prioritization,"Categorize bugs by severity and impact.",false,bug-report-core,gpt-4
+git-commit-message,git-commit-core,Better Git Commit Messages,"Write clear, conventional commit messages that explain why, not just what.",true,,gpt-4
+git-commit-message,git-commit-conventional,Conventional Commits,"Use conventional commit format (feat, fix, docs, etc).",false,git-commit-core,gpt-4
+git-commit-message,git-commit-detailed,Detailed Commit Messages,"Include context and reasoning in commit body.",false,git-commit-core,gpt-4
+code-review,code-review-core,Code Review,"Perform thorough code review checking for bugs, performance, and maintainability.",true,,gpt-4
+code-review,code-review-security,Security Code Review,"Focus on security vulnerabilities and best practices.",false,code-review-core,gpt-4
+code-review,code-review-style,Style and Consistency Review,"Ensure code follows style guide and conventions.",false,code-review-core,gpt-4
+refactor-plan,refactor-core,Refactoring Plan,"Create a safe refactoring plan with tests and incremental steps.",true,,gpt-4
+refactor-plan,refactor-legacy,Legacy Code Refactoring,"Approach legacy code refactoring with minimal risk.",false,refactor-core,gpt-4
+refactor-plan,refactor-architecture,Architecture Refactoring,"Plan large-scale architectural improvements.",false,refactor-core,gpt-4
+database-schema,schema-core,Database Schema Design,"Design a normalized, scalable database schema.",true,,gpt-4
+database-schema,schema-nosql,NoSQL Schema Design,"Design document-based schema for MongoDB/DynamoDB.",false,schema-core,gpt-4
+database-schema,schema-migration,Schema Migration Plan,"Plan safe database migrations with rollback strategy.",false,schema-core,gpt-4
+api-auth-design,api-auth-core,API Authentication Design,"Design secure API authentication using JWT or OAuth2.",true,,gpt-4
+api-auth-design,api-auth-rbac,Role-Based Access Control,"Implement RBAC for API authorization.",false,api-auth-core,gpt-4
+api-auth-design,api-auth-refresh,Token Refresh Strategy,"Handle token refresh and session management.",false,api-auth-core,gpt-4
+rate-limiting,rate-limit-core,API Rate Limiting,"Design rate limiting strategy to protect API resources.",true,,gpt-4
+rate-limiting,rate-limit-redis,Redis-Based Rate Limiting,"Implement distributed rate limiting with Redis.",false,rate-limit-core,gpt-4
+rate-limiting,rate-limit-tiered,Tiered Rate Limiting,"Create different rate limits for different user tiers.",false,rate-limit-core,gpt-4
+log-analysis,log-analysis-core,Application Log Analysis,"Analyze logs to identify errors, performance issues, and patterns.",true,,gpt-4
+log-analysis,log-analysis-elk,ELK Stack Log Analysis,"Use Elasticsearch queries to analyze logs.",false,log-analysis-core,gpt-4
+log-analysis,log-analysis-metrics,Log-Based Metrics,"Extract metrics and insights from application logs.",false,log-analysis-core,gpt-4
+incident-postmortem,postmortem-core,Incident Postmortem,"Write blameless postmortem with timeline, root cause, and action items.",true,,gpt-4
+incident-postmortem,postmortem-template,Postmortem Template,"Create standardized postmortem template.",false,postmortem-core,gpt-4
+incident-postmortem,postmortem-communication,Incident Communication,"Communicate incidents to stakeholders clearly.",false,postmortem-core,gpt-4
+monitoring-setup,monitoring-core,Monitoring and Alerts,"Design comprehensive monitoring with SLIs, SLOs, and alerts.",true,,gpt-4
+monitoring-setup,monitoring-sre,SRE Monitoring,"Implement SRE best practices for observability.",false,monitoring-core,gpt-4
+monitoring-setup,monitoring-cost,Cost-Effective Monitoring,"Balance monitoring coverage with infrastructure costs.",false,monitoring-core,gpt-4
+kpi-dashboard,kpi-core,KPI Dashboard Design,"Define KPIs and design dashboard for stakeholder visibility.",true,,gpt-4
+kpi-dashboard,kpi-product,Product KPI Dashboard,"Track product metrics like activation, retention, and engagement.",false,kpi-core,gpt-4
+kpi-dashboard,kpi-business,Business KPI Dashboard,"Monitor revenue, growth, and business health metrics.",false,kpi-core,gpt-4
+financial-model,financial-core,Startup Financial Model,"Build a 3-year financial model with revenue, costs, and runway.",true,,gpt-4
+financial-model,financial-saas,SaaS Financial Model,"Model SaaS metrics like MRR, CAC, LTV, and churn.",false,financial-core,gpt-4
+financial-model,financial-scenario,Scenario Planning Model,"Create best/worst/expected case financial scenarios.",false,financial-core,gpt-4
+unit-economics,unit-econ-core,Unit Economics Analysis,"Calculate and optimize CAC, LTV, and payback period.",true,,gpt-4
+unit-economics,unit-econ-cohort,Cohort-Based Unit Economics,"Analyze unit economics by customer cohort.",false,unit-econ-core,gpt-4
+unit-economics,unit-econ-channel,Channel Unit Economics,"Compare unit economics across acquisition channels.",false,unit-econ-core,gpt-4
+investor-pitch,pitch-core,Investor Pitch Outline,"Create a compelling pitch deck outline covering problem, solution, market, traction, and ask.",true,,gpt-4
+investor-pitch,pitch-seed,Seed Round Pitch,"Tailor pitch for seed-stage investors.",false,pitch-core,gpt-4
+investor-pitch,pitch-series-a,Series A Pitch,"Focus on traction and growth for Series A.",false,pitch-core,gpt-4
+exec-summary,exec-summary-core,Executive Summary,"Write a concise executive summary that captures key points.",true,,gpt-4
+exec-summary,exec-summary-business,Business Plan Executive Summary,"Summarize business plan for investors or partners.",false,exec-summary-core,gpt-4
+exec-summary,exec-summary-report,Report Executive Summary,"Distill lengthy reports into actionable summaries.",false,exec-summary-core,gpt-4
+market-sizing,market-size-core,Market Size Estimation,"Estimate TAM, SAM, and SOM using top-down and bottom-up approaches.",true,,gpt-4
+market-sizing,market-size-bottoms-up,Bottom-Up Market Sizing,"Calculate market size from customer segments and pricing.",false,market-size-core,gpt-4
+market-sizing,market-size-validation,Market Size Validation,"Validate market size estimates with data sources.",false,market-size-core,gpt-4
+user-personas,persona-core,User Personas,"Create detailed user personas with goals, pain points, and behaviors.",true,,gpt-4
+user-personas,persona-jobs,Jobs-to-be-Done Personas,"Frame personas around jobs customers are trying to accomplish.",false,persona-core,gpt-4
+user-personas,persona-segment,Persona Segmentation,"Segment users into distinct persona groups.",false,persona-core,gpt-4
+user-interviews,interview-core,User Interview Questions,"Generate open-ended questions that uncover real needs and behaviors.",true,,gpt-4
+user-interviews,interview-discovery,Discovery Interview Script,"Structure interviews for problem discovery.",false,interview-core,gpt-4
+user-interviews,interview-solution,Solution Validation Interview,"Test solution concepts with target users.",false,interview-core,gpt-4
+survey-questions,survey-core,Effective Survey Questions,"Write unbiased survey questions that yield actionable insights.",true,,gpt-4
+survey-questions,survey-nps,NPS Survey,"Design Net Promoter Score survey with follow-ups.",false,survey-core,gpt-4
+survey-questions,survey-satisfaction,Customer Satisfaction Survey,"Measure satisfaction across key touchpoints.",false,survey-core,gpt-4
+ab-test-plan,ab-test-core,A/B Test Plan,"Design statistically valid A/B test with hypothesis and success metrics.",true,,gpt-4
+ab-test-plan,ab-test-multivariate,Multivariate Test Plan,"Test multiple variables simultaneously.",false,ab-test-core,gpt-4
+ab-test-plan,ab-test-sequential,Sequential Testing,"Design sequential tests to reach significance faster.",false,ab-test-core,gpt-4
+conversion-audit,conversion-core,Conversion Funnel Audit,"Audit funnel for drop-off points and optimization opportunities.",true,,gpt-4
+conversion-audit,conversion-cro,CRO Audit Checklist,"Systematic conversion rate optimization audit.",false,conversion-core,gpt-4
+conversion-audit,conversion-mobile,Mobile Conversion Audit,"Focus on mobile-specific conversion issues.",false,conversion-core,gpt-4
+email-subject-lines,subject-core,High Open-Rate Subject Lines,"Generate subject lines that increase open rates without clickbait.",true,,gpt-4
+email-subject-lines,subject-ab,Subject Line A/B Testing,"Create variants for subject line testing.",false,subject-core,gpt-4
+email-subject-lines,subject-personalized,Personalized Subject Lines,"Use personalization to boost open rates.",false,subject-core,gpt-4
+newsletter-outline,newsletter-core,Newsletter Outline,"Create engaging newsletter outline with value-first content.",true,,gpt-4
+newsletter-outline,newsletter-curated,Curated Newsletter,"Compile and contextualize curated content.",false,newsletter-core,gpt-4
+newsletter-outline,newsletter-educational,Educational Newsletter,"Structure newsletter as learning resource.",false,newsletter-core,gpt-4
+brand-voice,brand-voice-core,Brand Voice Guide,"Define brand voice with attributes, dos/don'ts, and examples.",true,,gpt-4
+brand-voice,brand-voice-tone,Tone of Voice Guidelines,"Specify tone variations for different contexts.",false,brand-voice-core,gpt-4
+brand-voice,brand-voice-examples,Brand Voice Examples,"Provide before/after examples of brand voice.",false,brand-voice-core,gpt-4
+tone-rewrite,tone-rewrite-core,Tone Rewrite,"Rewrite copy in different tones while preserving meaning.",true,,gpt-4
+tone-rewrite,tone-professional,Professional Tone Rewrite,"Make copy more formal and professional.",false,tone-rewrite-core,gpt-4
+tone-rewrite,tone-casual,Casual Tone Rewrite,"Make copy more conversational and approachable.",false,tone-rewrite-core,gpt-4
+legal-summary,legal-summary-core,Legal Document Summary,"Summarize legal documents in plain English.",true,,gpt-4
+legal-summary,legal-summary-contract,Contract Summary,"Extract key terms and obligations from contracts.",false,legal-summary-core,gpt-4
+legal-summary,legal-summary-risk,Legal Risk Summary,"Identify potential legal risks in documents.",false,legal-summary-core,gpt-4
+privacy-policy,privacy-policy-core,Privacy Policy Draft,"Generate GDPR-compliant privacy policy draft.",true,,gpt-4
+privacy-policy,privacy-policy-ccpa,CCPA Privacy Policy,"Add California-specific privacy requirements.",false,privacy-policy-core,gpt-4
+privacy-policy,privacy-policy-simple,Simplified Privacy Policy,"Create user-friendly privacy policy summary.",false,privacy-policy-core,gpt-4
+terms-of-service,tos-core,Terms of Service Draft,"Generate comprehensive terms of service draft.",true,,gpt-4
+terms-of-service,tos-saas,SaaS Terms of Service,"Tailor terms for SaaS business model.",false,tos-core,gpt-4
+terms-of-service,tos-marketplace,Marketplace Terms of Service,"Include multi-sided marketplace provisions.",false,tos-core,gpt-4
+risk-assessment,risk-core,Risk Assessment,"Identify, analyze, and prioritize business risks.",true,,gpt-4
+risk-assessment,risk-cybersecurity,Cybersecurity Risk Assessment,"Assess security and data protection risks.",false,risk-core,gpt-4
+risk-assessment,risk-operational,Operational Risk Assessment,"Evaluate operational and process risks.",false,risk-core,gpt-4
+process-documentation,process-doc-core,Process Documentation,"Document internal processes with clear steps and ownership.",true,,gpt-4
+process-documentation,process-doc-flowchart,Process Flowchart,"Create visual process documentation.",false,process-doc-core,gpt-4
+process-documentation,process-doc-checklist,Process Checklist,"Convert process into actionable checklist.",false,process-doc-core,gpt-4
+sop-generator,sop-core,Standard Operating Procedure,"Create detailed SOP with purpose, scope, and procedures.",true,,gpt-4
+sop-generator,sop-training,Training SOP,"Design SOP for employee training and onboarding.",false,sop-core,gpt-4
+sop-generator,sop-compliance,Compliance SOP,"Create SOPs for regulatory compliance.",false,sop-core,gpt-4
+vendor-comparison,vendor-core,Vendor Comparison,"Compare vendors objectively across criteria.",true,,gpt-4
+vendor-comparison,vendor-scorecard,Vendor Scorecard,"Create weighted scorecard for vendor evaluation.",false,vendor-core,gpt-4
+vendor-comparison,vendor-rfi,Vendor RFI/RFP,"Generate request for information or proposal.",false,vendor-core,gpt-4
+automation-ideas,automation-core,Automation Opportunities,"Identify repetitive tasks suitable for automation.",true,,gpt-4
+automation-ideas,automation-roi,Automation ROI Analysis,"Calculate ROI for automation investments.",false,automation-core,gpt-4
+automation-ideas,automation-roadmap,Automation Roadmap,"Prioritize and sequence automation initiatives.",false,automation-core,gpt-4
+zapier-workflow,zapier-core,Zapier Automation Design,"Design no-code automation workflow in Zapier.",true,,gpt-4
+zapier-workflow,zapier-multi-step,Multi-Step Zapier Workflow,"Create complex workflows with filters and paths.",false,zapier-core,gpt-4
+zapier-workflow,zapier-error,Zapier Error Handling,"Add error handling and notifications to workflows.",false,zapier-core,gpt-4
+ai-use-cases,ai-usecase-core,AI Use Cases for Business,"Identify practical AI applications for specific business.",true,,gpt-4
+ai-use-cases,ai-usecase-roi,AI Use Case ROI,"Estimate ROI for AI implementation.",false,ai-usecase-core,gpt-4
+ai-use-cases,ai-usecase-roadmap,AI Implementation Roadmap,"Sequence AI initiatives by value and feasibility.",false,ai-usecase-core,gpt-4
+prompt-library,prompt-lib-core,Reusable Prompt Library,"Create a library of reusable prompts for common tasks.",true,,gpt-4
+prompt-library,prompt-lib-templates,Prompt Templates,"Design templated prompts with variables.",false,prompt-lib-core,gpt-4
+prompt-library,prompt-lib-versioning,Prompt Versioning,"Track and version prompt improvements.",false,prompt-lib-core,gpt-4
+prompt-forking,prompt-fork-core,Prompt Forking Strategy,"Improve prompts through systematic forking and testing.",true,,gpt-4
+prompt-forking,prompt-fork-ab,Prompt Fork A/B Testing,"Test forked prompts against originals.",false,prompt-fork-core,gpt-4
+prompt-forking,prompt-fork-documentation,Prompt Fork Documentation,"Document what changed and why in forks.",false,prompt-fork-core,gpt-4
+prompt-failure,prompt-failure-core,Prompt Failure Analysis,"Analyze why prompts fail and how to fix them.",true,,gpt-4
+prompt-failure,prompt-failure-edge,Edge Case Handling,"Identify and handle prompt edge cases.",false,prompt-failure-core,gpt-4
+prompt-failure,prompt-failure-validation,Prompt Output Validation,"Add validation to catch prompt failures.",false,prompt-failure-core,gpt-4
+benchmark-prompts,benchmark-core,Prompt Benchmarking,"Systematically benchmark prompts for quality and consistency.",true,,gpt-4
+benchmark-prompts,benchmark-metrics,Prompt Quality Metrics,"Define metrics for prompt evaluation.",false,benchmark-core,gpt-4
+benchmark-prompts,benchmark-dataset,Benchmark Dataset Creation,"Create test datasets for prompt evaluation.",false,benchmark-core,gpt-4
+model-comparison,model-comp-core,AI Model Comparison,"Compare outputs from different AI models.",true,,gpt-4
+model-comparison,model-comp-cost,Model Cost Comparison,"Compare models by cost and performance.",false,model-comp-core,gpt-4
+model-comparison,model-comp-latency,Model Latency Comparison,"Benchmark model response times.",false,model-comp-core,gpt-4
+cost-optimization,cost-opt-core,AI Usage Cost Optimization,"Reduce AI API costs without sacrificing quality.",true,,gpt-4
+cost-optimization,cost-opt-caching,Prompt Caching Strategy,"Implement caching to reduce redundant API calls.",false,cost-opt-core,gpt-4
+cost-optimization,cost-opt-batching,Batch Processing Optimization,"Optimize costs through batching and async processing.",false,cost-opt-core,gpt-4

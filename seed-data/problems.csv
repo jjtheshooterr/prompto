@@ -1,0 +1,81 @@
+slug,title,summary,domain,difficulty
+write-high-converting-landing-page,Write a high-converting SaaS landing page,Create a landing page optimized for conversions,marketing,intermediate
+seo-blog-post-outline,Create an SEO blog post outline that ranks,Generate an intent-driven SEO outline,marketing,beginner
+cold-email-personalized,Write a personalized cold email that gets replies,High-response outbound email,sales,beginner
+react-bug-triage,Debug a React bug from console errors,Find root cause and fix,coding,intermediate
+supabase-rls-generator,Generate Supabase RLS policies securely,Correct multi-tenant RLS,coding,advanced
+youtube-title-thumbnail,Generate YouTube titles and thumbnails with high CTR,Improve click-through rate,video,beginner
+shorts-script-hooks,Write viral Shorts hooks and scripts,Short-form video scripts,video,intermediate
+meeting-notes-actions,Turn meeting notes into action items,Structured tasks from notes,general,beginner
+saas-pricing-strategy,Design a SaaS pricing strategy,Create pricing tiers,strategy,intermediate
+sql-query-optimizer,Optimize a slow SQL query,Improve database performance,data,advanced
+resume-bullet-metrics,Rewrite resume bullets with metrics,Impact-driven resume bullets,general,beginner
+customer-support-reply,Write a calm support reply,De-escalate customer issues,general,beginner
+feature-requirements-doc,Generate a product requirements document,Clear PRDs,product,intermediate
+api-documentation,Write clean API documentation,Developer-friendly docs,coding,intermediate
+prompt-evaluation,Compare AI prompt outputs,Benchmark prompt quality,ai,advanced
+job-description,Write a compelling job description,Attract qualified candidates,hr,beginner
+linkedin-post,Write a LinkedIn post that gets engagement,Increase reach,marketing,beginner
+ad-copy-variants,Generate ad copy variants for testing,A/B ad testing,marketing,intermediate
+ux-microcopy,Write UX microcopy for apps,Improve usability,design,beginner
+error-messages,Write helpful error messages,Improve UX clarity,design,beginner
+email-follow-up,Write a follow-up email that gets responses,Increase reply rates,sales,beginner
+sales-call-script,Create a sales discovery call script,Qualify leads,sales,intermediate
+proposal-outline,Generate a client proposal outline,Win deals,sales,intermediate
+content-calendar,Build a 30-day content calendar,Plan content,marketing,beginner
+twitter-thread,Write a viral Twitter/X thread,Increase engagement,marketing,beginner
+blog-introduction,Write a compelling blog introduction,Hook readers,marketing,beginner
+case-study,Write a customer case study,Show proof,marketing,intermediate
+value-proposition,Define a clear value proposition,Clarify positioning,strategy,beginner
+competitive-analysis,Run a competitive analysis,Market positioning,strategy,intermediate
+feature-prioritization,Prioritize product features,Product roadmap,product,intermediate
+roadmap-planning,Create a product roadmap,Align execution,product,intermediate
+onboarding-emails,Write onboarding email sequence,Improve activation,marketing,beginner
+churn-reduction,Generate churn reduction ideas,Improve retention,strategy,advanced
+pricing-page-copy,Write pricing page copy,Increase conversions,marketing,intermediate
+affiliate-review,Write an affiliate product review,Drive conversions,marketing,beginner
+faq-generator,Generate FAQs for a product page,Reduce objections,marketing,beginner
+support-macro,Create support macros,Speed up support,general,beginner
+knowledge-base,Write knowledge base articles,Self-serve support,general,beginner
+release-notes,Write product release notes,Communicate updates,product,beginner
+bug-report,Write a clear bug report,Improve engineering flow,coding,beginner
+git-commit-message,Write better git commit messages,Readable history,coding,beginner
+code-review,Perform a code review,Improve quality,coding,intermediate
+refactor-plan,Create a refactoring plan,Reduce tech debt,coding,advanced
+database-schema,Design a database schema,Scalable data model,data,intermediate
+api-auth-design,Design API authentication,Secure APIs,coding,advanced
+rate-limiting,Design API rate limiting,Protect services,coding,advanced
+log-analysis,Analyze application logs,Debug issues,data,intermediate
+incident-postmortem,Write an incident postmortem,Improve reliability,engineering,intermediate
+monitoring-setup,Design monitoring and alerts,Observe systems,engineering,intermediate
+kpi-dashboard,Define KPIs and dashboards,Measure success,data,intermediate
+financial-model,Build a startup financial model,Forecast revenue,finance,advanced
+unit-economics,Analyze unit economics,Understand profitability,finance,intermediate
+investor-pitch,Create an investor pitch outline,Raise capital,finance,beginner
+exec-summary,Write an executive summary,Communicate clearly,business,beginner
+market-sizing,Estimate market size (TAM/SAM/SOM),Market analysis,strategy,intermediate
+user-personas,Create user personas,Understand customers,product,beginner
+user-interviews,Generate user interview questions,Customer research,product,beginner
+survey-questions,Write effective survey questions,Collect insights,product,beginner
+ab-test-plan,Design an A/B test plan,Experimentation,product,intermediate
+conversion-audit,Audit a funnel for conversion leaks,Improve growth,marketing,advanced
+email-subject-lines,Generate high open-rate subject lines,Increase opens,marketing,beginner
+newsletter-outline,Create a newsletter outline,Audience engagement,marketing,beginner
+brand-voice,Define a brand voice guide,Consistent messaging,marketing,beginner
+tone-rewrite,Rewrite copy in a different tone,Adapt messaging,marketing,beginner
+legal-summary,Summarize a legal document,Plain-English summary,legal,intermediate
+privacy-policy,Generate a privacy policy draft,Compliance,legal,beginner
+terms-of-service,Generate terms of service draft,Compliance,legal,beginner
+risk-assessment,Perform a risk assessment,Identify risks,business,advanced
+process-documentation,Document an internal process,Operational clarity,business,beginner
+sop-generator,Create a standard operating procedure,Repeatable workflows,business,beginner
+vendor-comparison,Compare vendors objectively,Decision support,business,intermediate
+automation-ideas,Generate automation opportunities,Save time,operations,beginner
+zapier-workflow,Design a Zapier automation,No-code automation,operations,beginner
+ai-use-cases,Identify AI use cases for a business,AI strategy,ai,beginner
+prompt-library,Create a reusable prompt library,Prompt management,ai,intermediate
+prompt-forking,Improve a prompt via forking,Prompt iteration,ai,advanced
+prompt-failure,Analyze prompt failures,Improve reliability,ai,advanced
+benchmark-prompts,Benchmark multiple prompts,Find best output,ai,advanced
+model-comparison,Compare AI model outputs,Model selection,ai,intermediate
+cost-optimization,Optimize AI usage costs,Reduce spend,ai,advanced
