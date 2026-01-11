@@ -50,30 +50,21 @@ export default function AllPromptsPage() {
 
       console.log('Loading prompts with filter:', filter, 'sort:', sort)
 
-      // Use the same approach as the working homepage component
-      let query = supabase
-        .from('prompts')
-        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, created_by, best_for, improvement_summary')
-        .eq('is_listed', true)
-        .eq('is_hidden', false)
-        .eq('visibility', 'public')
-        .eq('is_deleted', false)
+      let promptsResult: { data: any[] | null; error: any }
 
-      // Apply filter
-      if (filter === 'originals') {
-        query = query.is('parent_prompt_id', null)
-      } else if (filter === 'forks') {
-        query = query.not('parent_prompt_id', 'is', null)
+      if (sort === 'top' || sort === 'most_forked' || sort === 'newest') {
+        const { data, error } = await supabase
+          .rpc('get_ranked_prompts', {
+            sort_by: sort,
+            filter_type: filter,
+            limit_count: 50
+          })
+        promptsResult = { data, error }
+      } else {
+        promptsResult = { data: [], error: null }
       }
 
-      // Apply sort (we'll sort after fetching stats)
-      if (sort === 'newest') {
-        query = query.order('created_at', { ascending: false })
-      }
-
-      query = query.limit(20)
-
-      const { data: promptsData, error } = await query
+      const { data: promptsData, error } = promptsResult
 
       console.log('Prompts query result:', { data: promptsData?.length, error })
 
@@ -87,31 +78,30 @@ export default function AllPromptsPage() {
         console.log('Fetched prompts data:', promptsData.length, 'prompts')
 
         // Get problems separately
-        const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
+        const problemIds = [...new Set(promptsData.map((p: any) => p.problem_id).filter(Boolean))]
         const { data: problemsData } = await supabase
           .from('problems')
           .select('id, title, slug')
           .in('id', problemIds)
 
-        console.log('Fetched problems data:', problemsData?.length || 0, 'problems')
+        // Generate prompt IDs for stats fetching
+        const promptIds = promptsData.map((p: any) => p.id)
 
-        // Fetch stats for all prompts
-        const promptIds = promptsData.map(p => p.id)
+        // We still need to fetch stats to DISPLAY them 
         const { data: statsData } = await supabase
           .from('prompt_stats')
           .select('*')
           .in('prompt_id', promptIds)
 
-        console.log('Fetched stats for prompts:', statsData?.length || 0, 'stats')
-
-        // Attach stats and problems to prompts
-        const promptsWithStats = promptsData.map(prompt => {
+        // Attach problems and format stats
+        const formattedPrompts = promptsData.map((prompt: any) => {
           const stats = statsData?.find(s => s.prompt_id === prompt.id)
           const problem = problemsData?.find(p => p.id === prompt.problem_id)
+
           return {
             ...prompt,
             problems: problem ? { title: problem.title, slug: problem.slug } : { title: 'Unknown Problem', slug: '' },
-            prompt_stats: stats ? [stats] : [{
+            prompt_stats: [stats || {
               upvotes: 0,
               downvotes: 0,
               score: 0,
@@ -122,28 +112,7 @@ export default function AllPromptsPage() {
           }
         })
 
-        // Apply client-side sorting for stats-based sorts
-        let sortedPrompts = promptsWithStats
-        if (sort === 'top') {
-          sortedPrompts = promptsWithStats.sort((a, b) => {
-            const aUpvotes = a.prompt_stats[0]?.upvotes || 0
-            const bUpvotes = b.prompt_stats[0]?.upvotes || 0
-            if (bUpvotes !== aUpvotes) {
-              return bUpvotes - aUpvotes
-            }
-            // Fallback to created_at for same upvote counts
-            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          })
-        } else if (sort === 'most_forked') {
-          sortedPrompts = promptsWithStats.sort((a, b) => {
-            const aForks = a.prompt_stats[0]?.fork_count || 0
-            const bForks = b.prompt_stats[0]?.fork_count || 0
-            return bForks - aForks
-          })
-        }
-
-        console.log('Final sorted prompts:', sortedPrompts.length)
-        setPrompts(sortedPrompts)
+        setPrompts(formattedPrompts)
       } else {
         console.log('No prompts data found')
         setPrompts([])
@@ -189,31 +158,28 @@ export default function AllPromptsPage() {
             <span className="text-sm font-medium text-gray-700">Show:</span>
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                filter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors ${filter === 'all'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               All Prompts
             </button>
             <button
               onClick={() => setFilter('originals')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                filter === 'originals'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors ${filter === 'originals'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               Originals Only
             </button>
             <button
               onClick={() => setFilter('forks')}
-              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${
-                filter === 'forks'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${filter === 'forks'
+                ? 'bg-orange-600 text-white'
+                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
@@ -226,31 +192,28 @@ export default function AllPromptsPage() {
             <span className="text-sm font-medium text-gray-700">Sort:</span>
             <button
               onClick={() => setSort('newest')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                sort === 'newest'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors ${sort === 'newest'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               Newest
             </button>
             <button
               onClick={() => setSort('top')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                sort === 'top'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors ${sort === 'top'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
             >
               Top Rated
             </button>
             <button
               onClick={() => setSort('most_forked')}
-              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${
-                sort === 'most_forked'
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-              }`}
+              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${sort === 'most_forked'
+                ? 'bg-orange-600 text-white'
+                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
@@ -300,19 +263,19 @@ export default function AllPromptsPage() {
           </svg>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No prompts found</h3>
           <p className="text-gray-600 mb-4">
-            {filter === 'forks' 
+            {filter === 'forks'
               ? 'No forks found. Try browsing all prompts or create your first fork!'
               : 'No prompts match your criteria. Try different filters or create a new prompt.'
             }
           </p>
           <div className="flex gap-3 justify-center">
-            <Link 
+            <Link
               href="/problems"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Browse Problems
             </Link>
-            <Link 
+            <Link
               href="/create/prompt"
               className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
