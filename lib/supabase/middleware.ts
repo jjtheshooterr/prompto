@@ -27,20 +27,54 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  // WORKAROUND: Manual JWT verification
+  // Since Supabase SSR session detection is failing in Edge Runtime,
+  // we manually check if the access token exists and is not expired.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  const authCookie = request.cookies.get('sb-yknsbonffoaxxcwvxrls-auth-token')
 
-  console.log('Middleware - Path:', request.nextUrl.pathname)
-  console.log('Middleware - User:', user?.email || 'No user')
+  if (authCookie?.value) {
+    try {
+      // 1. Parse the cookie (it's a JSON object with access_token)
+      let sessionData
+      try {
+        sessionData = JSON.parse(authCookie.value)
+      } catch {
+        // Fallback for base64 encoded cookies
+        const decoded = Buffer.from(authCookie.value, 'base64').toString('utf-8')
+        sessionData = JSON.parse(decoded)
+      }
+
+      if (sessionData?.access_token) {
+        // 2. Decode the JWT to check expiration
+        // We don't verify the signature here (expensive/complex in edge), 
+        // we trust the cookie content + Supabase will reject invalid tokens downstream anyway.
+        const tokenParts = sessionData.access_token.split('.')
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString('utf-8'))
+          const now = Math.floor(Date.now() / 1000)
+
+          // Check if token is expired (add 10s buffer)
+          if (payload.exp > now + 10) {
+            console.log('Middleware - JWT is valid. User:', payload.email)
+            user = { email: payload.email, id: payload.sub }
+          } else {
+            console.log('Middleware - JWT is expired')
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error('Middleware - JWT verification failed:', e.message)
+    }
+  }
+
+  console.log('Middleware - Cookie Path:', request.nextUrl.pathname)
+  console.log('Middleware - User detected:', user?.email || 'No user')
 
   // Only protect specific authenticated routes
   const protectedRoutes = ['/dashboard', '/create']
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
 

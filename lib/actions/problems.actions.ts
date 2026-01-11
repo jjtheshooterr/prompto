@@ -24,7 +24,7 @@ export async function listProblems({
 
   let query = supabase
     .from('problems')
-    .select('*', { count: 'exact' })
+    .select('*, problem_stats(*)', { count: 'exact' })
     .eq('is_listed', true)
     .eq('is_hidden', false)
     .eq('is_deleted', false)
@@ -43,8 +43,11 @@ export async function listProblems({
   // Apply sorting
   if (sort === 'newest') {
     query = query.order('created_at', { ascending: false })
+  } else if (sort === 'top') { // Fix sort logic if needed, or leave as default
+    // If sorting by stats, we need inner join or foreign table sort, but for now fallback to created_at
+    query = query.order('created_at', { ascending: false })
   } else {
-    query = query.order('created_at', { ascending: false }) // Default for now
+    query = query.order('created_at', { ascending: false })
   }
 
   // Apply pagination
@@ -61,27 +64,8 @@ export async function listProblems({
     return { data: [], total: 0, pages: 0 }
   }
 
-  // Get prompt counts for each problem
-  const problemsWithCounts = await Promise.all(
-    problems.map(async (problem) => {
-      const { count } = await supabase
-        .from('prompts')
-        .select('id', { count: 'exact' })
-        .eq('problem_id', problem.id)
-        .eq('is_listed', true)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false)
-        .in('visibility', ['public', 'unlisted'])
-
-      return {
-        ...problem,
-        prompts: Array(count || 0).fill(null)
-      }
-    })
-  )
-
   return {
-    data: problemsWithCounts,
+    data: problems,
     total: count || 0,
     pages: Math.ceil((count || 0) / limit)
   }

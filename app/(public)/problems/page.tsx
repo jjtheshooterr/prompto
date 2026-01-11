@@ -121,7 +121,8 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             <div className="flex justify-between items-center text-sm text-gray-500">
               <span className="capitalize">{problem.industry || 'General'}</span>
               <span>
-                {Array.isArray(problem.prompts) ? problem.prompts.length : 0} prompts
+                {/* Use problem_stats if available, fallback to 0 */}
+                {problem.problem_stats?.total_prompts || 0} prompts
               </span>
             </div>
 
@@ -133,7 +134,9 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
               hasPinnedPrompt={problem.has_pinned_prompt}
               activeForks={problem.active_forks_count || 0}
               lastUpdated={problem.updated_at}
-              promptCount={Array.isArray(problem.prompts) ? problem.prompts.length : 0}
+              promptCount={problem.problem_stats?.total_prompts || 0}
+              worksCount={problem.problem_stats?.total_works || 0}
+              failsCount={problem.problem_stats?.total_fails || 0}
             />
           </Link>
         ))}

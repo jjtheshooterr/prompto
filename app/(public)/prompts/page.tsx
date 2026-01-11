@@ -25,6 +25,10 @@ interface Prompt {
     copy_count: number
     view_count: number
     fork_count: number
+    works_count: number
+    fails_count: number
+    reviews_count: number
+    last_reviewed_at: string | null
   }>
 }
 

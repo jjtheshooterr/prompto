@@ -11,11 +11,11 @@ interface ForkModalProps {
   onSuccess: (newPromptId: string) => void
 }
 
-export default function ForkModal({ 
-  isOpen, 
-  onClose, 
-  promptId, 
-  onSuccess 
+export default function ForkModal({
+  isOpen,
+  onClose,
+  promptId,
+  onSuccess
 }: ForkModalProps) {
   const [newTitle, setNewTitle] = useState('')
   const [forkReason, setForkReason] = useState('')
@@ -28,22 +28,22 @@ export default function ForkModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!newTitle.trim()) {
       toast('Please provide a title for your fork')
       return
     }
-    
+
     if (!forkReason.trim()) {
       toast('Please provide a reason for forking')
       return
     }
 
     setIsSubmitting(true)
-    
+
     try {
       const supabase = createClient()
-      
+
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
@@ -107,7 +107,7 @@ export default function ForkModal({
           known_failures: parentPrompt.known_failures,
           notes: attributedNotes,
           parent_prompt_id: promptId,
-          status: 'production', // Use production instead of draft for now
+          status: 'published', // Use published status for forked prompts
           is_listed: true,
           is_hidden: false,
           is_reported: false,
@@ -170,7 +170,7 @@ export default function ForkModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <h2 className="text-xl font-bold mb-4">Fork this prompt</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">

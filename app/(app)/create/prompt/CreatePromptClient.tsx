@@ -19,7 +19,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
       setParamsError('')
       return true
     }
-    
+
     try {
       JSON.parse(params)
       setParamsError('')
@@ -35,7 +35,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
     try {
       // Create prompt directly from client instead of using server action
       const supabase = createClient()
-      
+
       // Double-check authentication
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
@@ -49,7 +49,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
       const params = formData.get('params') as string
       const exampleInput = formData.get('example_input') as string
       const exampleOutput = formData.get('example_output') as string
-      const status = formData.get('status') as string || 'production'
+      const status = 'published' // Default to published, hidden from UI
 
       let parsedParams = {}
       if (params && params.trim()) {
@@ -70,7 +70,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
       if (!workspace) {
         // Create workspace if it doesn't exist
         const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
-        
+
         const { data: newWorkspace, error: workspaceError } = await supabase
           .from('workspaces')
           .insert({
@@ -80,11 +80,11 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           })
           .select('id')
           .single()
-        
+
         if (workspaceError) {
           throw new Error(`Failed to create workspace: ${workspaceError.message}`)
         }
-        
+
         // Add user as workspace member
         await supabase
           .from('workspace_members')
@@ -93,7 +93,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             user_id: user.id,
             role: 'owner'
           })
-        
+
         workspace = newWorkspace
       } else {
         // Ensure user is a member of their workspace
@@ -171,7 +171,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
       <form action={handleSubmit} className="space-y-6">
         <input type="hidden" name="problem_id" value={problemId} />
-        
+
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
             Prompt Title *
@@ -278,9 +278,8 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             id="params"
             name="params"
             rows={3}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${
-              paramsError ? 'border-red-300' : 'border-gray-300'
-            }`}
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${paramsError ? 'border-red-300' : 'border-gray-300'
+              }`}
             placeholder='{"temperature": 0.1, "max_tokens": 500, "top_p": 1}'
             onChange={(e) => validateParams(e.target.value)}
           />
@@ -292,21 +291,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           </p>
         </div>
 
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-            Status
-          </label>
-          <select
-            id="status"
-            name="status"
-            defaultValue="production"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="production">Production - Ready for use</option>
-            <option value="draft">Draft - Still testing</option>
-            <option value="experimental">Experimental - Early stage</option>
-          </select>
-        </div>
+
 
         <div className="flex gap-4 pt-6">
           <button
@@ -316,7 +301,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           >
             {submitting ? 'Creating...' : 'Create Prompt'}
           </button>
-          
+
           <button
             type="button"
             onClick={() => router.back()}

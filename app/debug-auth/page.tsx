@@ -1,91 +1,62 @@
-import { getUser } from '@/lib/actions/auth.actions'
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+'use client'
 
-export default async function DebugAuthPage() {
-  const user = await getUser()
-  
-  let connectionTest = null
-  let cookieInfo = null
-  let sessionInfo = null
-  
-  try {
-    const supabase = await createClient()
-    const { data, error } = await supabase.from('profiles').select('count').limit(1)
-    connectionTest = { data, error }
-    
-    // Get session info
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-    sessionInfo = { session: sessionData.session ? 'exists' : 'null', error: sessionError }
-    
-    // Get cookie info
-    const cookieStore = await cookies()
-    const authCookies = cookieStore.getAll().filter(cookie => 
-      cookie.name.includes('supabase') || cookie.name.includes('auth')
-    )
-    cookieInfo = authCookies
-  } catch (err) {
-    connectionTest = { error: err }
-  }
+import { createClient } from '@/lib/supabase/client'
+import { useEffect, useState } from 'react'
+
+export default function DebugAuthPage() {
+  const [clientState, setClientState] = useState<any>(null)
+  const [serverState, setServerState] = useState<any>(null)
+
+  useEffect(() => {
+    // Check client state
+    const supabase = createClient()
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      setClientState({
+        hasSession: !!session,
+        userEmail: session?.user?.email || null,
+        error: error?.message || null,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      })
+    })
+
+    // Check server state
+    fetch('/debug-auth').then(r => r.json()).then(setServerState)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Authentication Debug</h1>
-        
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Current User</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify(user, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Session Info</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify(sessionInfo, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Auth Cookies</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify(cookieInfo, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Supabase Connection Test</h2>
-            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
-              {JSON.stringify(connectionTest, null, 2)}
-            </pre>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Environment Variables</h2>
-            <div className="space-y-2 text-sm">
-              <div><strong>NEXT_PUBLIC_SUPABASE_URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL}</div>
-              <div><strong>NEXT_PUBLIC_SUPABASE_ANON_KEY:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing'}</div>
-              <div><strong>NEXT_PUBLIC_SITE_URL:</strong> {process.env.NEXT_PUBLIC_SITE_URL}</div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-            <div className="space-x-4">
-              <a href="/login" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                Go to Login
-              </a>
-              <a href="/signup" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-                Go to Signup
-              </a>
-              <a href="/dashboard" className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-                Go to Dashboard
-              </a>
-            </div>
-          </div>
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Authentication Debug</h1>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="border p-4 rounded">
+          <h2 className="font-bold mb-2">Client Side</h2>
+          <pre className="text-xs overflow-auto">{JSON.stringify(clientState, null, 2)}</pre>
         </div>
+
+        <div className="border p-4 rounded">
+          <h2 className="font-bold mb-2">Server Side</h2>
+          <pre className="text-xs overflow-auto">{JSON.stringify(serverState, null, 2)}</pre>
+        </div>
+      </div>
+
+      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <h3 className="font-bold mb-2">Expected Behavior:</h3>
+        <ul className="list-disc list-inside text-sm">
+          <li>Both sides should have the SAME <code>supabaseUrl</code></li>
+          <li>Both sides should show <code>hasAnonKey: true</code></li>
+          <li>Client should have <code>hasSession: true</code></li>
+          <li>Server should have <code>hasUser: true</code> and same <code>userEmail</code></li>
+        </ul>
+      </div>
+
+      <div className="mt-4 flex gap-2">
+        <a href="/debug-logout" className="px-4 py-2 bg-red-600 text-white rounded">
+          Force Logout
+        </a>
+        <a href="/login" className="px-4 py-2 bg-blue-600 text-white rounded">
+          Go to Login
+        </a>
       </div>
     </div>
   )

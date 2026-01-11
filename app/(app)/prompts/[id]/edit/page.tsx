@@ -8,7 +8,7 @@ export default function EditPromptPage() {
   const params = useParams()
   const router = useRouter()
   const promptId = params.id as string
-  
+
   const [prompt, setPrompt] = useState<any>(null)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -28,7 +28,7 @@ export default function EditPromptPage() {
   useEffect(() => {
     const loadData = async () => {
       const supabase = createClient()
-      
+
       // Get user
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       setUser(currentUser)
@@ -76,7 +76,7 @@ export default function EditPromptPage() {
 
     try {
       const supabase = createClient()
-      
+
       // Get current user
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
@@ -127,13 +127,13 @@ export default function EditPromptPage() {
   }
 
   const handlePublish = async () => {
-    const updatedFormData = { ...formData, status: 'production' }
+    const updatedFormData = { ...formData, status: 'published' }
     setFormData(updatedFormData)
-    
+
     setSaving(true)
     try {
       const supabase = createClient()
-      
+
       // Get current user
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
@@ -160,7 +160,7 @@ export default function EditPromptPage() {
           example_input: updatedFormData.example_input,
           example_output: updatedFormData.example_output,
           notes: updatedFormData.notes,
-          status: 'production',
+          status: 'published',
           updated_at: new Date().toISOString()
         })
         .eq('id', promptId)

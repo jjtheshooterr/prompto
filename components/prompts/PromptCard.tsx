@@ -28,13 +28,13 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
       const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
       setIsInComparison(selected.includes(prompt.id))
     }
-    
+
     checkComparison()
-    
+
     // Listen for comparison updates
     window.addEventListener('compareUpdated', checkComparison)
     window.addEventListener('storage', checkComparison)
-    
+
     return () => {
       window.removeEventListener('compareUpdated', checkComparison)
       window.removeEventListener('storage', checkComparison)
@@ -47,13 +47,17 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
     score: 0,
     copy_count: 0,
     view_count: 0,
-    fork_count: 0
+    fork_count: 0,
+    works_count: 0,
+    fails_count: 0,
+    reviews_count: 0,
+    last_reviewed_at: null
   }
 
   // Extract fork reason and changes summary from notes if this is a fork
   const getForkDetails = () => {
     if (!prompt.parent_prompt_id || !prompt.notes) return { reason: null, changes: null }
-    
+
     // Extract the reason and changes from "Forked from {id}. {reason} | Changes: {changes}"
     const match = prompt.notes.match(/^Forked from [^.]+\.\s*([^|]+)(?:\s*\|\s*Changes:\s*(.+))?$/)
     if (match) {
@@ -62,7 +66,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         changes: match[2]?.trim() || null
       }
     }
-    
+
     // Fallback for old format
     const oldMatch = prompt.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
     return {
@@ -97,99 +101,107 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
       {/* Main content area - flexible */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4">
-        <div className="flex-1">
-          {/* Fork indicator and title */}
-          <div className="flex items-center gap-2 mb-1">
-            {prompt.parent_prompt_id && (
-              <div className="flex items-center gap-1 text-orange-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                </svg>
-                <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
-              </div>
-            )}
-          </div>
-
-          <Link
-            href={`/prompts/${prompt.id}`}
-            className="text-xl font-semibold hover:text-blue-600 transition-colors block"
-          >
-            {prompt.title}
-          </Link>
-
-          {/* Best For tags */}
-          {prompt.best_for && prompt.best_for.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {prompt.best_for.map((tag: string, index: number) => (
-                <span
-                  key={`${tag}-${index}`}
-                  className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Improvement Summary */}
-          {prompt.improvement_summary && (
-            <div className="mt-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="font-medium">Improvement:</span>
-                <span>{prompt.improvement_summary}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Fork reason and changes summary - the key addition! */}
-          {forkDetails.reason && (
-            <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                </svg>
-                <span className="font-medium">Forked to:</span>
-                <span>{forkDetails.reason}</span>
-              </div>
-              {forkDetails.changes && (
-                <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-300">
-                  <span className="font-medium">Changes:</span> {forkDetails.changes}
-                </div>
-              )}
-              {parentPrompt && (
-                <div className="mt-1 text-xs text-orange-600">
-                  from <Link href={`/prompts/${parentPrompt.id}`} className="underline hover:text-orange-800">{parentPrompt.title}</Link>
+          <div className="flex-1">
+            {/* Fork indicator and title */}
+            <div className="flex items-center gap-2 mb-1">
+              {prompt.parent_prompt_id && (
+                <div className="flex items-center gap-1 text-orange-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                  <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
                 </div>
               )}
             </div>
-          )}
 
-          <div className="text-sm text-gray-500 mt-2">
-            Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
-            {showProblemTitle && prompt.problems?.title && (
-              <>
-                {' • '}
-                <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-gray-700">
-                  {prompt.problems.title}
-                </Link>
-              </>
+            <Link
+              href={`/prompts/${prompt.id}`}
+              className="text-xl font-semibold hover:text-blue-600 transition-colors block"
+            >
+              {prompt.title}
+            </Link>
+
+            {/* Best For tags */}
+            {prompt.best_for && prompt.best_for.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {prompt.best_for.map((tag: string, index: number) => (
+                  <span
+                    key={`${tag}-${index}`}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             )}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1">
-            <span className="text-green-600">↑{stats.upvotes}</span>
-            <span className="text-red-600">↓{stats.downvotes}</span>
+            {/* Improvement Summary */}
+            {prompt.improvement_summary && (
+              <div className="mt-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="font-medium">Improvement:</span>
+                  <span>{prompt.improvement_summary}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Fork reason and changes summary - the key addition! */}
+            {forkDetails.reason && (
+              <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                  <span className="font-medium">Forked to:</span>
+                  <span>{forkDetails.reason}</span>
+                </div>
+                {forkDetails.changes && (
+                  <div className="mt-2 text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded border border-orange-300">
+                    <span className="font-medium">Changes:</span> {forkDetails.changes}
+                  </div>
+                )}
+                {parentPrompt && (
+                  <div className="mt-1 text-xs text-orange-600">
+                    from <Link href={`/prompts/${parentPrompt.id}`} className="underline hover:text-orange-800">{parentPrompt.title}</Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="text-sm text-gray-500 mt-2">
+              Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
+              {showProblemTitle && prompt.problems?.title && (
+                <>
+                  {' • '}
+                  <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-gray-700">
+                    {prompt.problems.title}
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-          <div className="text-gray-500">
-            Score: {stats.score}
+
+          <div className="flex flex-col gap-2 mt-2 font-medium">
+            <div className="flex items-center gap-2">
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${stats.works_count > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.works_count} people said this worked`}>
+                ✅ {stats.works_count} Works
+              </span>
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${stats.fails_count > 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.fails_count} people said this failed`}>
+                ⚠️ {stats.fails_count} Fails
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <div className="flex items-center gap-1">
+                <span className="text-green-600">↑{stats.upvotes}</span>
+                <span className="text-red-600">↓{stats.downvotes}</span>
+              </div>
+              <div>Score: {stats.score}</div>
+            </div>
           </div>
         </div>
-      </div>
 
         <div className="mb-4 flex-1">
           <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
@@ -227,11 +239,10 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         <div className="flex gap-2">
           {onAddToCompare && (
             <button
-              className={`text-sm transition-colors ${
-                isInComparison 
-                  ? 'btnPrimary text-white' 
-                  : 'btnSecondary text-slate-700'
-              }`}
+              className={`text-sm transition-colors ${isInComparison
+                ? 'btnPrimary text-white'
+                : 'btnSecondary text-slate-700'
+                }`}
               onClick={() => onAddToCompare(prompt.id)}
             >
               {isInComparison ? '✓ In Comparison' : 'Compare'}
