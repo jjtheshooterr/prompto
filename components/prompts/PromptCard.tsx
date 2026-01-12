@@ -97,7 +97,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
   }, [prompt.parent_prompt_id])
 
   return (
-    <div className={`card p-6 flex flex-col h-full ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
+    <div className={`card p-5 flex flex-col h-full ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
       {/* Main content area - flexible */}
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between items-start mb-4">
@@ -148,7 +148,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               </div>
             )}
 
-            {/* Fork reason and changes summary - the key addition! */}
+            {/* Fork reason and changes summary */}
             {forkDetails.reason && (
               <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
                 <div className="flex items-center gap-2">
@@ -184,19 +184,35 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 mt-2 font-medium">
+          <div className="flex flex-col gap-2 font-medium">
             <div className="flex items-center gap-2">
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${stats.works_count > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.works_count} people said this worked`}>
-                ✅ {stats.works_count} Works
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${stats.works_count > 0 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.works_count} people said this worked`}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {stats.works_count} Works
               </span>
-              <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${stats.fails_count > 0 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.fails_count} people said this failed`}>
-                ⚠️ {stats.fails_count} Fails
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${stats.fails_count > 0 ? 'bg-gray-100 text-gray-600 border-gray-300' : 'bg-gray-50 text-gray-400 border-gray-200'}`} title={`${stats.fails_count} people said this failed`}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                {stats.fails_count} Fails
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-gray-400">
-              <div className="flex items-center gap-1">
-                <span className="text-green-600">↑{stats.upvotes}</span>
-                <span className="text-red-600">↓{stats.downvotes}</span>
+            <div className="flex items-center gap-3 text-xs text-gray-400 pl-1">
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-0.5 text-green-600">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                  {stats.upvotes}
+                </span>
+                <span className="flex items-center gap-0.5 text-red-600">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                  {stats.downvotes}
+                </span>
               </div>
               <div>Score: {stats.score}</div>
             </div>

@@ -93,34 +93,59 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                             onClick={() => setReviewType('worked')}
                             className="flex-1 py-3 px-4 rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 transition-colors flex flex-col items-center gap-1"
                         >
-                            <span className="text-xl">✅</span>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             <span className="font-medium">It Worked</span>
                         </button>
                         <button
                             onClick={() => setReviewType('failed')}
                             className="flex-1 py-3 px-4 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1"
                         >
-                            <span className="text-xl">⚠️</span>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
                             <span className="font-medium">It Failed</span>
                         </button>
                         <button
                             onClick={() => setReviewType('note')}
                             className="flex-1 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors flex flex-col items-center gap-1"
                         >
-                            <span className="text-xl">📝</span>
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                             <span className="font-medium">Just a Note</span>
                         </button>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                            <span className={`font-medium px-2 py-1 rounded text-sm ${reviewType === 'worked' ? 'bg-green-100 text-green-800' :
+                            <span className={`font-medium px-2 py-1 rounded text-sm flex items-center gap-1.5 ${reviewType === 'worked' ? 'bg-green-100 text-green-800' :
                                 reviewType === 'failed' ? 'bg-red-100 text-red-800' :
                                     'bg-gray-100 text-gray-800'
                                 }`}>
-                                {reviewType === 'worked' ? '✅ It Worked' :
-                                    reviewType === 'failed' ? '⚠️ It Failed' :
-                                        '📝 Note'}
+                                {reviewType === 'worked' ? (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        It Worked
+                                    </>
+                                ) : reviewType === 'failed' ? (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        It Failed
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        Note
+                                    </>
+                                )}
                             </span>
                             <button
                                 type="button"

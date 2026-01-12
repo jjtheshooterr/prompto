@@ -24,7 +24,7 @@ export async function listProblems({
 
   let query = supabase
     .from('problems')
-    .select('*, problem_stats(*)', { count: 'exact' })
+    .select('*, problem_stats(*), problem_tags(tags(name))', { count: 'exact' })
     .eq('is_listed', true)
     .eq('is_hidden', false)
     .eq('is_deleted', false)
@@ -32,7 +32,8 @@ export async function listProblems({
 
   // Apply search filter
   if (search) {
-    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,tags.cs.{${search}}`)
+    // Note: Tag search temporarily removed during schema migration
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
   // Apply industry filter
@@ -64,8 +65,14 @@ export async function listProblems({
     return { data: [], total: 0, pages: 0 }
   }
 
+  // Transform tags
+  const transformedProblems = (problems || []).map((p: any) => ({
+    ...p,
+    tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || []
+  }))
+
   return {
-    data: problems,
+    data: transformedProblems,
     total: count || 0,
     pages: Math.ceil((count || 0) / limit)
   }
@@ -81,7 +88,8 @@ export async function getPublicProblemBySlug(slug: string) {
       *,
       inputs,
       constraints,
-      success_criteria
+      success_criteria,
+      problem_tags(tags(name))
     `)
     .eq('slug', slug)
     .eq('is_deleted', false)
@@ -90,6 +98,10 @@ export async function getPublicProblemBySlug(slug: string) {
   if (error) {
     console.error('Error fetching problem:', error)
     return null
+  }
+
+  if (data && data.problem_tags) {
+    data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
   }
 
   return data
@@ -109,7 +121,8 @@ export async function getProblemBySlug(slug: string) {
       *,
       inputs,
       constraints,
-      success_criteria
+      success_criteria,
+      problem_tags(tags(name))
     `)
     .eq('slug', slug)
     .eq('is_deleted', false)
@@ -118,6 +131,10 @@ export async function getProblemBySlug(slug: string) {
   if (error) {
     console.error('Error fetching problem:', error)
     return null
+  }
+
+  if (data && data.problem_tags) {
+    data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
   }
 
   return data
@@ -191,13 +208,13 @@ export async function createProblem(formData: FormData) {
       .insert({
         title,
         description,
-        tags,
+        // tags handled via RPC
         industry,
         visibility,
         slug,
         is_listed: true,
         created_by: user.id,
-        owner_id: user.id, // Set owner_id for new visibility system
+        owner_id: user.id,
         workspace_id: workspace?.id
       })
       .select()
@@ -205,6 +222,15 @@ export async function createProblem(formData: FormData) {
 
     if (error) {
       throw new Error(`Failed to create problem: ${error.message}`)
+    }
+
+    // Sync tags using the new RPC
+    if (tags && tags.length > 0) {
+      const { error: tagError } = await supabase.rpc('manage_problem_tags', {
+        p_problem_id: data.id,
+        p_tags: tags
+      })
+      if (tagError) console.error('Failed to save tags:', tagError)
     }
 
     // If creating a private problem, add the owner as a member

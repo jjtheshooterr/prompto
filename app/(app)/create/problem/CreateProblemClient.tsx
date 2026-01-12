@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ProblemInput, ProblemConstraint, ProblemSuccessCriterion } from '@/types/problems'
+import { toast } from 'sonner'
 
 interface CreateProblemClientProps {
   user: any
@@ -75,7 +76,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
     try {
       // Create problem directly from client instead of using server action
       const supabase = createClient()
-      
+
       // Double-check authentication
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
@@ -113,7 +114,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       if (!workspace) {
         // Create workspace if it doesn't exist
         const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
-        
+
         const { data: newWorkspace, error: workspaceError } = await supabase
           .from('workspaces')
           .insert({
@@ -123,11 +124,11 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           })
           .select('id')
           .single()
-        
+
         if (workspaceError) {
           throw new Error(`Failed to create workspace: ${workspaceError.message}`)
         }
-        
+
         // Add user as workspace member
         await supabase
           .from('workspace_members')
@@ -136,7 +137,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             user_id: user.id,
             role: 'owner'
           })
-        
+
         workspace = newWorkspace
       } else {
         // Ensure user is a member of their workspace
@@ -170,7 +171,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           inputs: validInputs.length > 0 ? validInputs : null,
           constraints: validConstraints.length > 0 ? validConstraints : null,
           success_criteria: validCriteria.length > 0 ? validCriteria : null,
-          tags,
+          // tags handled via RPC below
           industry,
           visibility,
           slug,
@@ -184,6 +185,20 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
 
       if (error) {
         throw new Error(`Failed to create problem: ${error.message}`)
+      }
+
+      // Sync tags using the new RPC
+      if (tags && tags.length > 0) {
+        const { error: tagError } = await supabase.rpc('manage_problem_tags', {
+          p_problem_id: problem.id,
+          p_tags: tags
+        })
+
+        if (tagError) {
+          console.error('Failed to save tags:', tagError)
+          // Don't block creation, but warn
+          toast.error('Problem created but tags failed to save')
+        }
       }
 
       // If creating a private problem, add the owner as a member
@@ -200,7 +215,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       router.push(`/problems/${problem.slug}`)
     } catch (error) {
       console.error('Failed to create problem:', error)
-      alert(`Failed to create problem: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(`Failed to create problem: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setSubmitting(false)
     }
   }
@@ -500,7 +515,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           >
             {submitting ? 'Creating...' : 'Create Problem'}
           </button>
-          
+
           <button
             type="button"
             onClick={() => router.back()}

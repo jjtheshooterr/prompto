@@ -23,9 +23,9 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
     const loadData = async () => {
       const { slug } = await params
       const { sort: sortParam = 'top' } = await searchParams
-      
+
       setSort(sortParam)
-      
+
       // Use client-side Supabase to get problem with proper auth context
       const supabase = createClient()
       const { data: problemData, error } = await supabase
@@ -34,20 +34,28 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
           *,
           inputs,
           constraints,
-          success_criteria
+          success_criteria,
+          problem_tags(tags(name))
         `)
         .eq('slug', slug)
         .eq('is_deleted', false)
         .single()
-      
+
       if (error || !problemData) {
         console.error('Error fetching problem:', error)
         notFound()
         return
       }
 
+      // Transform tags from relation to flat array
+      if (problemData.problem_tags) {
+        problemData.tags = problemData.problem_tags
+          .map((pt: any) => pt.tags?.name)
+          .filter(Boolean)
+      }
+
       setProblem(problemData)
-      
+
       // Get prompts client-side as well
       let promptQuery = supabase
         .from('prompts')
@@ -80,14 +88,33 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
           // Attach stats to prompts
           const promptsWithStats = (promptsData || []).map(prompt => {
             const stats = statsData?.find(s => s.prompt_id === prompt.id)
+            const upvotes = stats?.upvotes || 0
+            const downvotes = stats?.downvotes || 0
+            const score = upvotes - downvotes
+
+            // Map upvotes/downvotes to works/fails for UI display
+            const statsObj = {
+              upvotes,
+              downvotes,
+              score,
+              views: stats?.view_count || 0, // correctly map view_count
+              copies: stats?.copy_count || 0, // correctly map copy_count
+              forks: stats?.fork_count || 0, // correctly map fork_count
+              works_count: upvotes, // Map upvotes to works
+              fails_count: downvotes // Map downvotes to fails
+            }
+
             return {
               ...prompt,
-              upvotes: stats?.upvotes || 0,
-              downvotes: stats?.downvotes || 0,
-              score: (stats?.upvotes || 0) - (stats?.downvotes || 0),
-              views: stats?.views || 0,
-              copies: stats?.copies || 0,
-              forks: stats?.forks || 0
+              // Spread top-level for sorting/backward compat
+              upvotes,
+              downvotes,
+              score,
+              views: statsObj.views,
+              copies: statsObj.copies,
+              forks: statsObj.forks,
+              // Attach nested stats array for PromptCard
+              prompt_stats: [statsObj]
             }
           })
 
@@ -101,7 +128,7 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
           setPrompts([])
         }
       }
-      
+
       setLoading(false)
     }
 
@@ -188,9 +215,8 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
                 <ul className="space-y-2">
                   {problem.constraints.map((constraint: any, index: number) => (
                     <li key={index} className="text-sm flex items-start">
-                      <span className={`inline-block w-2 h-2 rounded-full mr-2 mt-1.5 flex-shrink-0 ${
-                        constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
-                      }`}></span>
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 mt-1.5 flex-shrink-0 ${constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`}></span>
                       <span className="text-gray-700">{constraint.rule}</span>
                     </li>
                   ))}
@@ -248,21 +274,19 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
         <div className="flex gap-2">
           <Link
             href={`/problems/${problem.slug}?sort=top`}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              sort === 'top'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg transition-colors ${sort === 'top'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Top Rated
           </Link>
           <Link
             href={`/problems/${problem.slug}?sort=newest`}
-            className={`px-4 py-2 rounded-lg transition-colors ${
-              sort === 'newest'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg transition-colors ${sort === 'newest'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Newest
           </Link>
@@ -276,7 +300,7 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
               Recommended Solution
             </h2>

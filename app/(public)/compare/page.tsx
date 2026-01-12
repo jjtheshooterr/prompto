@@ -139,12 +139,12 @@ export default function ComparePage() {
 
         setUserVotes(prev => ({ ...prev, [promptId]: 0 }))
         console.log('Vote cleared successfully')
-        
+
         // Skip RPC call since it may not be available on hosted instance
       } else {
         // Check if vote exists first
         console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
-        
+
         const { data: existingVote, error: voteError } = await supabase
           .from('votes')
           .select('*')
@@ -201,7 +201,7 @@ export default function ComparePage() {
 
         setUserVotes(prev => ({ ...prev, [promptId]: value }))
         console.log('Vote set successfully')
-        
+
         // Skip RPC call since it may not be available on hosted instance
       }
     } catch (error) {
@@ -235,7 +235,7 @@ export default function ComparePage() {
 
   if (prompts.length === 0) {
     const storageIds = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-    
+
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center py-12">
@@ -288,7 +288,7 @@ export default function ComparePage() {
             Side-by-side comparison of {prompts.length} prompts
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -350,9 +350,8 @@ export default function ComparePage() {
                 <ul className="space-y-1">
                   {problem.constraints.map((constraint: any, index: number) => (
                     <li key={index} className="text-sm text-blue-800">
-                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                        constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
-                      }`}></span>
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${constraint.severity === 'hard' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`}></span>
                       {constraint.rule}
                     </li>
                   ))}
@@ -378,7 +377,7 @@ export default function ComparePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="flex flex-col lg:flex-row overflow-x-auto divide-y lg:divide-y-0 lg:divide-x divide-gray-200 border border-gray-200 rounded-lg bg-white shadow-sm">
         {prompts.map((prompt) => {
           const stats = prompt.prompt_stats?.[0] || {
             upvotes: 0,
@@ -390,7 +389,7 @@ export default function ComparePage() {
           }
 
           return (
-            <div key={prompt.id} className="bg-white border rounded-lg p-6 space-y-4">
+            <div key={prompt.id} className="flex-1 min-w-[320px] p-5 space-y-4 bg-white">
               {/* Header */}
               <div>
                 <Link
@@ -406,33 +405,47 @@ export default function ComparePage() {
 
               {/* Stats */}
               <div className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">↑{stats.upvotes}</span>
-                  <span className="text-red-600">↓{stats.downvotes}</span>
-                  <span className="text-gray-500">Score: {stats.score}</span>
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-0.5 text-green-600">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    {stats.upvotes}
+                  </span>
+                  <span className="flex items-center gap-0.5 text-red-600">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    {stats.downvotes}
+                  </span>
+                  <span className="text-gray-500 ml-1">Score: {stats.score}</span>
                 </div>
-                
+
                 {user && (
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleVote(prompt.id, 1)}
-                      className={`px-2 py-1 text-xs rounded transition-colors ${
-                        userVotes[prompt.id] === 1
+                      className={`p-1 rounded transition-colors ${userVotes[prompt.id] === 1
                           ? 'bg-green-600 text-white'
                           : 'border border-green-600 text-green-600 hover:bg-green-50'
-                      }`}
+                        }`}
+                      title="Vote Up"
                     >
-                      ↑
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                      </svg>
                     </button>
                     <button
                       onClick={() => handleVote(prompt.id, -1)}
-                      className={`px-2 py-1 text-xs rounded transition-colors ${
-                        userVotes[prompt.id] === -1
+                      className={`p-1 rounded transition-colors ${userVotes[prompt.id] === -1
                           ? 'bg-red-600 text-white'
                           : 'border border-red-600 text-red-600 hover:bg-red-50'
-                      }`}
+                        }`}
+                      title="Vote Down"
                     >
-                      ↓
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
                     </button>
                   </div>
                 )}
@@ -441,7 +454,7 @@ export default function ComparePage() {
               {/* System Prompt */}
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">System Prompt</div>
-                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
+                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-48 overflow-y-auto">
                   {renderContent(prompt.system_prompt)}
                 </div>
               </div>
@@ -449,7 +462,7 @@ export default function ComparePage() {
               {/* User Template */}
               <div>
                 <div className="text-sm font-medium text-gray-700 mb-2">User Template</div>
-                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-24 overflow-y-auto">
+                <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
                   {renderContent(prompt.user_prompt_template)}
                 </div>
               </div>
@@ -460,16 +473,16 @@ export default function ComparePage() {
                   {prompt.example_input && (
                     <div>
                       <div className="text-xs font-medium text-gray-700 mb-1">Example Input</div>
-                      <div className="bg-blue-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
+                      <div className="bg-blue-50 p-2 rounded text-xs font-mono max-h-24 overflow-y-auto">
                         {renderContent(prompt.example_input)}
                       </div>
                     </div>
                   )}
-                  
+
                   {prompt.example_output && (
                     <div>
                       <div className="text-xs font-medium text-gray-700 mb-1">Example Output</div>
-                      <div className="bg-green-50 p-2 rounded text-xs font-mono max-h-20 overflow-y-auto">
+                      <div className="bg-green-50 p-2 rounded text-xs font-mono max-h-24 overflow-y-auto">
                         {renderContent(prompt.example_output)}
                       </div>
                     </div>
@@ -505,15 +518,15 @@ export default function ComparePage() {
                       })
                       window.location.href = `/create/prompt?${params.toString()}`
                     }}
-                    className="flex-1 px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                   >
                     Fork
                   </button>
                 )}
-                
+
                 <Link
                   href={`/prompts/${prompt.id}`}
-                  className="flex-1 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
+                  className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
                 >
                   View Details
                 </Link>

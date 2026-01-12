@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function listPromptsByProblem(problemId: string, sort: 'newest' | 'top' = 'top') {
   const supabase = await createClient()
-  
+
   // First get the prompts
   let query = supabase
     .from('prompts')
@@ -78,7 +78,7 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
 
 export async function getPromptById(id: string) {
   const supabase = await createClient()
-  
+
   // First get the prompt
   const { data: prompt, error: promptError } = await supabase
     .from('prompts')
@@ -107,7 +107,7 @@ export async function getPromptById(id: string) {
 
 export async function getPromptsByIds(ids: string[]) {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase
     .from('prompts')
     .select(`
@@ -134,20 +134,20 @@ export async function getPromptsByIds(ids: string[]) {
 export async function createPrompt(formData: FormData) {
   try {
     const supabase = await createClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     console.log('Server action - createPrompt auth check:', {
       hasUser: !!user,
       userEmail: user?.email,
       authError: authError?.message
     })
-    
+
     if (authError) {
       console.error('Auth error in createPrompt:', authError)
       throw new Error(`Authentication error: ${authError.message}`)
     }
-    
+
     if (!user) {
       console.error('No user found in createPrompt')
       throw new Error('Must be authenticated to create prompts')
@@ -173,7 +173,7 @@ export async function createPrompt(formData: FormData) {
     if (!workspace) {
       // Create workspace if it doesn't exist
       const workspaceSlug = `user-${user.id.replace(/-/g, '')}`
-      
+
       const { data: newWorkspace, error: workspaceError } = await supabase
         .from('workspaces')
         .insert({
@@ -183,7 +183,7 @@ export async function createPrompt(formData: FormData) {
         })
         .select('id')
         .single()
-      
+
       if (workspaceError) {
         console.error('Failed to create workspace:', workspaceError)
         // If workspace creation fails, set to null
@@ -197,7 +197,7 @@ export async function createPrompt(formData: FormData) {
             user_id: user.id,
             role: 'owner'
           })
-        
+
         workspace = newWorkspace
       }
     }
@@ -209,11 +209,19 @@ export async function createPrompt(formData: FormData) {
       throw new Error('Invalid JSON in params field')
     }
 
+    // Generate slug from title
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+
     const { data, error } = await supabase
       .from('prompts')
       .insert({
         problem_id: problemId,
         title,
+        slug,
         system_prompt: systemPrompt,
         user_prompt_template: userPromptTemplate,
         model,
@@ -234,15 +242,7 @@ export async function createPrompt(formData: FormData) {
       throw new Error(`Failed to create prompt: ${error.message}`)
     }
 
-    // Create initial prompt_stats row
-    await supabase
-      .from('prompt_stats')
-      .insert({
-        prompt_id: data.id,
-        upvotes: 0,
-        downvotes: 0,
-        score: 0
-      })
+    // Stats are auto-created by database trigger
 
     revalidatePath('/problems')
     revalidatePath(`/problems/${problemId}`)
@@ -255,7 +255,7 @@ export async function createPrompt(formData: FormData) {
 
 export async function forkPrompt(parentPromptId: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     throw new Error('Must be authenticated to fork prompts')
@@ -272,15 +272,24 @@ export async function forkPrompt(parentPromptId: string) {
     throw new Error('Parent prompt not found')
   }
 
+  // Generate slug for forked prompt
+  const forkTitle = `${parentPrompt.title} (Fork)`
+  const slug = forkTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+
   // Create forked prompt
   const { data: forkedPrompt, error } = await supabase
     .from('prompts')
     .insert({
       ...parentPrompt,
       id: undefined, // Let DB generate new ID
+      slug,
       parent_prompt_id: parentPromptId,
       created_by: user.id,
-      title: `${parentPrompt.title} (Fork)`,
+      title: forkTitle,
       created_at: undefined,
       updated_at: undefined
     })
@@ -291,15 +300,7 @@ export async function forkPrompt(parentPromptId: string) {
     throw new Error(`Failed to fork prompt: ${error.message}`)
   }
 
-  // Create prompt_stats for forked prompt
-  await supabase
-    .from('prompt_stats')
-    .insert({
-      prompt_id: forkedPrompt.id,
-      upvotes: 0,
-      downvotes: 0,
-      score: 0
-    })
+  // Stats are auto-created by database trigger
 
   // Update fork count on parent
   await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
@@ -310,7 +311,7 @@ export async function forkPrompt(parentPromptId: string) {
 
 export async function forkPromptWithModal(parentPromptId: string, newTitle: string, notes: string) {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     throw new Error('Must be authenticated to fork prompts')
@@ -356,6 +357,13 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
   // Prepare notes with attribution
   const attributedNotes = `Forked from ${parentPromptId}. ${notes}`
 
+  // Generate slug from new title
+  const slug = newTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+
   // Create forked prompt
   const { data: forkedPrompt, error } = await supabase
     .from('prompts')
@@ -364,6 +372,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
       problem_id: parentPrompt.problem_id,
       visibility: parentPrompt.visibility,
       title: newTitle,
+      slug,
       system_prompt: parentPrompt.system_prompt,
       user_prompt_template: parentPrompt.user_prompt_template,
       model: parentPrompt.model,
@@ -387,18 +396,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
     throw new Error(`Failed to fork prompt: ${error.message}`)
   }
 
-  // Create prompt_stats for forked prompt
-  await supabase
-    .from('prompt_stats')
-    .insert({
-      prompt_id: forkedPrompt.id,
-      upvotes: 0,
-      downvotes: 0,
-      score: 0,
-      copy_count: 0,
-      view_count: 0,
-      fork_count: 0
-    })
+  // Stats are auto-created by database trigger
 
   // Insert fork event
   await supabase
@@ -419,7 +417,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
 
 export async function getPromptForks(promptId: string) {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase
     .from('prompts')
     .select(`
@@ -450,7 +448,7 @@ export async function getPromptForks(promptId: string) {
 
 export async function getParentPrompt(parentPromptId: string) {
   const supabase = await createClient()
-  
+
   const { data, error } = await supabase
     .from('prompts')
     .select('id, title')
@@ -468,9 +466,9 @@ export async function getParentPrompt(parentPromptId: string) {
 export async function updatePrompt(promptId: string, formData: FormData) {
   try {
     const supabase = await createClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
       throw new Error('Must be authenticated to update prompts')
     }

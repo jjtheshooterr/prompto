@@ -118,11 +118,19 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
       console.log('Creating prompt with workspace:', workspace.id)
 
+      // Generate slug from title
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+
       const { data: prompt, error } = await supabase
         .from('prompts')
         .insert({
           problem_id: problemId,
           title,
+          slug, // Add generated slug
           system_prompt: systemPrompt,
           user_prompt_template: userPromptTemplate,
           model,
@@ -142,15 +150,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         throw new Error(`Failed to create prompt: ${error.message}`)
       }
 
-      // Create initial prompt_stats row
-      await supabase
-        .from('prompt_stats')
-        .insert({
-          prompt_id: prompt.id,
-          upvotes: 0,
-          downvotes: 0,
-          score: 0
-        })
+      // Stats are now auto-created by database trigger
 
       router.push(`/prompts/${prompt.id}`)
     } catch (error) {
