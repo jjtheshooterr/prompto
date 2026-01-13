@@ -90,6 +90,13 @@ export default function ForkModal({
       // Prepare notes with attribution and changes summary
       const attributedNotes = `Forked from ${promptId}. ${forkReason}${changesSummary ? ` | Changes: ${changesSummary}` : ''}`
 
+      // Generate slug from title
+      const slug = newTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+
       // Create forked prompt
       const { data: forkedPrompt, error } = await supabase
         .from('prompts')
@@ -98,6 +105,7 @@ export default function ForkModal({
           problem_id: parentPrompt.problem_id,
           visibility: parentPrompt.visibility,
           title: newTitle,
+          slug,
           system_prompt: parentPrompt.system_prompt,
           user_prompt_template: parentPrompt.user_prompt_template,
           model: parentPrompt.model,
