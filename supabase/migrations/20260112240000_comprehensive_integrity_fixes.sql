@@ -1,6 +1,84 @@
 -- Comprehensive integrity fixes for production-ready schema
 
--- 1. CRITICAL: Fix workspace_id consistency on prompts
+-- 1. CRITICAL: Fix problem_members duplicates (prevents ambiguous permissions)
+-- Add unique constraint to prevent same user having multiple roles for same problem
+DO $ 
+BEGIN
+  -- First remove any existing duplicates (keep the highest role)
+  DELETE FROM public.problem_members pm1
+  WHERE EXISTS (
+    SELECT 1 FROM public.problem_members pm2
+    WHERE pm2.problem_id = pm1.problem_id 
+    AND pm2.user_id = pm1.user_id
+    AND pm2.id > pm1.id
+  );
+  
+  -- Add unique constraint if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                 WHERE constraint_name = 'problem_members_user_problem_unique') THEN
+    ALTER TABLE public.problem_members 
+    ADD CONSTRAINT problem_members_user_problem_unique 
+    UNIQUE (problem_id, user_id);
+  END IF;
+END $;
+
+-- 2. CRITICAL: Fix prompts.slug uniqueness (prevents routing collisions)
+-- Make slug unique within problem scope for SEO routing
+DO $ 
+BEGIN
+  -- First handle any existing duplicates by appending numbers
+  WITH duplicates AS (
+    SELECT problem_id, slug, 
+           ROW_NUMBER() OVER (PARTITION BY problem_id, slug ORDER BY created_at) as rn
+    FROM public.prompts 
+    WHERE slug IS NOT NULL
+  )
+  UPDATE public.prompts 
+  SET slug = prompts.slug || '-' || (duplicates.rn - 1)
+  FROM duplicates
+  WHERE prompts.problem_id = duplicates.problem_id 
+  AND prompts.slug = duplicates.slug
+  AND duplicates.rn > 1;
+  
+  -- Add unique constraint if it doesn't exist
+  IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                 WHERE constraint_name = 'prompts_problem_slug_unique') THEN
+    ALTER TABLE public.prompts 
+    ADD CONSTRAINT prompts_problem_slug_unique 
+    UNIQUE (problem_id, slug);
+  END IF;
+END $;
+
+-- 3. CRITICAL: Validate pinned_prompt_id belongs to the problem
+-- Prevents pinning prompts from other problems
+CREATE OR REPLACE FUNCTION public.validate_pinned_prompt()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $
+BEGIN
+  -- If pinned_prompt_id is set, ensure it belongs to this problem
+  IF NEW.pinned_prompt_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.prompts 
+      WHERE id = NEW.pinned_prompt_id 
+      AND problem_id = NEW.id
+    ) THEN
+      RAISE EXCEPTION 'Pinned prompt must belong to the same problem';
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$;
+
+-- Create trigger for pinned prompt validation
+DROP TRIGGER IF EXISTS trg_validate_pinned_prompt ON public.problems;
+CREATE TRIGGER trg_validate_pinned_prompt
+  BEFORE INSERT OR UPDATE ON public.problems
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_pinned_prompt();
+
+-- 4. CRITICAL: Fix workspace_id consistency on prompts
 -- Remove workspace_id from prompts since it's redundant with problem.workspace_id
 -- This prevents drift where prompt.workspace_id != problem.workspace_id
 -- Skip if column doesn't exist
@@ -263,3 +341,38 @@ CREATE TRIGGER trg_update_report_counts
   AFTER INSERT OR DELETE ON public.reports
   FOR EACH ROW
   EXECUTE FUNCTION public.update_report_counts();
+
+-- 8. CRITICAL: Enforce workspace membership consistency
+-- Ensure problem members also have workspace access (if problem has workspace_id)
+CREATE OR REPLACE FUNCTION public.validate_problem_membership()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $
+BEGIN
+  -- Check if problem belongs to a workspace
+  IF EXISTS (
+    SELECT 1 FROM public.problems 
+    WHERE id = NEW.problem_id 
+    AND workspace_id IS NOT NULL
+  ) THEN
+    -- Ensure user has workspace membership
+    IF NOT EXISTS (
+      SELECT 1 FROM public.workspace_members wm
+      JOIN public.problems p ON p.workspace_id = wm.workspace_id
+      WHERE p.id = NEW.problem_id 
+      AND wm.user_id = NEW.user_id
+    ) THEN
+      RAISE EXCEPTION 'User must be a workspace member to join workspace problems';
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$;
+
+-- Create trigger for problem membership validation
+DROP TRIGGER IF EXISTS trg_validate_problem_membership ON public.problem_members;
+CREATE TRIGGER trg_validate_problem_membership
+  BEFORE INSERT OR UPDATE ON public.problem_members
+  FOR EACH ROW
+  EXECUTE FUNCTION public.validate_problem_membership();
