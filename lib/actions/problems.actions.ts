@@ -24,7 +24,11 @@ export async function listProblems({
 
   let query = supabase
     .from('problems')
-    .select('*, problem_stats(*), problem_tags(tags(name))', { count: 'exact' })
+    .select(`
+      *,
+      problem_stats(*),
+      problem_tags(tags(name))
+    `, { count: 'exact' })
     .eq('is_listed', true)
     .eq('is_hidden', false)
     .eq('is_deleted', false)
@@ -65,10 +69,30 @@ export async function listProblems({
     return { data: [], total: 0, pages: 0 }
   }
 
-  // Transform tags
+  // Get unique user IDs
+  const userIds = [...new Set(problems.map((p: any) => p.created_by).filter(Boolean))]
+  
+  // Fetch author data separately
+  let authorsMap: Record<string, any> = {}
+  if (userIds.length > 0) {
+    const { data: authors } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .in('id', userIds)
+    
+    if (authors) {
+      authorsMap = authors.reduce((acc, author) => {
+        acc[author.id] = author
+        return acc
+      }, {} as Record<string, any>)
+    }
+  }
+
+  // Transform tags and attach author data
   const transformedProblems = (problems || []).map((p: any) => ({
     ...p,
-    tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || []
+    tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [],
+    author: p.created_by ? authorsMap[p.created_by] : null
   }))
 
   return {
@@ -100,8 +124,24 @@ export async function getPublicProblemBySlug(slug: string) {
     return null
   }
 
-  if (data && data.problem_tags) {
-    data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
+  if (data) {
+    // Transform tags
+    if (data.problem_tags) {
+      data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
+    }
+    
+    // Fetch author data separately
+    if (data.created_by) {
+      const { data: author } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .eq('id', data.created_by)
+        .single()
+      
+      if (author) {
+        data.author = author
+      }
+    }
   }
 
   return data
@@ -111,10 +151,6 @@ export async function getPublicProblemBySlug(slug: string) {
 export async function getProblemBySlug(slug: string) {
   const supabase = await createClient()
 
-  // RLS policies will automatically handle:
-  // - Public problems: visible to everyone
-  // - Unlisted problems: visible to everyone with link
-  // - Private problems: visible to owner and members only
   const { data, error } = await supabase
     .from('problems')
     .select(`
@@ -133,8 +169,24 @@ export async function getProblemBySlug(slug: string) {
     return null
   }
 
-  if (data && data.problem_tags) {
-    data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
+  if (data) {
+    // Transform tags
+    if (data.problem_tags) {
+      data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
+    }
+    
+    // Fetch author data separately
+    if (data.created_by) {
+      const { data: author } = await supabase
+        .from('profiles')
+        .select('id, username, display_name, avatar_url')
+        .eq('id', data.created_by)
+        .single()
+      
+      if (author) {
+        data.author = author
+      }
+    }
   }
 
   return data

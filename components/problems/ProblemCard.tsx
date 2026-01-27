@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { AuthorChip } from '@/components/common/AuthorChip'
 
 interface ProblemCardProps {
   problem: {
@@ -9,7 +10,14 @@ interface ProblemCardProps {
     tags: string[]
     industry: string | null
     created_at: string
+    created_by?: string
     prompts?: { count: number }[]
+    author?: {
+      id: string
+      username: string | null
+      display_name: string
+      avatar_url: string | null
+    }
   }
 }
 
@@ -55,7 +63,23 @@ export default function ProblemCard({ problem }: ProblemCardProps) {
         )}
         
         <div className="flex items-center justify-between text-sm text-gray-500">
-          <span>{new Date(problem.created_at).toLocaleDateString()}</span>
+          <div className="flex items-center gap-2">
+            <span>{new Date(problem.created_at).toLocaleDateString()}</span>
+            {problem.author && (
+              <>
+                <span>•</span>
+                <span className="text-gray-600">
+                  by <AuthorChip 
+                    userId={problem.created_by || problem.author.id}
+                    username={problem.author.username}
+                    displayName={problem.author.display_name}
+                    avatarUrl={problem.author.avatar_url}
+                    showAvatar={false}
+                  />
+                </span>
+              </>
+            )}
+          </div>
           <span>{promptCount} prompt{promptCount !== 1 ? 's' : ''}</span>
         </div>
       </div>

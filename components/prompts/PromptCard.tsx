@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ReportModal from '@/components/moderation/ReportModal'
+import { AuthorChip } from '@/components/common/AuthorChip'
 import { toast } from 'sonner'
 
 interface PromptCardProps {
@@ -182,6 +183,19 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                 </>
               )}
             </div>
+            
+            {/* Author attribution */}
+            {prompt.author && (
+              <div className="text-sm text-gray-600 mt-1">
+                by <AuthorChip 
+                  userId={prompt.created_by}
+                  username={prompt.author.username}
+                  displayName={prompt.author.display_name}
+                  avatarUrl={prompt.author.avatar_url}
+                  showAvatar={false}
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 font-medium">

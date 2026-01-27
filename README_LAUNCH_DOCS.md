@@ -132,6 +132,45 @@
 
 ---
 
+### Performance Optimizations (Week 2)
+**File:** `week2_performance_optimizations.sql`  
+**Purpose:** Optimize RLS policies and remove duplicate indexes  
+**Risk:** Low  
+**Time:** 10 minutes
+
+**What it does:**
+1. Drops duplicate RLS policies
+2. Optimizes auth.uid() calls (10-50% faster)
+3. Removes duplicate indexes
+
+**Status:** ✅ APPLIED
+
+---
+
+### User Profiles & Attribution (Week 2-3)
+**File:** `profiles_attribution_migration.sql`  
+**Purpose:** Add GitHub-style user profiles with author attribution  
+**Risk:** Low (additive only)  
+**Time:** 5 minutes
+
+**What it does:**
+1. Adds username system with validation
+2. Creates public profiles view
+3. Adds performance indexes
+4. Creates profile query functions
+5. Enables author attribution
+
+**Status:** ✅ APPLIED
+
+**Documentation:**
+- `PROFILES_FEATURE_SUMMARY.md` - Feature overview
+- `PROFILES_MIGRATION_APPLIED.md` - Migration details
+- `PROFILES_API_REFERENCE.md` - Developer API guide
+- `profiles_ui_quickstart.md` - UI implementation guide
+- `profiles_implementation_plan.md` - Full technical plan
+
+---
+
 ## 🎯 Reading Paths
 
 ### Path 1: "Just Tell Me If I Can Launch"
@@ -148,9 +187,16 @@
 1. `EXECUTIVE_SUMMARY.md`
 2. `LAUNCH_TIMELINE.md`
 3. `WEEK1_EXECUTION_GUIDE.md`
-4. Apply migrations when ready
+4. `MIGRATIONS_APPLIED_SUMMARY.md` (see what's done)
+5. Apply remaining migrations when ready
 
-### Path 4: "I'm a Technical Reviewer"
+### Path 4: "I Want to Implement Profiles"
+1. `PROFILES_FEATURE_SUMMARY.md` (overview)
+2. `PROFILES_API_REFERENCE.md` (API guide)
+3. `profiles_ui_quickstart.md` (UI implementation)
+4. `PROFILES_MIGRATION_APPLIED.md` (migration details)
+
+### Path 5: "I'm a Technical Reviewer"
 1. `LAUNCH_READINESS_REPORT.md`
 2. `PARANOIA_CHECK_RESULTS.md`
 3. Review migration files
@@ -294,6 +340,12 @@ That's how great products are built.
 | WEEK1_EXECUTION_GUIDE.md | 1.0 | Jan 27, 2026 |
 | week1_report_deduplication.sql | 1.1 | Jan 27, 2026 |
 | week1_consolidate_triggers.sql | 1.1 | Jan 27, 2026 |
+| week2_performance_optimizations.sql | 1.0 | Jan 27, 2026 |
+| profiles_attribution_migration.sql | 1.0 | Jan 27, 2026 |
+| MIGRATIONS_APPLIED_SUMMARY.md | 1.1 | Jan 27, 2026 |
+| PROFILES_FEATURE_SUMMARY.md | 1.0 | Jan 27, 2026 |
+| PROFILES_MIGRATION_APPLIED.md | 1.0 | Jan 27, 2026 |
+| PROFILES_API_REFERENCE.md | 1.0 | Jan 27, 2026 |
 
 ---
 

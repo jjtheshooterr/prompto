@@ -82,6 +82,59 @@
 
 ---
 
+### Week 2-3: User Profiles & Attribution
+**Migration:** `add_user_profiles_and_attribution`  
+**Status:** ✅ SUCCESS
+
+**Changes:**
+
+#### Part 1: Username System
+- ✅ Added username format constraint (3-20 chars, a-z 0-9 underscore)
+- ✅ Cleaned existing usernames (replaced dots with underscores)
+- ✅ Created case-insensitive username lookup index
+
+#### Part 2: Public Profiles View
+- ✅ Created `public_profiles` view (security-safe)
+- ✅ Granted SELECT access to anon and authenticated users
+- ✅ Exposes: id, username, display_name, avatar_url, reputation, stats
+
+#### Part 3: Performance Indexes
+- ✅ `idx_prompts_created_by_date` - User's prompts by date
+- ✅ `idx_prompts_created_by_parent` - User's forks
+- ✅ `idx_problems_created_by_date` - User's problems by date
+- ✅ `idx_profiles_username_lower` - Case-insensitive username lookup
+
+#### Part 4: RLS Policies
+- ✅ `public_profiles_select_all` - Anyone can read profiles
+- ✅ `profiles_update_self` - Users can update their own profile
+
+#### Part 5: Helper Functions
+- ✅ `is_username_available(text)` - Check username availability
+- ✅ `get_profile_by_username(text)` - Lookup profile by username
+- ✅ `get_user_prompts()` - Get user's original prompts
+- ✅ `get_user_forks()` - Get user's forks with parent attribution
+- ✅ `get_user_problems()` - Get user's problems
+
+**Pre-Migration Cleanup:**
+- Fixed 9 usernames containing dots (jaxon.thomas* → jaxon_thomas*)
+
+**Bug Fixes:**
+- Fixed ORDER BY casting issue in query functions
+
+**Verification:**
+- ✅ Username constraint active
+- ✅ Public profiles view working
+- ✅ All 4 indexes created
+- ✅ Both RLS policies active
+- ✅ All 5 functions tested and working
+
+**Next Steps:**
+- Implement UI following `profiles_ui_quickstart.md`
+- Add profile pages at `/u/[username]`
+- Add author attribution to prompts/problems
+
+---
+
 ## 📊 Current State
 
 ### RLS Policies (Cleaned Up)
@@ -277,7 +330,7 @@ DROP FUNCTION IF EXISTS has_active_report;
 ---
 
 **Prepared by:** Kiro AI with Supabase-Hosted Power  
-**Migrations Applied:** 3  
-**Total Changes:** 30+ optimizations  
-**Time Taken:** ~5 minutes  
-**Status:** 🚀 Ready for launch!
+**Migrations Applied:** 4  
+**Total Changes:** 40+ optimizations  
+**Time Taken:** ~10 minutes  
+**Status:** 🚀 Ready for launch with profiles!

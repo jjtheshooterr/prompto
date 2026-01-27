@@ -44,11 +44,29 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
   console.log('Prompt IDs:', promptIds)
   console.log('Stats data:', statsData)
 
-  // Attach stats to prompts
+  // Fetch author data separately
+  const userIds = [...new Set(prompts.map(p => p.created_by).filter(Boolean))]
+  let authorsMap: Record<string, any> = {}
+  if (userIds.length > 0) {
+    const { data: authors } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .in('id', userIds)
+    
+    if (authors) {
+      authorsMap = authors.reduce((acc, author) => {
+        acc[author.id] = author
+        return acc
+      }, {} as Record<string, any>)
+    }
+  }
+
+  // Attach stats and author to prompts
   let promptsWithStats = prompts.map(prompt => {
     const stats = statsData?.find(s => s.prompt_id === prompt.id)
     return {
       ...prompt,
+      author: prompt.created_by ? authorsMap[prompt.created_by] : null,
       prompt_stats: stats ? [stats] : [{
         upvotes: 0,
         downvotes: 0,
