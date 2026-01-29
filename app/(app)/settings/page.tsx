@@ -5,6 +5,14 @@ import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import Image from 'next/image';
 
+export const metadata = {
+  title: 'Settings - Prompto',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
