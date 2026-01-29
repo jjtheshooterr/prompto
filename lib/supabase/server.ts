@@ -31,7 +31,11 @@ export async function createClient() {
   const authCookie = cookieStore.get('sb-yknsbonffoaxxcwvxrls-auth-token')
   if (authCookie?.value) {
     try {
-      const sessionData = JSON.parse(authCookie.value)
+      // The cookie value is base64 encoded
+      const base64Value = authCookie.value.replace(/^base64-/, '')
+      const decodedValue = Buffer.from(base64Value, 'base64').toString('utf-8')
+      const sessionData = JSON.parse(decodedValue)
+      
       if (sessionData.access_token && sessionData.refresh_token) {
         // Manually set the session on the client
         await client.auth.setSession({
@@ -41,7 +45,7 @@ export async function createClient() {
       }
     } catch (e) {
       // If manual injection fails, fallback to normal behavior
-      console.error('Manual session injection failed:', e)
+      // This is expected for anonymous users
     }
   }
 

@@ -19,14 +19,15 @@ interface Profile {
 export default async function ProfileByIdPage({ 
   params 
 }: { 
-  params: { id: string } 
+  params: Promise<{ id: string }> 
 }) {
+  const { id } = await params;
   const supabase = await createClient();
   
   const { data: profile, error } = await supabase
     .from('public_profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
     
   if (error || !profile) {
@@ -41,12 +42,13 @@ export default async function ProfileByIdPage({
   return <ProfilePageClient profile={profile as Profile} />;
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from('public_profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
     
   if (!profile) {

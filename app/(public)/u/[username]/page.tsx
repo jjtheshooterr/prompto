@@ -19,12 +19,13 @@ interface Profile {
 export default async function ProfilePage({ 
   params 
 }: { 
-  params: { username: string } 
+  params: Promise<{ username: string }> 
 }) {
+  const { username } = await params;
   const supabase = await createClient();
   
   const { data: profile, error } = await supabase
-    .rpc('get_profile_by_username', { u: params.username })
+    .rpc('get_profile_by_username', { u: username })
     .single();
     
   if (error || !profile) {
@@ -34,10 +35,11 @@ export default async function ProfilePage({
   return <ProfilePageClient profile={profile as Profile} />;
 }
 
-export async function generateMetadata({ params }: { params: { username: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
+  const { username } = await params;
   const supabase = await createClient();
   const { data: profile } = await supabase
-    .rpc('get_profile_by_username', { u: params.username })
+    .rpc('get_profile_by_username', { u: username })
     .single();
     
   if (!profile) {
