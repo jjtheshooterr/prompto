@@ -3,6 +3,9 @@ import Link from 'next/link'
 import QualitySignals from '@/components/problems/QualitySignals'
 import Pagination from '@/components/ui/Pagination'
 
+// Enable ISR with 2-minute revalidation
+export const revalidate = 120
+
 interface ProblemsPageProps {
   searchParams: Promise<{
     search?: string
@@ -119,7 +122,15 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             )}
 
             <div className="flex justify-between items-center text-sm text-gray-500">
-              <span className="capitalize">{problem.industry || 'General'}</span>
+              <div className="flex items-center gap-2">
+                <span className="capitalize">{problem.industry || 'General'}</span>
+                {problem.author && (
+                  <>
+                    <span>•</span>
+                    <span>by {problem.author.display_name || problem.author.username || 'Anonymous'}</span>
+                  </>
+                )}
+              </div>
               <span>
                 {/* Use problem_stats if available, fallback to 0 */}
                 {problem.problem_stats?.total_prompts || 0} prompts

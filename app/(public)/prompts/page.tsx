@@ -1,149 +1,92 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
-import { toast } from 'sonner'
+import PromptsFilterClient from './PromptsFilterClient'
 
-interface Prompt {
-  id: string
-  title: string
-  system_prompt: string
-  model: string
-  created_at: string
-  parent_prompt_id?: string
-  notes?: string
-  problems: {
-    title: string
-    slug: string
-  }
-  prompt_stats: Array<{
-    upvotes: number
-    downvotes: number
-    score: number
-    copy_count: number
-    view_count: number
-    fork_count: number
-    works_count: number
-    fails_count: number
-    reviews_count: number
-    last_reviewed_at: string | null
+// Enable ISR with 2-minute revalidation
+export const revalidate = 120
+
+interface AllPromptsPageProps {
+  searchParams: Promise<{
+    filter?: 'all' | 'originals' | 'forks'
+    sort?: 'newest' | 'top' | 'most_forked'
+    page?: string
   }>
 }
 
-export default function AllPromptsPage() {
-  const [prompts, setPrompts] = useState<Prompt[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'originals' | 'forks'>('all')
-  const [sort, setSort] = useState<'newest' | 'top' | 'most_forked'>('newest')
+export default async function AllPromptsPage({ searchParams }: AllPromptsPageProps) {
+  const params = await searchParams
+  const filter = (params.filter || 'all') as 'all' | 'originals' | 'forks'
+  const sort = (params.sort || 'newest') as 'newest' | 'top' | 'most_forked'
+  const currentPage = Number(params.page) || 1
+  const limit = 12
 
-  // Handle URL parameters
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const sortParam = urlParams.get('sort') as 'newest' | 'top' | 'most_forked'
-    if (sortParam && ['newest', 'top', 'most_forked'].includes(sortParam)) {
-      setSort(sortParam)
-    }
-  }, [])
+  const supabase = await createClient()
 
-  useEffect(() => {
-    const loadPrompts = async () => {
-      setLoading(true)
-      const supabase = createClient()
+  // Get total count
+  let countQuery = supabase
+    .from('prompts')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_listed', true)
+    .eq('is_hidden', false)
+    .eq('is_deleted', false)
+    .eq('visibility', 'public')
 
-      console.log('Loading prompts with filter:', filter, 'sort:', sort)
+  if (filter === 'originals') {
+    countQuery = countQuery.is('parent_prompt_id', null)
+  } else if (filter === 'forks') {
+    countQuery = countQuery.not('parent_prompt_id', 'is', null)
+  }
 
-      let promptsResult: { data: any[] | null; error: any }
+  const { count } = await countQuery
+  const total = count || 0
+  const totalPages = Math.ceil(total / limit)
+  const offset = (currentPage - 1) * limit
 
-      if (sort === 'top' || sort === 'most_forked' || sort === 'newest') {
-        const { data, error } = await supabase
-          .rpc('get_ranked_prompts', {
-            sort_by: sort,
-            filter_type: filter,
-            limit_count: 50
-          })
-        promptsResult = { data, error }
-      } else {
-        promptsResult = { data: [], error: null }
+  // Get prompts using RPC
+  const { data: promptsData, error } = await supabase
+    .rpc('get_ranked_prompts', {
+      sort_by: sort,
+      filter_type: filter,
+      limit_count: limit,
+      offset_count: offset
+    })
+
+  let prompts: any[] = []
+
+  if (!error && promptsData && promptsData.length > 0) {
+    // Get problems separately
+    const problemIds = [...new Set(promptsData.map((p: any) => p.problem_id).filter(Boolean))]
+    const { data: problemsData } = await supabase
+      .from('problems')
+      .select('id, title, slug')
+      .in('id', problemIds)
+
+    // Get stats
+    const promptIds = promptsData.map((p: any) => p.id)
+    const { data: statsData } = await supabase
+      .from('prompt_stats')
+      .select('*')
+      .in('prompt_id', promptIds)
+
+    // Attach problems and format stats
+    prompts = promptsData.map((prompt: any) => {
+      const stats = statsData?.find(s => s.prompt_id === prompt.id)
+      const problem = problemsData?.find(p => p.id === prompt.problem_id)
+
+      return {
+        ...prompt,
+        problems: problem ? { title: problem.title, slug: problem.slug } : { title: 'Unknown Problem', slug: '' },
+        prompt_stats: [stats || {
+          upvotes: 0,
+          downvotes: 0,
+          score: 0,
+          copy_count: 0,
+          view_count: 0,
+          fork_count: 0
+        }]
       }
-
-      const { data: promptsData, error } = promptsResult
-
-      console.log('Prompts query result:', { data: promptsData?.length, error })
-
-      if (error) {
-        console.error('Error loading prompts:', error)
-        setLoading(false)
-        return
-      }
-
-      if (promptsData && promptsData.length > 0) {
-        console.log('Fetched prompts data:', promptsData.length, 'prompts')
-
-        // Get problems separately
-        const problemIds = [...new Set(promptsData.map((p: any) => p.problem_id).filter(Boolean))]
-        const { data: problemsData } = await supabase
-          .from('problems')
-          .select('id, title, slug')
-          .in('id', problemIds)
-
-        // Generate prompt IDs for stats fetching
-        const promptIds = promptsData.map((p: any) => p.id)
-
-        // We still need to fetch stats to DISPLAY them 
-        const { data: statsData } = await supabase
-          .from('prompt_stats')
-          .select('*')
-          .in('prompt_id', promptIds)
-
-        // Attach problems and format stats
-        const formattedPrompts = promptsData.map((prompt: any) => {
-          const stats = statsData?.find(s => s.prompt_id === prompt.id)
-          const problem = problemsData?.find(p => p.id === prompt.problem_id)
-
-          return {
-            ...prompt,
-            problems: problem ? { title: problem.title, slug: problem.slug } : { title: 'Unknown Problem', slug: '' },
-            prompt_stats: [stats || {
-              upvotes: 0,
-              downvotes: 0,
-              score: 0,
-              copy_count: 0,
-              view_count: 0,
-              fork_count: 0
-            }]
-          }
-        })
-
-        setPrompts(formattedPrompts)
-      } else {
-        console.log('No prompts data found')
-        setPrompts([])
-      }
-
-      setLoading(false)
-    }
-
-    loadPrompts()
-  }, [filter, sort])
-
-  const addToCompare = (promptId: string) => {
-    const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-    if (!selected.includes(promptId)) {
-      selected.push(promptId)
-      localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      // Dispatch custom event to update header badge
-      window.dispatchEvent(new CustomEvent('compareUpdated'))
-      toast.success(`Added to comparison (${selected.length} total)`, {
-        action: {
-          label: 'View Comparison',
-          onClick: () => window.location.href = '/compare'
-        }
-      })
-    } else {
-      toast('Already in comparison')
-    }
+    })
   }
 
   return (
@@ -155,112 +98,27 @@ export default function AllPromptsPage() {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="mb-8 bg-white p-6 rounded-lg shadow">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex gap-2">
-            <span className="text-sm font-medium text-gray-700">Show:</span>
-            <button
-              onClick={() => setFilter('all')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              All Prompts
-            </button>
-            <button
-              onClick={() => setFilter('originals')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${filter === 'originals'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Originals Only
-            </button>
-            <button
-              onClick={() => setFilter('forks')}
-              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${filter === 'forks'
-                ? 'bg-orange-600 text-white'
-                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              Forks Only
-            </button>
-          </div>
-
-          <div className="flex gap-2">
-            <span className="text-sm font-medium text-gray-700">Sort:</span>
-            <button
-              onClick={() => setSort('newest')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${sort === 'newest'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Newest
-            </button>
-            <button
-              onClick={() => setSort('top')}
-              className={`px-3 py-1 text-sm rounded transition-colors ${sort === 'top'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              Top Rated
-            </button>
-            <button
-              onClick={() => setSort('most_forked')}
-              className={`px-3 py-1 text-sm rounded transition-colors flex items-center gap-1 ${sort === 'most_forked'
-                ? 'bg-orange-600 text-white'
-                : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              Most Forked
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Filters - Client Component */}
+      <PromptsFilterClient filter={filter} sort={sort} />
 
       {/* Results */}
-      {loading ? (
-        <div className="space-y-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          <div className="mb-4 text-sm text-gray-600">
-            Showing {prompts.length} prompts
-            {filter === 'forks' && ' (forks only)'}
-            {filter === 'originals' && ' (originals only)'}
-          </div>
+      <div className="mb-4 text-sm text-gray-600">
+        Showing {prompts.length} of {total} prompts
+        {filter === 'forks' && ' (forks only)'}
+        {filter === 'originals' && ' (originals only)'}
+      </div>
 
-          <div className="space-y-6">
-            {prompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                prompt={prompt}
-                onAddToCompare={addToCompare}
-                showProblemTitle={true}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      <div className="space-y-6">
+        {prompts.map((prompt) => (
+          <PromptCard
+            key={prompt.id}
+            prompt={prompt}
+            showProblemTitle={true}
+          />
+        ))}
+      </div>
 
-      {prompts.length === 0 && !loading && (
+      {prompts.length === 0 && (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -286,6 +144,60 @@ export default function AllPromptsPage() {
               Create Prompt
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center">
+          <nav className="flex items-center gap-2">
+            <Link
+              href={`/prompts?filter=${filter}&sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
+              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${
+                currentPage === 1 ? 'opacity-50 pointer-events-none' : ''
+              }`}
+            >
+              Previous
+            </Link>
+            
+            {[...Array(totalPages)].map((_, i) => {
+              const page = i + 1
+              if (
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+              ) {
+                return (
+                  <Link
+                    key={page}
+                    href={`/prompts?filter=${filter}&sort=${sort}&page=${page}`}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </Link>
+                )
+              } else if (
+                page === currentPage - 2 ||
+                page === currentPage + 2
+              ) {
+                return <span key={page} className="px-2 text-gray-400">...</span>
+              }
+              return null
+            })}
+            
+            <Link
+              href={`/prompts?filter=${filter}&sort=${sort}&page=${Math.min(totalPages, currentPage + 1)}`}
+              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${
+                currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''
+              }`}
+            >
+              Next
+            </Link>
+          </nav>
         </div>
       )}
     </div>

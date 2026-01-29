@@ -80,6 +80,8 @@ export async function listProblems({
       .select('id, username, display_name, avatar_url')
       .in('id', userIds)
     
+    console.log('Fetched authors:', authors) // Debug log
+    
     if (authors) {
       authorsMap = authors.reduce((acc, author) => {
         acc[author.id] = author
@@ -89,11 +91,15 @@ export async function listProblems({
   }
 
   // Transform tags and attach author data
-  const transformedProblems = (problems || []).map((p: any) => ({
-    ...p,
-    tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [],
-    author: p.created_by ? authorsMap[p.created_by] : null
-  }))
+  const transformedProblems = (problems || []).map((p: any) => {
+    const problem = {
+      ...p,
+      tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [],
+      author: p.created_by ? authorsMap[p.created_by] : null
+    }
+    console.log('Problem with author:', problem.title, problem.author) // Debug log
+    return problem
+  })
 
   return {
     data: transformedProblems,

@@ -1,6 +1,9 @@
 import Link from 'next/link'
 import TopRatedPrompts from '@/components/home/TopRatedPrompts'
 
+// Enable ISR with 1-minute revalidation for homepage
+export const revalidate = 60
+
 export default function HomePage() {
   return (
     <div className="bg-slate-50">

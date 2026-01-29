@@ -52,6 +52,21 @@ export default function UserMenu({ user }: UserMenuProps) {
             Dashboard
           </Link>
           <Link
+            href="/workspace"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            Workspace
+          </Link>
+          <Link
+            href="/settings"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            Settings
+          </Link>
+          <hr className="my-1" />
+          <Link
             href="/problems/new"
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={() => setIsOpen(false)}

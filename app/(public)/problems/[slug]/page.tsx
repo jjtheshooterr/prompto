@@ -1,170 +1,30 @@
-'use client'
-
-import { createClient } from '@/lib/supabase/client'
+import { getProblemBySlug } from '@/lib/actions/problems.actions'
 import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
 import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { Suspense } from 'react'
+
+// Enable ISR with 5-minute revalidation
+export const revalidate = 300
 
 interface ProblemDetailPageProps {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ sort?: 'newest' | 'top' }>
 }
 
-export default function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
-  const [problem, setProblem] = useState<any>(null)
-  const [prompts, setPrompts] = useState<any[]>([])
-  const [sort, setSort] = useState<'newest' | 'top'>('top')
-  const [loading, setLoading] = useState(true)
+export default async function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
+  const { slug } = await params
+  const { sort = 'top' } = await searchParams
 
-  useEffect(() => {
-    const loadData = async () => {
-      const { slug } = await params
-      const { sort: sortParam = 'top' } = await searchParams
-
-      setSort(sortParam)
-
-      // Use client-side Supabase to get problem with proper auth context
-      const supabase = createClient()
-      const { data: problemData, error } = await supabase
-        .from('problems')
-        .select(`
-          *,
-          inputs,
-          constraints,
-          success_criteria,
-          problem_tags(tags(name))
-        `)
-        .eq('slug', slug)
-        .eq('is_deleted', false)
-        .single()
-
-      if (error || !problemData) {
-        console.error('Error fetching problem:', error)
-        notFound()
-        return
-      }
-
-      // Transform tags from relation to flat array
-      if (problemData.problem_tags) {
-        problemData.tags = problemData.problem_tags
-          .map((pt: any) => pt.tags?.name)
-          .filter(Boolean)
-      }
-
-      setProblem(problemData)
-
-      // Get prompts client-side as well
-      let promptQuery = supabase
-        .from('prompts')
-        .select('*')
-        .eq('problem_id', problemData.id)
-        .eq('is_listed', true)
-        .eq('is_hidden', false)
-        .eq('is_deleted', false)
-
-      if (sortParam === 'newest') {
-        promptQuery = promptQuery.order('created_at', { ascending: false })
-      } else {
-        promptQuery = promptQuery.order('created_at', { ascending: false })
-      }
-
-      const { data: promptsData, error: promptsError } = await promptQuery
-
-      if (promptsError) {
-        console.error('Error fetching prompts:', promptsError)
-        setPrompts([])
-      } else {
-        // Get stats for prompts if needed
-        const promptIds = promptsData?.map(p => p.id) || []
-        if (promptIds.length > 0) {
-          const { data: statsData } = await supabase
-            .from('prompt_stats')
-            .select('*')
-            .in('prompt_id', promptIds)
-
-          // Attach stats to prompts
-          const promptsWithStats = (promptsData || []).map(prompt => {
-            const stats = statsData?.find(s => s.prompt_id === prompt.id)
-            const upvotes = stats?.upvotes || 0
-            const downvotes = stats?.downvotes || 0
-            const score = upvotes - downvotes
-
-            // Map upvotes/downvotes to works/fails for UI display
-            const statsObj = {
-              upvotes,
-              downvotes,
-              score,
-              views: stats?.view_count || 0, // correctly map view_count
-              copies: stats?.copy_count || 0, // correctly map copy_count
-              forks: stats?.fork_count || 0, // correctly map fork_count
-              works_count: upvotes, // Map upvotes to works
-              fails_count: downvotes // Map downvotes to fails
-            }
-
-            return {
-              ...prompt,
-              // Spread top-level for sorting/backward compat
-              upvotes,
-              downvotes,
-              score,
-              views: statsObj.views,
-              copies: statsObj.copies,
-              forks: statsObj.forks,
-              // Attach nested stats array for PromptCard
-              prompt_stats: [statsObj]
-            }
-          })
-
-          // Sort by score if 'top' sort
-          if (sortParam === 'top') {
-            promptsWithStats.sort((a, b) => b.upvotes - a.upvotes)
-          }
-
-          setPrompts(promptsWithStats)
-        } else {
-          setPrompts([])
-        }
-      }
-
-      setLoading(false)
-    }
-
-    loadData()
-  }, [params, searchParams])
-
-  const addToCompare = (promptId: string) => {
-    const selected = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-    if (!selected.includes(promptId)) {
-      selected.push(promptId)
-      localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      // Dispatch custom event to update header badge
-      window.dispatchEvent(new CustomEvent('compareUpdated'))
-      toast.success(`Added to comparison (${selected.length} total)`, {
-        action: {
-          label: 'View Comparison',
-          onClick: () => window.location.href = '/compare'
-        }
-      })
-    } else {
-      toast('Already in comparison')
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    )
-  }
-
+  // Fetch problem and prompts server-side
+  const problem = await getProblemBySlug(slug)
+  
   if (!problem) {
     notFound()
-    return null
   }
+
+  const prompts = await listPromptsByProblem(problem.id, sort)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -257,7 +117,12 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500">
             <span className="mr-4">Industry: {problem.industry}</span>
-            <span>{prompts.length} prompts</span>
+            <span className="mr-4">{prompts.length} prompts</span>
+            {problem.author && (
+              <span>
+                by {problem.author.display_name || problem.author.username || 'Anonymous'}
+              </span>
+            )}
           </div>
 
           <Link
@@ -304,7 +169,6 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
               </svg>
               Recommended Solution
             </h2>
-            {/* This would show the pinned prompt - for now just show a placeholder */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-yellow-800">Featured solution coming soon...</p>
             </div>
@@ -322,13 +186,14 @@ export default function ProblemDetailPage({ params, searchParams }: ProblemDetai
         </div>
 
         {/* Prompts */}
-        {prompts.map((prompt) => (
-          <PromptCard
-            key={prompt.id}
-            prompt={prompt}
-            onAddToCompare={addToCompare}
-          />
-        ))}
+        <Suspense fallback={<div>Loading prompts...</div>}>
+          {prompts.map((prompt) => (
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+            />
+          ))}
+        </Suspense>
       </div>
 
       {prompts.length === 0 && (

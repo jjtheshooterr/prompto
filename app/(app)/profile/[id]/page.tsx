@@ -2,6 +2,9 @@ import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ProfilePageClient } from '@/components/profile/ProfilePageClient';
 
+// Enable ISR with 5-minute revalidation
+export const revalidate = 300
+
 export default async function ProfileByIdPage({ 
   params 
 }: { 
