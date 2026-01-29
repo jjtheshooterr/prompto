@@ -53,8 +53,10 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
     return { title: 'User Not Found' };
   }
   
+  const typedProfile = profile as Profile;
+  
   return {
-    title: `${profile.display_name} - Prompto`,
-    description: `View ${profile.display_name}'s prompts, forks, and problems on Prompto.`
+    title: `${typedProfile.display_name} - Prompto`,
+    description: `View ${typedProfile.display_name}'s prompts, forks, and problems on Prompto.`
   };
 }
