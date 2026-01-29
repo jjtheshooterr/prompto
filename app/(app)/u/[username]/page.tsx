@@ -5,6 +5,17 @@ import { ProfilePageClient } from '@/components/profile/ProfilePageClient';
 // Enable ISR with 5-minute revalidation
 export const revalidate = 300
 
+interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string;
+  avatar_url: string | null;
+  created_at: string;
+  reputation: number;
+  upvotes_received: number;
+  forks_received: number;
+}
+
 export default async function ProfilePage({ 
   params 
 }: { 
@@ -20,7 +31,7 @@ export default async function ProfilePage({
     notFound();
   }
   
-  return <ProfilePageClient profile={profile} />;
+  return <ProfilePageClient profile={profile as Profile} />;
 }
 
 export async function generateMetadata({ params }: { params: { username: string } }) {
