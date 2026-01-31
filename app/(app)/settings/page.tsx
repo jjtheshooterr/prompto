@@ -126,11 +126,10 @@ export default function SettingsPage() {
         .from('avatars')
         .getPublicUrl(fileName);
 
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
+      // Update profile with new avatar URL using secure RPC
+      const { error: updateError } = await supabase.rpc('update_profile', {
+        p_avatar_url: publicUrl
+      });
 
       if (updateError) throw updateError;
 
@@ -155,11 +154,10 @@ export default function SettingsPage() {
       const oldPath = avatarUrl.split('/').slice(-2).join('/');
       await supabase.storage.from('avatars').remove([oldPath]);
 
-      // Update profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id);
+      // Update profile using secure RPC
+      const { error } = await supabase.rpc('update_profile', {
+        p_avatar_url: null
+      });
 
       if (error) throw error;
 
@@ -176,7 +174,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     if (!user) return;
     
-    // Validate username if provided
+    // Validate username if provided and changed
     if (username && username !== originalUsername && usernameAvailable !== true) {
       toast.error('Please choose an available username');
       return;
@@ -185,18 +183,41 @@ export default function SettingsPage() {
     setSaving(true);
     const supabase = createClient();
     
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        display_name: displayName || null,
-        username: username || null
-      })
-      .eq('id', user.id);
+    try {
+      // Update profile fields using secure RPC
+      const { data, error: profileError } = await supabase.rpc('update_profile', {
+        p_display_name: displayName || null
+      });
 
-    if (error) {
-      toast.error('Failed to update profile');
-      console.error(error);
-    } else {
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        console.error('Error details:', JSON.stringify(profileError, null, 2));
+        throw profileError;
+      }
+
+      console.log('Profile updated successfully:', data);
+
+      // Update username separately if changed
+      if (username && username !== originalUsername) {
+        const { error: usernameError } = await supabase.rpc('change_username', {
+          p_new_username: username
+        });
+
+        if (usernameError) {
+          if (usernameError.message.includes('30 days')) {
+            toast.error('Username can only be changed once every 30 days');
+          } else if (usernameError.message.includes('not available')) {
+            toast.error('Username not available');
+          } else if (usernameError.message.includes('Invalid username format')) {
+            toast.error('Invalid username format. Use 3-20 lowercase letters, numbers, and underscores only.');
+          } else {
+            throw usernameError;
+          }
+          setSaving(false);
+          return;
+        }
+      }
+
       toast.success('Profile updated! Refreshing page to show changes...');
       setOriginalUsername(username);
       
@@ -204,9 +225,11 @@ export default function SettingsPage() {
       setTimeout(() => {
         window.location.reload();
       }, 1500);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+      setSaving(false);
     }
-    
-    setSaving(false);
   };
 
   if (loading) {
@@ -234,6 +257,8 @@ export default function SettingsPage() {
                   src={avatarUrl}
                   alt="Profile picture"
                   fill
+                  sizes="96px"
+                  priority
                   className="object-cover"
                 />
               ) : (

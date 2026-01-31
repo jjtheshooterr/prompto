@@ -186,18 +186,7 @@ export default function ComparePage() {
           return
         }
 
-        // Track vote event (don't fail if this fails)
-        try {
-          await supabase
-            .from('prompt_events')
-            .insert({
-              prompt_id: promptId,
-              user_id: user.id,
-              event_type: value === 1 ? 'vote_up' : 'vote_down'
-            })
-        } catch (eventError) {
-          console.warn('Failed to track vote event:', eventError)
-        }
+        // Vote stats are updated by database triggers automatically
 
         setUserVotes(prev => ({ ...prev, [promptId]: value }))
         console.log('Vote set successfully')

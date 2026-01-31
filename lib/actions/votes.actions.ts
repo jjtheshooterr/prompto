@@ -24,14 +24,7 @@ export async function setVote(promptId: string, value: 1 | -1) {
     throw new Error(`Failed to vote: ${error.message}`)
   }
 
-  // Track vote event
-  await supabase
-    .from('prompt_events')
-    .insert({
-      prompt_id: promptId,
-      user_id: user.id,
-      event_type: value === 1 ? 'vote_up' : 'vote_down'
-    })
+  // Vote counts are automatically updated in prompt_stats via database triggers
 
   revalidatePath(`/prompts/${promptId}`)
 }

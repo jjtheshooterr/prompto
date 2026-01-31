@@ -27,28 +27,15 @@ export default function PromptDetailPage() {
     const loadInitialData = async () => {
       await loadData()
 
-      // Track view event client-side
+      // Track view event client-side using new increment function
       if (user) {
         const supabase = createClient()
 
-        // Insert view event
-        try {
-          await supabase
-            .from('prompt_events')
-            .insert({
-              prompt_id: promptId,
-              user_id: user.id,
-              event_type: 'view'
-            })
-        } catch (eventError) {
-          console.warn('Failed to track view event:', eventError)
-        }
-
         // Update view count using RPC function
         try {
-          await supabase.rpc('increment_view_count', { prompt_id: promptId })
+          await supabase.rpc('increment_prompt_views', { prompt_id: promptId })
         } catch (rpcError) {
-          console.warn('RPC failed for view count:', rpcError)
+          console.warn('Failed to increment view count:', rpcError)
         }
       }
 
@@ -127,19 +114,6 @@ export default function PromptDetailPage() {
           console.error('Error details:', JSON.stringify(error, null, 2))
           toast.error('Could not record vote')
           return
-        }
-
-        // Track vote event
-        try {
-          await supabase
-            .from('prompt_events')
-            .insert({
-              prompt_id: promptId,
-              user_id: user.id,
-              event_type: value === 1 ? 'vote_up' : 'vote_down'
-            })
-        } catch (eventError) {
-          console.warn('Failed to track vote event:', eventError)
         }
 
         setUserVote(value)
@@ -252,27 +226,14 @@ export default function PromptDetailPage() {
     await navigator.clipboard.writeText(text)
 
     if (user) {
-      // Track copy event client-side
+      // Track copy using new increment function
       const supabase = createClient()
-
-      // Insert copy event
-      try {
-        await supabase
-          .from('prompt_events')
-          .insert({
-            prompt_id: promptId,
-            user_id: user.id,
-            event_type: 'copy'
-          })
-      } catch (eventError) {
-        console.warn('Failed to track copy event:', eventError)
-      }
 
       // Update copy count using RPC function
       try {
-        await supabase.rpc('increment_copy_count', { prompt_id: promptId })
+        await supabase.rpc('increment_prompt_copies', { prompt_id: promptId })
       } catch (rpcError) {
-        console.warn('RPC failed for copy count:', rpcError)
+        console.warn('Failed to increment copy count:', rpcError)
       }
     }
 

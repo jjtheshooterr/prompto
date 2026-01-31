@@ -52,6 +52,21 @@
 |----------|---------|------|----------|
 | [`LAUNCH_DAY_CHECKLIST.md`](LAUNCH_DAY_CHECKLIST.md) | Complete launch sequence | 30 min | ⭐⭐⭐ |
 
+### 🔧 Technical Implementation Details
+
+| Document | Purpose | Notes |
+|----------|---------|-------|
+| [`CRITICAL_FIXES_APPLIED.md`](CRITICAL_FIXES_APPLIED.md) | Critical production fixes summary | Reference |
+| [`CRITICAL_INDEXES_APPLIED.md`](CRITICAL_INDEXES_APPLIED.md) | Performance indexes (10-100x improvement) | Reference |
+| [`CRITICAL_SECURITY_FIXES_APPLIED.md`](CRITICAL_SECURITY_FIXES_APPLIED.md) | P0 security vulnerabilities fixed | Reference |
+| [`APPLICATION_UPDATES_COMPLETE.md`](APPLICATION_UPDATES_COMPLETE.md) | App code updates complete | Reference |
+| [`FORK_INTEGRITY_COMPLETE.md`](FORK_INTEGRITY_COMPLETE.md) | Fork integrity enforcement details | Reference |
+| [`REPORTING_SYSTEM_FIXED.md`](REPORTING_SYSTEM_FIXED.md) | Reporting system architecture | Reference |
+| [`PROMPT_EVENTS_OPTIMIZATION.md`](PROMPT_EVENTS_OPTIMIZATION.md) | Events table optimization strategy | Reference |
+| [`SCHEMA_VERIFICATION_COMPLETE.md`](SCHEMA_VERIFICATION_COMPLETE.md) | Complete schema verification | Reference |
+| [`SECURITY_LINTER_FIXES.md`](SECURITY_LINTER_FIXES.md) | Security improvements applied | Reference |
+| [`SECURITY_FIXES_SUMMARY.md`](SECURITY_FIXES_SUMMARY.md) | Security fixes overview | Reference |
+
 ### 📋 Historical Documentation
 
 | Document | Purpose | Notes |
