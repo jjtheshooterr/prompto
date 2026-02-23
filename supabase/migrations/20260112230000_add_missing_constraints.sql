@@ -2,42 +2,58 @@
 
 -- 1. Add uniqueness constraint to problem_members (problem_id, user_id)
 -- This prevents duplicate memberships
-alter table public.problem_members 
-add constraint problem_members_problem_id_user_id_key unique (problem_id, user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'problem_members_problem_id_user_id_key'
+  ) THEN
+    ALTER TABLE public.problem_members 
+    ADD CONSTRAINT problem_members_problem_id_user_id_key UNIQUE (problem_id, user_id);
+  END IF;
+END $$;
 
 -- 2. Add uniqueness constraint to prompts.slug within problem scope
 -- This ensures slugs are unique within each problem
-alter table public.prompts 
-add constraint prompts_problem_id_slug_key unique (problem_id, slug);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'prompts_problem_id_slug_key'
+  ) THEN
+    ALTER TABLE public.prompts 
+    ADD CONSTRAINT prompts_problem_id_slug_key UNIQUE (problem_id, slug);
+  END IF;
+END $$;
 
 -- 3. Create function to enforce pinned_prompt_id belongs to the problem
-create or replace function public.enforce_pinned_prompt_belongs_to_problem() 
-returns trigger 
-language plpgsql 
-as $$ 
-begin   
-  if new.pinned_prompt_id is null then     
-    return new;   
-  end if;    
+CREATE OR REPLACE FUNCTION public.enforce_pinned_prompt_belongs_to_problem() 
+RETURNS TRIGGER 
+LANGUAGE plpgsql 
+AS $$ 
+BEGIN   
+  IF NEW.pinned_prompt_id IS NULL THEN     
+    RETURN NEW;   
+  END IF;    
   
-  if not exists (     
-    select 1     
-    from public.prompts p     
-    where p.id = new.pinned_prompt_id       
-      and p.problem_id = new.id   
-  ) then     
-    raise exception 'Pinned prompt % does not belong to problem %', new.pinned_prompt_id, new.id;   
-  end if;    
+  IF NOT EXISTS (     
+    SELECT 1     
+    FROM public.prompts p     
+    WHERE p.id = NEW.pinned_prompt_id       
+      AND p.problem_id = NEW.id   
+  ) THEN     
+    RAISE EXCEPTION 'Pinned prompt % does not belong to problem %', NEW.pinned_prompt_id, NEW.id;   
+  END IF;    
   
-  return new; 
-end; 
+  RETURN NEW; 
+END; 
 $$;
 
 -- Drop existing trigger if it exists and create new one
-drop trigger if exists trg_enforce_pinned_prompt on public.problems;
+DROP TRIGGER IF EXISTS trg_enforce_pinned_prompt ON public.problems;
 
-create trigger trg_enforce_pinned_prompt 
-before insert or update of pinned_prompt_id 
-on public.problems 
-for each row 
-execute function public.enforce_pinned_prompt_belongs_to_problem();
+CREATE TRIGGER trg_enforce_pinned_prompt 
+BEFORE INSERT OR UPDATE OF pinned_prompt_id 
+ON public.problems 
+FOR EACH ROW 
+EXECUTE FUNCTION public.enforce_pinned_prompt_belongs_to_problem();

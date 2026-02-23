@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/app/providers'
 
 interface UserStats {
   problemsCreated: number
@@ -20,29 +21,25 @@ interface RecentActivity {
 }
 
 export default function ClientDashboard() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth()
   const [stats, setStats] = useState<UserStats>({
     problemsCreated: 0,
     promptsSubmitted: 0,
     votesCast: 0,
-    promptsForked: 0
+    promptsForked: 0,
   })
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [myPrompts, setMyPrompts] = useState<any[]>([])
   const [topPrompts, setTopPrompts] = useState<any[]>([])
 
   useEffect(() => {
+    if (loading) return  // wait for auth context to resolve
     const loadDashboardData = async () => {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
-        setLoading(false)
         return
       }
-
-      setUser(user)
 
       // Load user statistics
       const [problemsResult, promptsResult, votesResult, forksResult] = await Promise.all([
@@ -51,19 +48,19 @@ export default function ClientDashboard() {
           .from('problems')
           .select('id')
           .eq('created_by', user.id),
-        
+
         // Prompts submitted by user
         supabase
           .from('prompts')
           .select('id')
           .eq('created_by', user.id),
-        
+
         // Votes cast by user
         supabase
           .from('votes')
           .select('prompt_id')
           .eq('user_id', user.id),
-        
+
         // Prompts forked by user (prompts with parent_prompt_id)
         supabase
           .from('prompts')
@@ -76,7 +73,7 @@ export default function ClientDashboard() {
         problemsCreated: problemsResult.data?.length || 0,
         promptsSubmitted: promptsResult.data?.length || 0,
         votesCast: votesResult.data?.length || 0,
-        promptsForked: forksResult.data?.length || 0
+        promptsForked: forksResult.data?.length || 0,
       })
 
       // Load user's recent prompts
@@ -180,12 +177,10 @@ export default function ClientDashboard() {
       } else {
         setTopPrompts([])
       }
-
-      setLoading(false)
     }
 
     loadDashboardData()
-  }, [])
+  }, [user, loading])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -210,7 +205,7 @@ export default function ClientDashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-gray-600">Welcome to your Promptvexity dashboard</p>
-          
+
           {user ? (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-700">✅ Welcome back, {user.email}!</p>
@@ -240,7 +235,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-lg border shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
@@ -254,7 +249,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-lg border shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
@@ -268,7 +263,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white p-6 rounded-lg border shadow-sm">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
@@ -284,7 +279,6 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Link
                 href="/create/problem"
@@ -371,7 +365,7 @@ export default function ClientDashboard() {
                                 <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
                               </div>
                             )}
-                            <Link 
+                            <Link
                               href={`/prompts/${prompt.id}`}
                               className="font-medium text-gray-900 hover:text-blue-600"
                             >
@@ -396,7 +390,7 @@ export default function ClientDashboard() {
                             </svg>
                             {prompt.prompt_stats?.[0]?.fork_count || 0}
                           </span>
-                          <Link 
+                          <Link
                             href={`/prompts/${prompt.id}/edit`}
                             className="text-blue-600 hover:text-blue-700"
                           >
@@ -418,7 +412,7 @@ export default function ClientDashboard() {
                   View All →
                 </Link>
               </div>
-              
+
               {topPrompts.length > 0 ? (
                 <div className="space-y-4">
                   {topPrompts.map((prompt) => (
@@ -434,7 +428,7 @@ export default function ClientDashboard() {
                                 <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
                               </div>
                             )}
-                            <Link 
+                            <Link
                               href={`/prompts/${prompt.id}`}
                               className="font-medium text-gray-900 hover:text-blue-600"
                             >
@@ -466,7 +460,7 @@ export default function ClientDashboard() {
                   </svg>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No top rated prompts yet</h3>
                   <p className="text-gray-600 mb-4">Be the first to create and vote on prompts!</p>
-                  <Link 
+                  <Link
                     href="/create/prompt"
                     className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
@@ -490,7 +484,7 @@ export default function ClientDashboard() {
                       <p className="text-gray-600 text-sm">Define a coding challenge that needs AI prompt solutions</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-3">
                     <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-green-600 text-sm font-medium">2</span>
@@ -500,7 +494,7 @@ export default function ClientDashboard() {
                       <p className="text-gray-600 text-sm">Explore problems created by the community and add your prompt solutions</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-start space-x-3">
                     <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <span className="text-purple-600 text-sm font-medium">3</span>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { REPORT_REASONS } from '@/types/reports'
 import { toast } from 'sonner'
+import { useAuth } from '@/app/providers'
 
 interface ReportModalProps {
   isOpen: boolean
@@ -23,25 +24,25 @@ export default function ReportModal({
   const [reason, setReason] = useState('')
   const [details, setDetails] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const { user } = useAuth()
 
   if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!reason) {
       toast('Please select a reason for reporting')
       return
     }
 
     setSubmitting(true)
-    
+
     try {
       const supabase = createClient()
-      
+
       // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      if (!user) {
         toast('Please log in to report content')
         return
       }
@@ -81,13 +82,13 @@ export default function ReportModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
         <h2 className="text-xl font-bold mb-4">Report Content</h2>
-        
+
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-600">Reporting:</div>
           <div className="font-medium">{contentTitle}</div>
           <div className="text-xs text-gray-500 capitalize">{contentType}</div>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

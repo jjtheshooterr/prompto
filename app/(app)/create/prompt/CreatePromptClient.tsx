@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/app/providers'
 
 interface CreatePromptClientProps {
   user: any
@@ -13,6 +14,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [paramsError, setParamsError] = useState('')
+  const { user: contextUser } = useAuth()
 
   const validateParams = (params: string) => {
     if (!params || !params.trim()) {
@@ -36,9 +38,8 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
       // Create prompt directly from client instead of using server action
       const supabase = createClient()
 
-      // Double-check authentication
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      // Double-check authentication via context
+      if (!contextUser) {
         throw new Error('Please log in again')
       }
 

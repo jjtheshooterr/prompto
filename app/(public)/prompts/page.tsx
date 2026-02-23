@@ -9,7 +9,8 @@ export const revalidate = 120
 interface AllPromptsPageProps {
   searchParams: Promise<{
     filter?: 'all' | 'originals' | 'forks'
-    sort?: 'newest' | 'top' | 'most_forked'
+    sort?: 'newest' | 'top' | 'most_forked' | 'best'
+    search?: string
     page?: string
   }>
 }
@@ -17,77 +18,94 @@ interface AllPromptsPageProps {
 export default async function AllPromptsPage({ searchParams }: AllPromptsPageProps) {
   const params = await searchParams
   const filter = (params.filter || 'all') as 'all' | 'originals' | 'forks'
-  const sort = (params.sort || 'newest') as 'newest' | 'top' | 'most_forked'
+  const sort = (params.sort || 'newest') as 'newest' | 'top' | 'most_forked' | 'best'
+  const search = params.search || ''
   const currentPage = Number(params.page) || 1
   const limit = 12
 
   const supabase = await createClient()
 
-  // Get total count
-  let countQuery = supabase
-    .from('prompts')
-    .select('id', { count: 'exact', head: true })
-    .eq('is_listed', true)
-    .eq('is_hidden', false)
-    .eq('is_deleted', false)
-    .eq('visibility', 'public')
-
-  if (filter === 'originals') {
-    countQuery = countQuery.is('parent_prompt_id', null)
-  } else if (filter === 'forks') {
-    countQuery = countQuery.not('parent_prompt_id', 'is', null)
-  }
-
-  const { count } = await countQuery
-  const total = count || 0
-  const totalPages = Math.ceil(total / limit)
-  const offset = (currentPage - 1) * limit
-
-  // Get prompts using RPC
-  const { data: promptsData, error } = await supabase
-    .rpc('get_ranked_prompts', {
-      sort_by: sort,
-      filter_type: filter,
-      limit_count: limit,
-      offset_count: offset
-    })
-
+  // Get prompts
   let prompts: any[] = []
+  let total = 0
 
-  if (!error && promptsData && promptsData.length > 0) {
-    // Get problems separately
-    const problemIds = [...new Set(promptsData.map((p: any) => p.problem_id).filter(Boolean))]
-    const { data: problemsData } = await supabase
-      .from('problems')
-      .select('id, title, slug')
-      .in('id', problemIds)
+  if (search) {
+    // Use full-text search
+    const { data: searchData, error: searchError } = await supabase
+      .from('prompts')
+      .select(`
+        *,
+        problems!prompts_problem_id_fkey (title, slug),
+        prompt_stats (
+          upvotes, downvotes, score, copy_count, view_count, fork_count,
+          works_count, fails_count, reviews_count
+        )
+      `)
+      .textSearch('fts', search, { type: 'websearch' })
+      .eq('is_listed', true)
+      .eq('is_hidden', false)
+      .eq('is_deleted', false)
+      .range((currentPage - 1) * limit, currentPage * limit - 1)
 
-    // Get stats
-    const promptIds = promptsData.map((p: any) => p.id)
-    const { data: statsData } = await supabase
-      .from('prompt_stats')
-      .select('*')
-      .in('prompt_id', promptIds)
+    // Also get count for search
+    const { count: searchCount } = await supabase
+      .from('prompts')
+      .select('id', { count: 'exact', head: true })
+      .textSearch('fts', search, { type: 'websearch' })
+      .eq('is_listed', true)
+      .eq('is_hidden', false)
+      .eq('is_deleted', false)
 
-    // Attach problems and format stats
-    prompts = promptsData.map((prompt: any) => {
-      const stats = statsData?.find(s => s.prompt_id === prompt.id)
-      const problem = problemsData?.find(p => p.id === prompt.problem_id)
+    prompts = searchData || []
+    total = searchCount || 0
+  } else {
+    // Normal listing
+    let query = supabase
+      .from(sort === 'best' ? 'prompt_rankings' : 'prompts')
+      .select(`
+        *,
+        problems!prompts_problem_id_fkey (title, slug),
+        prompt_stats (
+          upvotes, downvotes, score, copy_count, view_count, fork_count,
+          works_count, fails_count, reviews_count
+        )
+      `, { count: 'exact' })
+      .eq('is_listed', true)
+      .eq('is_hidden', false)
+      .eq('is_deleted', false)
 
-      return {
-        ...prompt,
-        problems: problem ? { title: problem.title, slug: problem.slug } : { title: 'Unknown Problem', slug: '' },
-        prompt_stats: [stats || {
-          upvotes: 0,
-          downvotes: 0,
-          score: 0,
-          copy_count: 0,
-          view_count: 0,
-          fork_count: 0
-        }]
-      }
-    })
+    if (filter === 'originals') {
+      query = query.is('parent_prompt_id', null)
+    } else if (filter === 'forks') {
+      query = query.not('parent_prompt_id', 'is', null)
+    }
+
+    if (sort === 'best') {
+      query = query.order('rank_score', { ascending: false })
+    } else if (sort === 'most_forked') {
+      query = query.order('fork_count', { ascending: false, referencedTable: 'prompt_stats' })
+    } else if (sort === 'top') {
+      query = query.order('upvotes', { ascending: false, referencedTable: 'prompt_stats' })
+    } else {
+      query = query.order('created_at', { ascending: false })
+    }
+
+    const { data, count: normalCount } = await query
+      .range((currentPage - 1) * limit, currentPage * limit - 1)
+
+    prompts = data || []
+    total = normalCount || 0
   }
+
+  const totalPages = Math.ceil(total / limit)
+
+  // Format prompts to match card expectations if needed
+  prompts = prompts.map(p => ({
+    ...p,
+    prompt_stats: Array.isArray(p.prompt_stats) ? p.prompt_stats : [p.prompt_stats].filter(Boolean)
+  }))
+
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -99,7 +117,7 @@ export default async function AllPromptsPage({ searchParams }: AllPromptsPagePro
       </div>
 
       {/* Filters - Client Component */}
-      <PromptsFilterClient filter={filter} sort={sort} />
+      <PromptsFilterClient filter={filter} sort={sort} search={search} />
 
       {/* Results */}
       <div className="mb-4 text-sm text-gray-600">
@@ -152,14 +170,13 @@ export default async function AllPromptsPage({ searchParams }: AllPromptsPagePro
         <div className="mt-8 flex justify-center">
           <nav className="flex items-center gap-2">
             <Link
-              href={`/prompts?filter=${filter}&sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
-              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${
-                currentPage === 1 ? 'opacity-50 pointer-events-none' : ''
-              }`}
+              href={`/prompts?filter=${filter}&sort=${sort}${search ? `&search=${search}` : ''}&page=${Math.max(1, currentPage - 1)}`}
+              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${currentPage === 1 ? 'opacity-50 pointer-events-none' : ''
+                }`}
             >
               Previous
             </Link>
-            
+
             {[...Array(totalPages)].map((_, i) => {
               const page = i + 1
               if (
@@ -170,12 +187,11 @@ export default async function AllPromptsPage({ searchParams }: AllPromptsPagePro
                 return (
                   <Link
                     key={page}
-                    href={`/prompts?filter=${filter}&sort=${sort}&page=${page}`}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      currentPage === page
-                        ? 'bg-blue-600 text-white'
-                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                    href={`/prompts?filter=${filter}&sort=${sort}${search ? `&search=${search}` : ''}&page=${page}`}
+                    className={`px-4 py-2 rounded-lg transition-colors ${currentPage === page
+                      ? 'bg-blue-600 text-white'
+                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
                   >
                     {page}
                   </Link>
@@ -188,12 +204,11 @@ export default async function AllPromptsPage({ searchParams }: AllPromptsPagePro
               }
               return null
             })}
-            
+
             <Link
-              href={`/prompts?filter=${filter}&sort=${sort}&page=${Math.min(totalPages, currentPage + 1)}`}
-              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${
-                currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''
-              }`}
+              href={`/prompts?filter=${filter}&sort=${sort}${search ? `&search=${search}` : ''}&page=${Math.min(totalPages, currentPage + 1)}`}
+              className={`px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors ${currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''
+                }`}
             >
               Next
             </Link>

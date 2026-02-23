@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ProblemInput, ProblemConstraint, ProblemSuccessCriterion } from '@/types/problems'
 import { toast } from 'sonner'
+import { useAuth } from '@/app/providers'
 
 interface CreateProblemClientProps {
   user: any
@@ -13,6 +14,7 @@ interface CreateProblemClientProps {
 export default function CreateProblemClient({ user }: CreateProblemClientProps) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
+  const { user: contextUser } = useAuth()
   const [inputs, setInputs] = useState<ProblemInput[]>([
     { name: '', description: '', required: true }
   ])
@@ -77,9 +79,8 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       // Create problem directly from client instead of using server action
       const supabase = createClient()
 
-      // Double-check authentication
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      // Double-check authentication via context
+      if (!contextUser) {
         throw new Error('Please log in again')
       }
 

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/app/providers'
 
 type ReviewType = 'worked' | 'failed' | 'note'
 
@@ -14,7 +15,8 @@ interface PromptReviewFormProps {
 export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFormProps) {
     const [reviewType, setReviewType] = useState<ReviewType | null>(null)
     const [reason, setReason] = useState('')
-    const [isPending, setIsPending] = useState(false) // Changed from useTransition
+    const [isPending, setIsPending] = useState(false)
+    const { user } = useAuth()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -35,7 +37,6 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
         try {
             // Use client-side Supabase like voting does
             const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
 
             if (!user) {
                 toast.error('Please log in to submit a review')

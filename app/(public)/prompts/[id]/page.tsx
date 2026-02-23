@@ -288,7 +288,7 @@ export default function PromptDetailPage() {
     fork_count: 0,
     works_count: 0,
     fails_count: 0,
-    reviews_count: 0
+    reviews_count: 0,
   }
 
   console.log('Prompt data:', prompt)
@@ -312,7 +312,14 @@ export default function PromptDetailPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
+        <div className="flex items-center gap-3 mb-4">
+          <h1 className="text-3xl font-bold">{prompt.title}</h1>
+          {prompt.depth > 0 && (
+            <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold ring-1 ring-inset ring-blue-700/10">
+              Evolution Depth: {prompt.depth}
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-gray-500">
@@ -459,7 +466,6 @@ export default function PromptDetailPage() {
           {/* Fork Lineage */}
           <ForkLineage
             promptId={promptId}
-            parentPromptId={prompt.parent_prompt_id}
           />
 
           {/* Review Form - Evidence */}
@@ -484,8 +490,8 @@ export default function PromptDetailPage() {
                   <div key={review.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium border ${review.review_type === 'worked' ? 'bg-green-100 text-green-800 border-green-200' :
-                          review.review_type === 'failed' ? 'bg-red-100 text-red-800 border-red-200' :
-                            'bg-gray-100 text-gray-800 border-gray-200'
+                        review.review_type === 'failed' ? 'bg-red-100 text-red-800 border-red-200' :
+                          'bg-gray-100 text-gray-800 border-gray-200'
                         }`}>
                         {review.review_type === 'worked' ? '✅ Worked' :
                           review.review_type === 'failed' ? '⚠️ Failed' : '📝 Note'}

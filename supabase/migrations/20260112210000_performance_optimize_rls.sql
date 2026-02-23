@@ -101,7 +101,7 @@ WITH CHECK ((SELECT auth.uid()) IS NOT NULL);
 DROP POLICY IF EXISTS "reports_insert" ON public.reports;
 CREATE POLICY "reports_insert"
 ON public.reports FOR INSERT TO authenticated
-WITH CHECK (reported_by = (SELECT auth.uid()));
+WITH CHECK (reporter_id = (SELECT auth.uid()));
 
 DROP POLICY IF EXISTS "reports_update" ON public.reports;
 CREATE POLICY "reports_update"

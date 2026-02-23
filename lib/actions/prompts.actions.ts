@@ -3,22 +3,24 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function listPromptsByProblem(problemId: string, sort: 'newest' | 'top' = 'top') {
+export type PromptSort = 'newest' | 'top' | 'best' | 'most_improved'
+
+export async function listPromptsByProblem(problemId: string, sort: PromptSort = 'newest') {
   const supabase = await createClient()
 
-  // First get the prompts
   let query = supabase
-    .from('prompts')
+    .from(sort === 'best' || sort === 'most_improved' ? 'prompt_rankings' : 'prompts')
     .select('*')
     .eq('problem_id', problemId)
     .eq('is_listed', true)
     .eq('is_hidden', false)
-    .eq('is_deleted', false) // Add soft delete check
+    .eq('is_deleted', false)
 
-  if (sort === 'newest') {
-    query = query.order('created_at', { ascending: false })
+  if (sort === 'best') {
+    query = query.order('rank_score', { ascending: false })
+  } else if (sort === 'most_improved') {
+    query = query.order('improvement_score', { ascending: false })
   } else {
-    // For 'top' sort, we'll sort client-side after getting stats
     query = query.order('created_at', { ascending: false })
   }
 
@@ -29,65 +31,49 @@ export async function listPromptsByProblem(problemId: string, sort: 'newest' | '
     return []
   }
 
-  if (!prompts || prompts.length === 0) {
-    return []
-  }
+  if (!prompts || prompts.length === 0) return []
 
-  // Fetch stats separately for all prompts
-  const promptIds = prompts.map(p => p.id)
+  const promptIds = prompts.map((p: any) => p.id)
   const { data: statsData } = await supabase
     .from('prompt_stats')
     .select('*')
     .in('prompt_id', promptIds)
 
-  console.log(`Found ${prompts.length} prompts for problem ${problemId}`)
-  console.log('Prompt IDs:', promptIds)
-  console.log('Stats data:', statsData)
-
-  // Fetch author data separately
-  const userIds = [...new Set(prompts.map(p => p.created_by).filter(Boolean))]
+  const userIds = [...new Set(prompts.map((p: any) => p.created_by).filter(Boolean))]
   let authorsMap: Record<string, any> = {}
   if (userIds.length > 0) {
     const { data: authors } = await supabase
       .from('profiles')
       .select('id, username, display_name, avatar_url')
       .in('id', userIds)
-    
     if (authors) {
-      authorsMap = authors.reduce((acc, author) => {
-        acc[author.id] = author
+      authorsMap = authors.reduce((acc: Record<string, any>, a: any) => {
+        acc[a.id] = a
         return acc
-      }, {} as Record<string, any>)
+      }, {})
     }
   }
 
-  // Attach stats and author to prompts
-  let promptsWithStats = prompts.map(prompt => {
-    const stats = statsData?.find(s => s.prompt_id === prompt.id)
+  const defaultStats = {
+    upvotes: 0, downvotes: 0, score: 0,
+    copy_count: 0, view_count: 0, fork_count: 0,
+    works_count: 0, fails_count: 0, reviews_count: 0,
+  }
+
+  let promptsWithStats = prompts.map((prompt: any) => {
+    const stats = statsData?.find((s: any) => s.prompt_id === prompt.id)
     return {
       ...prompt,
       author: prompt.created_by ? authorsMap[prompt.created_by] : null,
-      prompt_stats: stats ? [stats] : [{
-        upvotes: 0,
-        downvotes: 0,
-        score: 0,
-        copy_count: 0,
-        view_count: 0,
-        fork_count: 0
-      }]
+      prompt_stats: [stats ? { ...defaultStats, ...stats } : defaultStats],
     }
   })
 
-  // Apply sorting for 'top' after attaching stats
   if (sort === 'top') {
-    promptsWithStats = promptsWithStats.sort((a, b) => {
-      const aUpvotes = a.prompt_stats[0]?.upvotes || 0
-      const bUpvotes = b.prompt_stats[0]?.upvotes || 0
-      if (bUpvotes !== aUpvotes) {
-        return bUpvotes - aUpvotes
-      }
-      // Fallback to created_at for same upvote counts
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    promptsWithStats = promptsWithStats.sort((a: any, b: any) => {
+      const aUp = a.prompt_stats[0]?.upvotes || 0
+      const bUp = b.prompt_stats[0]?.upvotes || 0
+      return bUp !== aUp ? bUp - aUp : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
   }
 
@@ -102,14 +88,10 @@ export async function getPromptById(id: string) {
     .from('prompts')
     .select(`
       *,
-      problems (title, slug),
+      problems!prompts_problem_id_fkey (title, slug),
       prompt_stats (
-        upvotes,
-        downvotes,
-        score,
-        copy_count,
-        view_count,
-        fork_count
+        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        works_count, fails_count, reviews_count
       )
     `)
     .eq('id', id)
@@ -131,12 +113,8 @@ export async function getPromptsByIds(ids: string[]) {
     .select(`
       *,
       prompt_stats (
-        upvotes,
-        downvotes,
-        score,
-        copy_count,
-        view_count,
-        fork_count
+        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        works_count, fails_count, reviews_count
       )
     `)
     .in('id', ids)
@@ -538,4 +516,62 @@ export async function updatePrompt(promptId: string, formData: FormData) {
     console.error('Error in updatePrompt:', error)
     throw error
   }
+}
+
+export async function searchPrompts(searchQuery: string, limit: number = 20) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('prompts')
+    .select(`
+      *,
+      problems!prompts_problem_id_fkey (title, slug),
+      prompt_stats (
+        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        works_count, fails_count, reviews_count
+      )
+    `)
+    .textSearch('fts', searchQuery, {
+      type: 'websearch',
+      config: 'english'
+    })
+    .eq('is_listed', true)
+    .eq('is_hidden', false)
+    .eq('is_deleted', false)
+    .limit(limit)
+
+  if (error) {
+    console.error('Error searching prompts:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function getPromptChildren(promptId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .rpc('get_prompt_children', { p_prompt_id: promptId })
+
+  if (error) {
+    console.error('Error fetching prompt children:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function getPromptLineage(promptId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .rpc('get_prompt_lineage', { p_prompt_id: promptId })
+
+  if (error) {
+    console.error('Error fetching prompt lineage:', error)
+    return []
+  }
+
+  return data || []
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { useAuth } from '@/app/providers'
 
 interface ForkModalProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ export default function ForkModal({
   const [improvementSummary, setImprovementSummary] = useState('')
   const [bestFor, setBestFor] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { user } = useAuth()
 
   if (!isOpen) return null
 
@@ -45,8 +47,7 @@ export default function ForkModal({
       const supabase = createClient()
 
       // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      if (!user) {
         toast('Please log in to fork prompts')
         return
       }

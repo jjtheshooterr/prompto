@@ -52,7 +52,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
     works_count: 0,
     fails_count: 0,
     reviews_count: 0,
-    last_reviewed_at: null
+    last_reviewed_at: null,
   }
 
   // Extract fork reason and changes summary from notes if this is a fork
@@ -183,11 +183,11 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                 </>
               )}
             </div>
-            
+
             {/* Author attribution */}
             <div className="text-sm text-gray-600 mt-1">
               by {prompt.author ? (
-                <AuthorChip 
+                <AuthorChip
                   userId={prompt.created_by}
                   username={prompt.author.username}
                   displayName={prompt.author.display_name}
@@ -253,58 +253,59 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
       </div>
 
       {/* Footer - pinned to bottom */}
-      <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
-        <div className="flex gap-4 text-sm text-gray-500">
-          <span>{stats.view_count} views</span>
-          <span>{stats.copy_count} copies</span>
-          {/* Show fork count with icon - Fix #3 */}
-          {stats.fork_count > 0 && (
-            <span className="flex items-center gap-1 text-orange-600">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              {stats.fork_count} forks
-            </span>
-          )}
-        </div>
+      <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-100">
+        <div className="flex justify-between items-center">
+          <div className="flex gap-4 text-sm text-gray-500">
+            <span>{stats.view_count} views</span>
+            <span>{stats.copy_count} copies</span>
+            {stats.fork_count > 0 && (
+              <span className="flex items-center gap-1 text-orange-600">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                </svg>
+                {stats.fork_count} forks
+              </span>
+            )}
+          </div>
 
-        <div className="flex gap-2">
-          {onAddToCompare && (
-            <button
-              className={`text-sm transition-colors ${isInComparison
-                ? 'btnPrimary text-white'
-                : 'btnSecondary text-slate-700'
-                }`}
-              onClick={() => onAddToCompare(prompt.id)}
+          <div className="flex gap-2">
+            {onAddToCompare && (
+              <button
+                className={`text-sm transition-colors ${isInComparison
+                  ? 'btnPrimary text-white'
+                  : 'btnSecondary text-slate-700'
+                  }`}
+                onClick={() => onAddToCompare(prompt.id)}
+              >
+                {isInComparison ? '✓ In Comparison' : 'Compare'}
+              </button>
+            )}
+            <Link
+              href={`/prompts/${prompt.id}`}
+              className="btnPrimary text-white text-sm"
             >
-              {isInComparison ? '✓ In Comparison' : 'Compare'}
+              View Details
+            </Link>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
+              title="Report this prompt"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
             </button>
-          )}
-          <Link
-            href={`/prompts/${prompt.id}`}
-            className="btnPrimary text-white text-sm"
-          >
-            View Details
-          </Link>
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
-            title="Report this prompt"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+          </div>
+        </div>{/* end justify-between row */}
 
-      <ReportModal
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-        contentType="prompt"
-        contentId={prompt.id}
-        contentTitle={prompt.title}
-      />
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          contentType="prompt"
+          contentId={prompt.id}
+          contentTitle={prompt.title}
+        />
+      </div>
     </div>
   )
 }

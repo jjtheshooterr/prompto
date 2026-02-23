@@ -47,7 +47,11 @@ ALTER TABLE problems
   ADD COLUMN IF NOT EXISTS visibility problem_visibility NOT NULL DEFAULT 'public';
 
 -- Ensure ownership is set for existing problems
+-- First delete any orphaned problems without a creator
+DELETE FROM problems WHERE created_by IS NULL;
+-- Then set owner_id from created_by
 UPDATE problems SET owner_id = created_by WHERE owner_id IS NULL;
+-- Now we can safely add the NOT NULL constraint
 ALTER TABLE problems ALTER COLUMN owner_id SET NOT NULL;
 
 -- 5. Create problem_members table for workspace collaboration

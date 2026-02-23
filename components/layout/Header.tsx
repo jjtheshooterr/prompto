@@ -5,46 +5,28 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import GlobalSearch from '@/components/search/GlobalSearch'
+import { useAuth } from '@/app/providers'
 
 export default function Header() {
-  const [user, setUser] = useState<any>(null)
+  const { user, loading } = useAuth()
   const [userProfile, setUserProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [compareCount, setCompareCount] = useState(0)
 
+  // Fetch profile whenever the user changes
   useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      
-      // Get user profile to check role
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, username')
-          .eq('id', user.id)
-          .single()
-        setUserProfile(profile)
-      }
-      
-      setLoading(false)
+    if (!user) {
+      setUserProfile(null)
+      return
     }
-
-    getUser()
-
-    // Listen for auth changes
     const supabase = createClient()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (!session?.user) {
-        setUserProfile(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
+    supabase
+      .from('profiles')
+      .select('role, username')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => setUserProfile(data ?? null))
+  }, [user])
 
   // Track compare items count
   useEffect(() => {
@@ -58,7 +40,7 @@ export default function Header() {
 
     // Listen for storage changes
     window.addEventListener('storage', updateCompareCount)
-    
+
     // Listen for custom events when items are added
     window.addEventListener('compareUpdated', updateCompareCount)
 
@@ -71,7 +53,6 @@ export default function Header() {
   const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    setUser(null)
     window.location.href = '/'
   }
 
@@ -84,21 +65,21 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
-            <Image 
-              src="/logo.svg" 
-              alt="Promptvexity Logo" 
-              width={32} 
+            <Image
+              src="/logo.svg"
+              alt="Promptvexity Logo"
+              width={32}
               height={32}
               className="w-8 h-8"
             />
             <span className="text-2xl font-bold text-blue-600">Promptvexity</span>
           </Link>
-          
+
           {/* Search Bar - Desktop */}
           <div className="hidden md:block flex-1 max-w-md mx-8">
             <GlobalSearch />
           </div>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -107,13 +88,12 @@ export default function Header() {
             <Link href="/prompts" className="text-gray-600 hover:text-gray-900 transition-colors">
               All Prompts
             </Link>
-            <Link 
-              href="/compare" 
-              className={`transition-colors relative ${
-                compareCount > 0 
-                  ? 'text-blue-600 hover:text-blue-700 font-medium' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+            <Link
+              href="/compare"
+              className={`transition-colors relative ${compareCount > 0
+                ? 'text-blue-600 hover:text-blue-700 font-medium'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Compare
               {compareCount > 0 && (
@@ -141,7 +121,7 @@ export default function Header() {
               </>
             )}
           </nav>
-          
+
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {loading ? (
@@ -157,14 +137,14 @@ export default function Header() {
               </div>
             ) : (
               <>
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   Sign In
                 </Link>
-                <Link 
-                  href="/signup" 
+                <Link
+                  href="/signup"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Sign Up
@@ -179,10 +159,10 @@ export default function Header() {
             className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             aria-label="Toggle mobile menu"
           >
-            <svg 
-              className="w-6 h-6" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               {mobileMenuOpen ? (
@@ -193,7 +173,7 @@ export default function Header() {
             </svg>
           </button>
         </div>
-        
+
         {/* Search Bar - Mobile */}
         <div className="md:hidden mt-4">
           <GlobalSearch />
@@ -203,27 +183,26 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-gray-200">
             <nav className="flex flex-col space-y-4">
-              <Link 
-                href="/problems" 
+              <Link
+                href="/problems"
                 className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                 onClick={closeMobileMenu}
               >
                 Browse Problems
               </Link>
-              <Link 
-                href="/prompts" 
+              <Link
+                href="/prompts"
                 className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                 onClick={closeMobileMenu}
               >
                 All Prompts
               </Link>
-              <Link 
-                href="/compare" 
-                className={`transition-colors py-2 relative inline-block ${
-                  compareCount > 0 
-                    ? 'text-blue-600 hover:text-blue-700 font-medium' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
+              <Link
+                href="/compare"
+                className={`transition-colors py-2 relative inline-block ${compareCount > 0
+                  ? 'text-blue-600 hover:text-blue-700 font-medium'
+                  : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 onClick={closeMobileMenu}
               >
                 Compare
@@ -233,33 +212,33 @@ export default function Header() {
                   </span>
                 )}
               </Link>
-              
+
               {user ? (
                 <>
-                  <Link 
-                    href="/dashboard" 
+                  <Link
+                    href="/dashboard"
                     className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                     onClick={closeMobileMenu}
                   >
                     Dashboard
                   </Link>
-                  <Link 
-                    href="/workspace" 
+                  <Link
+                    href="/workspace"
                     className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                     onClick={closeMobileMenu}
                   >
                     Workspace
                   </Link>
-                  <Link 
-                    href="/create/problem" 
+                  <Link
+                    href="/create/problem"
                     className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                     onClick={closeMobileMenu}
                   >
                     Create Problem
                   </Link>
                   {userProfile?.role === 'admin' && (
-                    <Link 
-                      href="/admin/reports" 
+                    <Link
+                      href="/admin/reports"
                       className="text-red-600 hover:text-red-700 transition-colors py-2 font-medium"
                       onClick={closeMobileMenu}
                     >
@@ -278,15 +257,15 @@ export default function Header() {
                 </>
               ) : (
                 <>
-                  <Link 
-                    href="/login" 
+                  <Link
+                    href="/login"
                     className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                     onClick={closeMobileMenu}
                   >
                     Sign In
                   </Link>
-                  <Link 
-                    href="/signup" 
+                  <Link
+                    href="/signup"
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
                     onClick={closeMobileMenu}
                   >

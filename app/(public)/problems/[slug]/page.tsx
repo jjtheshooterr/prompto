@@ -1,5 +1,5 @@
 import { getProblemBySlug } from '@/lib/actions/problems.actions'
-import { listPromptsByProblem } from '@/lib/actions/prompts.actions'
+import { listPromptsByProblem, type PromptSort } from '@/lib/actions/prompts.actions'
 import PromptCard from '@/components/prompts/PromptCard'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -10,16 +10,16 @@ export const revalidate = 300
 
 interface ProblemDetailPageProps {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ sort?: 'newest' | 'top' }>
+  searchParams: Promise<{ sort?: PromptSort }>
 }
 
 export default async function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
   const { slug } = await params
-  const { sort = 'top' } = await searchParams
+  const { sort = 'newest' } = await searchParams
 
   // Fetch problem and prompts server-side
   const problem = await getProblemBySlug(slug)
-  
+
   if (!problem) {
     notFound()
   }
@@ -136,25 +136,24 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
 
       {/* Sort Controls */}
       <div className="mb-6">
-        <div className="flex gap-2">
-          <Link
-            href={`/problems/${problem.slug}?sort=top`}
-            className={`px-4 py-2 rounded-lg transition-colors ${sort === 'top'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            Top Rated
-          </Link>
-          <Link
-            href={`/problems/${problem.slug}?sort=newest`}
-            className={`px-4 py-2 rounded-lg transition-colors ${sort === 'newest'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-          >
-            Newest
-          </Link>
+        <div className="flex flex-wrap gap-2">
+          {([
+            { value: 'best', label: '⭐ Best' },
+            { value: 'top', label: '👍 Top Rated' },
+            { value: 'most_improved', label: '🔀 Most Improved' },
+            { value: 'newest', label: '🕐 Newest' },
+          ] as { value: string; label: string }[]).map(({ value, label }) => (
+            <Link
+              key={value}
+              href={`/problems/${problem.slug}?sort=${value}`}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${sort === value
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
       </div>
 

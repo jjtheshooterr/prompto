@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/app/providers'
 
 interface Member {
   id: string
@@ -21,6 +22,7 @@ interface MemberManagementProps {
 }
 
 export default function MemberManagement({ problemId, onClose, onUpdate }: MemberManagementProps) {
+  const { user } = useAuth()
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [newMemberEmail, setNewMemberEmail] = useState('')
@@ -34,7 +36,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
   const loadMembers = async () => {
     try {
       const supabase = createClient()
-      
+
       // Get members first
       const { data: members, error: membersError } = await supabase
         .from('problem_members')
@@ -84,10 +86,9 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
     setAdding(true)
     try {
       const supabase = createClient()
-      
+
       // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      if (!user) {
         throw new Error('Must be authenticated')
       }
 
@@ -114,7 +115,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
         }
         throw new Error(`Failed to add member: ${error.message}`)
       }
-      
+
       setNewMemberEmail('')
       setNewMemberRole('member')
       await loadMembers()
@@ -131,10 +132,9 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
 
     try {
       const supabase = createClient()
-      
+
       // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) {
+      if (!user) {
         throw new Error('Must be authenticated')
       }
 
@@ -200,7 +200,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
                 required
               />
             </div>
-            
+
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                 Role
@@ -216,7 +216,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
                 <option value="admin">Admin - Can manage members</option>
               </select>
             </div>
-            
+
             <button
               type="submit"
               disabled={adding}
@@ -230,7 +230,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
         {/* Current Members */}
         <div>
           <h3 className="font-medium mb-3">Current Members ({members.length})</h3>
-          
+
           {loading ? (
             <div className="text-center py-4">Loading members...</div>
           ) : members.length === 0 ? (
@@ -247,12 +247,12 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
                       Added {new Date(member.created_at).toLocaleDateString()}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <span className={`px-2 py-1 text-xs rounded font-medium ${getRoleColor(member.role)}`}>
                       {member.role}
                     </span>
-                    
+
                     {member.role !== 'owner' && (
                       <button
                         onClick={() => handleRemoveMember(member.user_id)}
