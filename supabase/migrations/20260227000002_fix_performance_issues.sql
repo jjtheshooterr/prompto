@@ -72,31 +72,32 @@ WITH CHECK (
 -- Keep the more descriptive named index, drop the duplicate
 -- Note: Some indexes back constraints and cannot be dropped directly
 
--- prompt_reviews: Both indexes are identical, one backs a constraint
--- Drop the constraint first, then recreate with the better-named index
-ALTER TABLE public.prompt_reviews DROP CONSTRAINT IF EXISTS prompt_reviews_prompt_id_user_id_key;
-DROP INDEX IF EXISTS public.prompt_reviews_user_prompt_unique;
--- Recreate as a unique constraint (which creates an index automatically)
-ALTER TABLE public.prompt_reviews 
-ADD CONSTRAINT prompt_reviews_user_prompt_unique 
-UNIQUE (prompt_id, user_id);
+-- prompt_reviews: Check which constraint exists and handle accordingly
+DO $$
+BEGIN
+    -- Check if the old constraint exists and the new one doesn't
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prompt_reviews_prompt_id_user_id_key') 
+       AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prompt_reviews_user_prompt_unique') THEN
+        ALTER TABLE public.prompt_reviews DROP CONSTRAINT prompt_reviews_prompt_id_user_id_key;
+        -- Recreate as named constraint
+        ALTER TABLE public.prompt_reviews 
+        ADD CONSTRAINT prompt_reviews_user_prompt_unique 
+        UNIQUE (prompt_id, user_id);
+    END IF;
+    
+    -- If the new constraint already exists, just drop the old one if it exists
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prompt_reviews_user_prompt_unique') 
+       AND EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prompt_reviews_prompt_id_user_id_key') THEN
+        ALTER TABLE public.prompt_reviews DROP CONSTRAINT prompt_reviews_prompt_id_user_id_key;
+    END IF;
+END $$;
 
--- prompts: Keep idx_prompts_created_by_created_at, drop idx_prompts_created_by_date
+-- Drop duplicate indexes (skip if they don't exist)
 DROP INDEX IF EXISTS public.idx_prompts_created_by_date;
-
--- prompts: Keep idx_prompts_parent_prompt_id_created_at, drop idx_prompts_forks
 DROP INDEX IF EXISTS public.idx_prompts_forks;
-
--- reports: Keep idx_reports_content_type_content_id, drop idx_reports_content
 DROP INDEX IF EXISTS public.idx_reports_content;
-
--- reports: Keep idx_reports_reporter_id, drop idx_reports_reporter
 DROP INDEX IF EXISTS public.idx_reports_reporter;
-
--- reports: Keep idx_reports_status_created_at, drop idx_reports_status_date
 DROP INDEX IF EXISTS public.idx_reports_status_date;
-
--- username_history: Keep idx_username_history_user_id, drop idx_username_history_user_changed
 DROP INDEX IF EXISTS public.idx_username_history_user_changed;
 
 -- ============================================================
