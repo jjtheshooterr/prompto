@@ -32,35 +32,55 @@ export default function ProblemCard({
   const [updating, setUpdating] = useState(false)
 
   const handleVisibilityChange = async (newVisibility: 'public' | 'unlisted' | 'private') => {
-    if (!isOwner) return
+    if (!isOwner) {
+      console.log('Not owner, cannot change visibility')
+      return
+    }
     
+    console.log('Changing visibility from', visibility, 'to', newVisibility)
     setUpdating(true)
+    
     try {
       const supabase = createClient()
       
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
+        console.error('Auth error:', authError)
         throw new Error('Must be authenticated')
       }
 
-      // Update visibility
-      const { error } = await supabase
+      console.log('User authenticated:', user.id)
+      console.log('Updating problem:', problem.id)
+
+      // Update visibility - RLS policy will check if user has owner/admin role
+      const { data, error } = await supabase
         .from('problems')
         .update({ visibility: newVisibility })
         .eq('id', problem.id)
-        .eq('owner_id', user.id) // Only owner can change visibility
+        .select()
+
+      console.log('Update response:', { data, error })
 
       if (error) {
+        console.error('Update error:', error)
         throw new Error(`Failed to update visibility: ${error.message}`)
       }
 
+      if (!data || data.length === 0) {
+        console.error('No data returned - RLS policy may have blocked the update')
+        throw new Error('Update blocked - you may not have permission to modify this problem')
+      }
+
+      console.log('Successfully updated to:', data[0].visibility)
       setVisibility(newVisibility)
+      alert('Visibility updated successfully!')
     } catch (error) {
       console.error('Failed to update visibility:', error)
       alert(`Failed to update visibility: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setUpdating(false)
     }
-    setUpdating(false)
   }
 
   const getVisibilityColor = (vis: string) => {
