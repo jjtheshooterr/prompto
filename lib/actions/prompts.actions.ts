@@ -21,23 +21,20 @@ export type PromptSort = 'newest' | 'top' | 'best' | 'most_improved'
 export async function listPromptsByProblem(problemId: string, sort: PromptSort = 'newest') {
   const supabase = await createClient()
 
-  let query = supabase
-    .from(sort === 'best' || sort === 'most_improved' ? 'prompt_rankings' : 'prompts')
-    .select('*')
+  const { data: prompts, error } = await supabase
+    .from('prompts')
+    .select(`
+      *,
+      author:profiles!created_by (id, username, display_name, avatar_url),
+      prompt_stats (
+        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        works_count, fails_count, reviews_count
+      )
+    `)
     .eq('problem_id', problemId)
     .eq('is_listed', true)
     .eq('is_hidden', false)
     .eq('is_deleted', false)
-
-  if (sort === 'best') {
-    query = query.order('rank_score', { ascending: false })
-  } else if (sort === 'most_improved') {
-    query = query.order('improvement_score', { ascending: false })
-  } else {
-    query = query.order('created_at', { ascending: false })
-  }
-
-  const { data: prompts, error } = await query
 
   if (error) {
     console.error('Error fetching prompts:', error)
@@ -46,27 +43,6 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
 
   if (!prompts || prompts.length === 0) return []
 
-  const promptIds = prompts.map((p: any) => p.id)
-  const { data: statsData } = await supabase
-    .from('prompt_stats')
-    .select('*')
-    .in('prompt_id', promptIds)
-
-  const userIds = [...new Set(prompts.map((p: any) => p.created_by).filter(Boolean))]
-  let authorsMap: Record<string, any> = {}
-  if (userIds.length > 0) {
-    const { data: authors } = await supabase
-      .from('profiles')
-      .select('id, username, display_name, avatar_url')
-      .in('id', userIds)
-    if (authors) {
-      authorsMap = authors.reduce((acc: Record<string, any>, a: any) => {
-        acc[a.id] = a
-        return acc
-      }, {})
-    }
-  }
-
   const defaultStats = {
     upvotes: 0, downvotes: 0, score: 0,
     copy_count: 0, view_count: 0, fork_count: 0,
@@ -74,21 +50,37 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
   }
 
   let promptsWithStats = prompts.map((prompt: any) => {
-    const stats = statsData?.find((s: any) => s.prompt_id === prompt.id)
+    const statsData = prompt.prompt_stats ? (Array.isArray(prompt.prompt_stats) ? prompt.prompt_stats[0] : prompt.prompt_stats) : null;
+    const authorData = prompt.author ? (Array.isArray(prompt.author) ? prompt.author[0] : prompt.author) : null;
+
     return {
       ...prompt,
-      author: prompt.created_by ? authorsMap[prompt.created_by] : null,
-      prompt_stats: [stats ? { ...defaultStats, ...stats } : defaultStats],
+      author: authorData,
+      prompt_stats: [statsData ? { ...defaultStats, ...statsData } : defaultStats],
     }
   })
 
-  if (sort === 'top') {
-    promptsWithStats = promptsWithStats.sort((a: any, b: any) => {
-      const aUp = a.prompt_stats[0]?.upvotes || 0
-      const bUp = b.prompt_stats[0]?.upvotes || 0
+  // Sort completely in JS since we fetched everything and avoiding prompt_rankings view
+  promptsWithStats = promptsWithStats.sort((a: any, b: any) => {
+    const aStats = a.prompt_stats[0]
+    const bStats = b.prompt_stats[0]
+
+    if (sort === 'best') {
+      const aRankScore = (aStats.upvotes - aStats.downvotes) + (2 * aStats.works_count) - (2 * aStats.fails_count) + aStats.reviews_count;
+      const bRankScore = (bStats.upvotes - bStats.downvotes) + (2 * bStats.works_count) - (2 * bStats.fails_count) + bStats.reviews_count;
+      return bRankScore !== aRankScore ? bRankScore - aRankScore : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    } else if (sort === 'most_improved') {
+      const aImprovement = aStats.fork_count
+      const bImprovement = bStats.fork_count
+      return bImprovement !== aImprovement ? bImprovement - aImprovement : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    } else if (sort === 'top') {
+      const aUp = aStats.upvotes
+      const bUp = bStats.upvotes
       return bUp !== aUp ? bUp - aUp : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
-  }
+    } else {
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    }
+  })
 
   return promptsWithStats
 }
