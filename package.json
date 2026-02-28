@@ -11,7 +11,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --dir app --dir components --dir lib",
+    "lint": "eslint \"{app,components,lib}/**/*.{js,jsx,ts,tsx}\"",
     "seed": "tsx scripts/seed.ts",
     "test": "vitest",
     "test:run": "vitest --run",
