@@ -98,13 +98,13 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
   }, [prompt.parent_prompt_id])
 
   return (
-    <div className={`card p-5 flex flex-col h-full ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
+    <div className={`card p-3 sm:p-5 flex flex-col h-full ${prompt.parent_prompt_id ? 'border-l-4 border-orange-400' : ''}`}>
       {/* Main content area - flexible */}
       <div className="flex-1 flex flex-col">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 mb-3 sm:mb-4">
+          <div className="flex-1 w-full sm:w-auto">
             {/* Fork indicator and title */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-2">
               {prompt.parent_prompt_id && (
                 <div className="flex items-center gap-1 text-orange-600">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,14 +117,14 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
 
             <Link
               href={`/prompts/${prompt.id}`}
-              className="text-xl font-semibold hover:text-blue-600 transition-colors block"
+              className="text-lg sm:text-xl font-semibold hover:text-blue-600 transition-colors block"
             >
               {prompt.title}
             </Link>
 
             {/* Best For tags */}
             {prompt.best_for && prompt.best_for.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="flex flex-wrap gap-1.5 mt-2">
                 {prompt.best_for.map((tag: string, index: number) => (
                   <span
                     key={`${tag}-${index}`}
@@ -138,7 +138,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
 
             {/* Improvement Summary */}
             {prompt.improvement_summary && (
-              <div className="mt-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg border border-green-200">
+              <div className="mt-2 text-xs sm:text-sm text-green-700 bg-green-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-green-200">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -151,7 +151,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
 
             {/* Fork reason and changes summary */}
             {forkDetails.reason && (
-              <div className="mt-2 text-sm text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200">
+              <div className="mt-2 text-xs sm:text-sm text-orange-700 bg-orange-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-orange-200">
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
@@ -172,7 +172,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               </div>
             )}
 
-            <div className="text-sm text-gray-500 mt-2">
+            <div className="text-xs sm:text-sm text-gray-500 mt-2">
               Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
               {showProblemTitle && prompt.problems?.title && (
                 <>
@@ -185,7 +185,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             </div>
 
             {/* Author attribution */}
-            <div className="text-sm text-gray-600 mt-1">
+            <div className="text-xs sm:text-sm text-gray-600 mt-1">
               by {prompt.author ? (
                 <AuthorChip
                   userId={prompt.created_by}
@@ -200,23 +200,25 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 font-medium">
-            <div className="flex items-center gap-2">
-              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${stats.works_count > 0 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.works_count} people said this worked`}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-row sm:flex-col gap-2 font-medium w-full sm:w-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs border whitespace-nowrap ${stats.works_count > 0 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`} title={`${stats.works_count} people said this worked`}>
+                <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                {stats.works_count} Works
+                <span className="hidden sm:inline">{stats.works_count} Works</span>
+                <span className="sm:hidden">{stats.works_count}</span>
               </span>
-              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs border ${stats.fails_count > 0 ? 'bg-gray-100 text-gray-600 border-gray-300' : 'bg-gray-50 text-gray-400 border-gray-200'}`} title={`${stats.fails_count} people said this failed`}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-xs border whitespace-nowrap ${stats.fails_count > 0 ? 'bg-gray-100 text-gray-600 border-gray-300' : 'bg-gray-50 text-gray-400 border-gray-200'}`} title={`${stats.fails_count} people said this failed`}>
+                <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
-                {stats.fails_count} Fails
+                <span className="hidden sm:inline">{stats.fails_count} Fails</span>
+                <span className="sm:hidden">{stats.fails_count}</span>
               </span>
             </div>
-            <div className="flex items-center gap-3 text-xs text-gray-400 pl-1">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-400 pl-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <span className="flex items-center gap-0.5 text-green-600">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -235,9 +237,9 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
           </div>
         </div>
 
-        <div className="mb-4 flex-1">
-          <div className="text-sm text-gray-600 mb-2">System Prompt:</div>
-          <div className="bg-gray-50 p-3 rounded text-sm font-mono line-clamp-3 relative group">
+        <div className="mb-3 sm:mb-4 flex-1">
+          <div className="text-xs sm:text-sm text-gray-600 mb-2">System Prompt:</div>
+          <div className="bg-gray-50 p-2 sm:p-3 rounded text-xs sm:text-sm font-mono line-clamp-3 relative group">
             {prompt.system_prompt}
             <button
               onClick={() => {
@@ -253,9 +255,9 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
       </div>
 
       {/* Footer - pinned to bottom */}
-      <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-100">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4 text-sm text-gray-500">
+      <div className="flex flex-col gap-2 sm:gap-3 mt-auto pt-3 sm:pt-4 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 flex-wrap">
             <span>{stats.view_count} views</span>
             <span>{stats.copy_count} copies</span>
             {stats.fork_count > 0 && (
@@ -268,27 +270,27 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {onAddToCompare && (
               <button
-                className={`text-sm transition-colors ${isInComparison
+                className={`text-xs sm:text-sm transition-colors px-3 py-1.5 sm:px-4 sm:py-2 ${isInComparison
                   ? 'btnPrimary text-white'
                   : 'btnSecondary text-slate-700'
                   }`}
                 onClick={() => onAddToCompare(prompt.id)}
               >
-                {isInComparison ? '✓ In Comparison' : 'Compare'}
+                {isInComparison ? '✓' : 'Compare'}
               </button>
             )}
             <Link
               href={`/prompts/${prompt.id}`}
-              className="btnPrimary text-white text-sm"
+              className="btnPrimary text-white text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 flex-1 sm:flex-none text-center"
             >
               View Details
             </Link>
             <button
               onClick={() => setShowReportModal(true)}
-              className="px-2 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
+              className="px-2 py-1.5 text-xs text-gray-500 hover:text-red-600 transition-colors"
               title="Report this prompt"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
