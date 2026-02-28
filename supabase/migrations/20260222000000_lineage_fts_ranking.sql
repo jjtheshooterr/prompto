@@ -140,14 +140,13 @@ ALTER TABLE public.prompts
 
 CREATE INDEX IF NOT EXISTS prompts_fts_idx ON public.prompts USING GIN(fts);
 
--- problems FTS: title + description + goal
+-- problems FTS: title + description
 ALTER TABLE public.problems
   ADD COLUMN IF NOT EXISTS fts tsvector
     GENERATED ALWAYS AS (
       to_tsvector('english'::regconfig,
         coalesce(title, '') || ' ' ||
-        coalesce(description, '') || ' ' ||
-        coalesce(goal, '')
+        coalesce(description, '')
       )
     ) STORED;
 

@@ -119,8 +119,6 @@ export default function ForkModal({
           status: 'published', // Use published status for forked prompts
           is_listed: true,
           is_hidden: false,
-          is_reported: false,
-          report_count: 0,
           created_by: user.id,
           improvement_summary: improvementSummary || null,
           best_for: bestFor ? bestFor.split(',').map(tag => tag.trim()).filter(tag => tag) : null
