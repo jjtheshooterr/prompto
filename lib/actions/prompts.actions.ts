@@ -2,6 +2,19 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const CreatePromptSchema = z.object({
+  problem_id: z.string().uuid('Invalid problem ID'),
+  title: z.string().min(1, 'Title is required').max(100, 'Title is too long').trim(),
+  system_prompt: z.string().max(10000, 'System prompt is too long').trim().optional(),
+  user_prompt_template: z.string().max(10000, 'User prompt template is too long').trim().optional(),
+  model: z.string().min(1, 'Model is required').max(50),
+  params: z.string().optional(),
+  example_input: z.string().max(5000).trim().optional(),
+  example_output: z.string().max(5000).trim().optional(),
+  status: z.enum(['draft', 'production', 'archived']).default('production'),
+})
 
 export type PromptSort = 'newest' | 'top' | 'best' | 'most_improved'
 
@@ -133,31 +146,39 @@ export async function createPrompt(formData: FormData) {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    console.log('Server action - createPrompt auth check:', {
-      hasUser: !!user,
-      userEmail: user?.email,
-      authError: authError?.message
-    })
-
-    if (authError) {
-      console.error('Auth error in createPrompt:', authError)
-      throw new Error(`Authentication error: ${authError.message}`)
-    }
-
-    if (!user) {
-      console.error('No user found in createPrompt')
+    if (authError || !user) {
       throw new Error('Must be authenticated to create prompts')
     }
 
-    const problemId = formData.get('problem_id') as string
-    const title = formData.get('title') as string
-    const systemPrompt = formData.get('system_prompt') as string
-    const userPromptTemplate = formData.get('user_prompt_template') as string
-    const model = formData.get('model') as string
-    const params = formData.get('params') as string
-    const exampleInput = formData.get('example_input') as string
-    const exampleOutput = formData.get('example_output') as string
-    const status = formData.get('status') as string || 'production'
+    const formDataObj = {
+      problem_id: formData.get('problem_id'),
+      title: formData.get('title'),
+      system_prompt: formData.get('system_prompt'),
+      user_prompt_template: formData.get('user_prompt_template'),
+      model: formData.get('model'),
+      params: formData.get('params'),
+      example_input: formData.get('example_input'),
+      example_output: formData.get('example_output'),
+      status: formData.get('status') || 'production',
+    }
+
+    const parsed = CreatePromptSchema.safeParse(formDataObj)
+    if (!parsed.success) {
+      const firstError = parsed.error.errors[0]
+      throw new Error(firstError?.message ?? 'Invalid prompt data')
+    }
+
+    const {
+      problem_id: problemId,
+      title,
+      system_prompt: systemPrompt,
+      user_prompt_template: userPromptTemplate,
+      model,
+      params,
+      example_input: exampleInput,
+      example_output: exampleOutput,
+      status
+    } = parsed.data
 
     // Get or create user's workspace
     let { data: workspace } = await supabase
@@ -173,29 +194,32 @@ export async function createPrompt(formData: FormData) {
       const { data: newWorkspace, error: workspaceError } = await supabase
         .from('workspaces')
         .insert({
-          name: `${user.email}'s Workspace`,
+          name: user.email ? `${user.email}'s Workspace` : 'My Workspace',
           slug: workspaceSlug,
           owner_id: user.id
         })
         .select('id')
         .single()
 
-      if (workspaceError) {
-        console.error('Failed to create workspace:', workspaceError)
-        // If workspace creation fails, set to null
-        workspace = { id: null }
-      } else {
-        // Add user as workspace member
-        await supabase
-          .from('workspace_members')
-          .insert({
-            workspace_id: newWorkspace.id,
-            user_id: user.id,
-            role: 'owner'
-          })
-
-        workspace = newWorkspace
+      if (workspaceError || !newWorkspace) {
+        throw new Error('Failed to create your workspace. Please try again.')
       }
+
+      // Add user as workspace member — throw if this fails so the user isn't
+      // left as workspace owner without membership access
+      const { error: memberError } = await supabase
+        .from('workspace_members')
+        .insert({
+          workspace_id: newWorkspace.id,
+          user_id: user.id,
+          role: 'owner'
+        })
+
+      if (memberError) {
+        throw new Error('Failed to set up workspace membership. Please try again.')
+      }
+
+      workspace = newWorkspace
     }
 
     let parsedParams = {}
@@ -206,11 +230,14 @@ export async function createPrompt(formData: FormData) {
     }
 
     // Generate slug from title
-    const slug = title
+    const cleanTitle = title
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
       .replace(/\s+/g, '-')
-      .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+      .substring(0, 50)
+
+    const slug = (cleanTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
 
     const { data, error } = await supabase
       .from('prompts')
@@ -228,14 +255,14 @@ export async function createPrompt(formData: FormData) {
         visibility: 'public',
         is_listed: true,
         created_by: user.id,
-        workspace_id: workspace?.id || null
+        workspace_id: workspace.id
       })
       .select()
       .single()
 
     if (error) {
       console.error('Failed to create prompt:', error)
-      throw new Error(`Failed to create prompt: ${error.message}`)
+      throw new Error('Failed to create prompt due to an unexpected error. Please try again.')
     }
 
     // Stats are auto-created by database trigger
@@ -252,81 +279,142 @@ export async function createPrompt(formData: FormData) {
 export async function forkPrompt(parentPromptId: string) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
     throw new Error('Must be authenticated to fork prompts')
   }
 
-  // Get the parent prompt
-  const { data: parentPrompt } = await supabase
+  // Get the parent prompt — only fork publicly visible, non-deleted prompts
+  const { data: parentPrompt, error: fetchError } = await supabase
     .from('prompts')
     .select('*')
     .eq('id', parentPromptId)
+    .eq('is_deleted', false)
     .single()
 
-  if (!parentPrompt) {
-    throw new Error('Parent prompt not found')
+  if (fetchError || !parentPrompt) {
+    throw new Error('Parent prompt not found or is no longer available')
+  }
+
+  // Get (or create) the forker's own workspace — fork always lands in the
+  // forker's workspace, never in the parent's.
+  let { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('owner_id', user.id)
+    .single()
+
+  if (!workspace) {
+    const { data: newWorkspace, error: wsError } = await supabase
+      .from('workspaces')
+      .insert({
+        name: user.email ? `${user.email}'s Workspace` : 'My Workspace',
+        slug: `user-${user.id.replace(/-/g, '')}`,
+        owner_id: user.id,
+      })
+      .select('id')
+      .single()
+
+    if (wsError || !newWorkspace) {
+      throw new Error('Could not create workspace for fork')
+    }
+
+    const { error: memberError } = await supabase.from('workspace_members').insert({
+      workspace_id: newWorkspace.id,
+      user_id: user.id,
+      role: 'owner',
+    })
+    if (memberError) {
+      throw new Error('Failed to set up workspace membership for fork')
+    }
+    workspace = newWorkspace
   }
 
   // Generate slug for forked prompt
   const forkTitle = `${parentPrompt.title} (Fork)`
-  const slug = forkTitle
+  const cleanForkTitle = forkTitle
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
     .replace(/\s+/g, '-')
-    .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+    .substring(0, 50)
 
-  // Create forked prompt
+  const slug = (cleanForkTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
+
+  // Create forked prompt — use an explicit field list, never spread the parent.
+  // Spreading inherits is_reported, report_count, is_hidden, is_deleted,
+  // and the parent's workspace_id, all of which must be reset for a new fork.
   const { data: forkedPrompt, error } = await supabase
     .from('prompts')
     .insert({
-      ...parentPrompt,
-      id: undefined, // Let DB generate new ID
-      slug,
-      parent_prompt_id: parentPromptId,
-      created_by: user.id,
+      workspace_id: workspace.id,
+      problem_id: parentPrompt.problem_id,
       title: forkTitle,
-      created_at: undefined,
-      updated_at: undefined
+      slug,
+      system_prompt: parentPrompt.system_prompt,
+      user_prompt_template: parentPrompt.user_prompt_template,
+      model: parentPrompt.model,
+      params: parentPrompt.params,
+      example_input: parentPrompt.example_input,
+      example_output: parentPrompt.example_output,
+      known_failures: parentPrompt.known_failures,
+      notes: `Forked from prompt ${parentPromptId}.`,
+      parent_prompt_id: parentPromptId,
+      visibility: parentPrompt.visibility,
+      status: 'draft',    // always start as draft
+      is_listed: true,
+      is_hidden: false,      // reset from parent
+      is_reported: false,      // reset from parent
+      report_count: 0,          // reset from parent
+      is_deleted: false,      // reset from parent
+      created_by: user.id,
     })
     .select()
     .single()
 
   if (error) {
-    throw new Error(`Failed to fork prompt: ${error.message}`)
+    console.error('Failed to fork prompt:', error)
+    throw new Error('Failed to fork prompt due to an unexpected error. Please try again.')
   }
 
-  // Stats are auto-created by database trigger
+  // Record the fork event on the parent
+  await supabase.from('prompt_events').insert({
+    prompt_id: parentPromptId,
+    user_id: user.id,
+    event_type: 'fork',
+  })
 
-  // Update fork count on parent
+  // Update fork count on parent (fire-and-forget — stats trigger handles the rest)
   await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
 
   revalidatePath('/problems')
+  revalidatePath(`/prompts/${parentPromptId}`)
   return forkedPrompt
 }
 
 export async function forkPromptWithModal(parentPromptId: string, newTitle: string, notes: string) {
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
     throw new Error('Must be authenticated to fork prompts')
   }
 
-  // Get the parent prompt
+  // Get the parent prompt — only fork non-deleted, non-hidden prompts
+  // (unless the user is a workspace member of the parent — handled below)
   const { data: parentPrompt, error: fetchError } = await supabase
     .from('prompts')
     .select('*')
     .eq('id', parentPromptId)
+    .eq('is_deleted', false)
     .single()
 
   if (fetchError || !parentPrompt) {
-    throw new Error('Parent prompt not found')
+    throw new Error('Parent prompt not found or is no longer available')
   }
 
-  // Check if prompt is hidden/unlisted and user has access
+  // Check if prompt is hidden/unlisted and user has workspace access
   if (parentPrompt.is_hidden || !parentPrompt.is_listed) {
-    // Check if user is workspace member
     const { data: membership } = await supabase
       .from('workspace_members')
       .select('role')
@@ -339,7 +427,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
     }
   }
 
-  // Get user's workspace
+  // Get (or create) the forker's workspace
   let { data: workspace } = await supabase
     .from('workspaces')
     .select('id')
@@ -347,18 +435,40 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
     .single()
 
   if (!workspace) {
-    throw new Error('User workspace not found')
+    const { data: newWorkspace, error: wsError } = await supabase
+      .from('workspaces')
+      .insert({
+        name: user.email ? `${user.email}'s Workspace` : 'My Workspace',
+        slug: `user-${user.id.replace(/-/g, '')}`,
+        owner_id: user.id,
+      })
+      .select('id')
+      .single()
+
+    if (wsError || !newWorkspace) {
+      throw new Error('Could not create workspace to place fork in')
+    }
+
+    await supabase.from('workspace_members').insert({
+      workspace_id: newWorkspace.id,
+      user_id: user.id,
+      role: 'owner',
+    })
+    workspace = newWorkspace
   }
 
   // Prepare notes with attribution
   const attributedNotes = `Forked from ${parentPromptId}. ${notes}`
 
   // Generate slug from new title
-  const slug = newTitle
+  const cleanNewTitle = newTitle
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
     .replace(/\s+/g, '-')
-    .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+    .substring(0, 50)
+
+  const slug = (cleanNewTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
 
   // Create forked prompt
   const { data: forkedPrompt, error } = await supabase
@@ -389,7 +499,8 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
     .single()
 
   if (error) {
-    throw new Error(`Failed to fork prompt: ${error.message}`)
+    console.error('Failed to fork prompt with modal:', error)
+    throw new Error('Failed to fork prompt due to an unexpected error. Please try again.')
   }
 
   // Stats are auto-created by database trigger
@@ -507,7 +618,7 @@ export async function updatePrompt(promptId: string, formData: FormData) {
 
     if (error) {
       console.error('Failed to update prompt:', error)
-      throw new Error(`Failed to update prompt: ${error.message}`)
+      throw new Error('Failed to update prompt due to an unexpected error. Please try again.')
     }
 
     revalidatePath(`/prompts/${promptId}`)

@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // UX gate only — not a security boundary.
 // Real enforcement happens at the DB level via RLS and server actions.
-const PROTECTED = ['/dashboard', '/create', '/settings', '/workspace']
+// For /admin routes, the reports page additionally verifies profiles.role = 'admin'
+// server-side before rendering anything.
+const PROTECTED = ['/dashboard', '/create', '/settings', '/workspace', '/admin']
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -31,5 +33,6 @@ export const config = {
     '/create/:path*',
     '/settings/:path*',
     '/workspace/:path*',
+    '/admin/:path*',
   ],
 }
