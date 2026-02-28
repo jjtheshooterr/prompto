@@ -28,23 +28,23 @@ export default async function ConfirmPage({
             {message}
           </p>
         </div>
-        
+
         <div className="mt-8 bg-white py-8 px-6 shadow rounded-lg text-center">
           <p className="text-gray-600 mb-4">
-            We've sent you a confirmation link. Click the link in your email to activate your account.
+            We&apos;ve sent you a confirmation link. Click the link in your email to activate your account.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            Didn't receive an email? Check your spam folder or try signing up again.
+            Didn&apos;t receive an email? Check your spam folder or try signing up again.
           </p>
-          
+
           <div className="space-y-3">
-            <Link 
+            <Link
               href="/signup"
               className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Try Again
             </Link>
-            <Link 
+            <Link
               href="/login"
               className="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >

@@ -8,7 +8,7 @@ export function UserForksList({ userId }: { userId: string }) {
   const [forks, setForks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState('newest');
-  
+
   useEffect(() => {
     async function loadForks() {
       const supabase = createClient();
@@ -24,7 +24,7 @@ export function UserForksList({ userId }: { userId: string }) {
     }
     loadForks();
   }, [userId, sort]);
-  
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -32,7 +32,7 @@ export function UserForksList({ userId }: { userId: string }) {
       </div>
     );
   }
-  
+
   if (forks.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -40,17 +40,17 @@ export function UserForksList({ userId }: { userId: string }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
         </svg>
         <p className="text-lg font-medium">No forks yet</p>
-        <p className="text-sm mt-1">This user hasn't forked any prompts</p>
+        <p className="text-sm mt-1">This user hasn&apos;t forked any prompts</p>
       </div>
     );
   }
-  
+
   return (
     <div>
       {/* Sort dropdown */}
       <div className="mb-4 flex justify-end">
-        <select 
-          value={sort} 
+        <select
+          value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -58,7 +58,7 @@ export function UserForksList({ userId }: { userId: string }) {
           <option value="top">Top Rated</option>
         </select>
       </div>
-      
+
       {/* List */}
       <div className="space-y-4">
         {forks.map((fork) => (
@@ -68,7 +68,7 @@ export function UserForksList({ userId }: { userId: string }) {
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2 py-1 rounded">Fork</span>
                 </div>
-                <Link 
+                <Link
                   href={`/prompts/${fork.id}`}
                   className="text-xl font-semibold hover:text-blue-600 transition-colors"
                 >
@@ -85,11 +85,11 @@ export function UserForksList({ userId }: { userId: string }) {
                 )}
               </div>
             </div>
-            
+
             {/* Parent attribution */}
             <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
               Forked from{' '}
-              <Link 
+              <Link
                 href={`/prompts/${fork.parent_prompt_id}`}
                 className="text-blue-600 hover:underline font-medium"
               >
@@ -101,11 +101,11 @@ export function UserForksList({ userId }: { userId: string }) {
                 </>
               )}
             </div>
-            
+
             {/* Problem link */}
             <div className="mt-2 text-sm text-gray-500">
               Problem:{' '}
-              <Link 
+              <Link
                 href={`/problems/${fork.problem_id}`}
                 className="hover:text-gray-700"
               >

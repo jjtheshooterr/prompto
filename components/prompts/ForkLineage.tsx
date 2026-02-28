@@ -97,7 +97,7 @@ export default function ForkLineage({ promptId }: ForkLineageProps) {
                 </div>
                 {child.improvement_summary ? (
                   <p className="text-sm text-gray-600 line-clamp-2 italic">
-                    "{child.improvement_summary}"
+                    &quot;{child.improvement_summary}&quot;
                   </p>
                 ) : (
                   <p className="text-xs text-gray-400 italic">No improvement summary provided.</p>

@@ -222,7 +222,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             placeholder="You are an expert SQL developer. Your task is to convert natural language questions into accurate SQL queries..."
           />
           <p className="text-sm text-gray-500 mt-1">
-            The system message that sets the AI's role and behavior.
+            The system message that sets the AI&apos;s role and behavior.
           </p>
         </div>
 
