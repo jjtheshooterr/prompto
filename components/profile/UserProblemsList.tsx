@@ -8,7 +8,7 @@ export function UserProblemsList({ userId }: { userId: string }) {
   const [problems, setProblems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState('newest');
-  
+
   useEffect(() => {
     async function loadProblems() {
       const supabase = createClient();
@@ -24,7 +24,7 @@ export function UserProblemsList({ userId }: { userId: string }) {
     }
     loadProblems();
   }, [userId, sort]);
-  
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -32,7 +32,7 @@ export function UserProblemsList({ userId }: { userId: string }) {
       </div>
     );
   }
-  
+
   if (problems.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -40,17 +40,17 @@ export function UserProblemsList({ userId }: { userId: string }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
         </svg>
         <p className="text-lg font-medium">No problems yet</p>
-        <p className="text-sm mt-1">This user hasn't created any problems</p>
+        <p className="text-sm mt-1">This user hasn&apos;t created any problems</p>
       </div>
     );
   }
-  
+
   return (
     <div>
       {/* Sort dropdown */}
       <div className="mb-4 flex justify-end">
-        <select 
-          value={sort} 
+        <select
+          value={sort}
           onChange={(e) => setSort(e.target.value)}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
@@ -58,14 +58,14 @@ export function UserProblemsList({ userId }: { userId: string }) {
           <option value="activity">Most Active</option>
         </select>
       </div>
-      
+
       {/* List */}
       <div className="space-y-4">
         {problems.map((problem) => (
           <div key={problem.id} className="border rounded-lg p-5 bg-white hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
-                <Link 
+                <Link
                   href={`/problems/${problem.slug}`}
                   className="text-xl font-semibold hover:text-blue-600 transition-colors"
                 >
@@ -80,13 +80,12 @@ export function UserProblemsList({ userId }: { userId: string }) {
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  problem.visibility === 'public' 
-                    ? 'bg-green-100 text-green-700' 
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${problem.visibility === 'public'
+                    ? 'bg-green-100 text-green-700'
                     : problem.visibility === 'workspace'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700'
-                }`}>
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}>
                   {problem.visibility}
                 </span>
                 <span className="text-sm text-gray-600">

@@ -1,8 +1,34 @@
 'use server'
 
+import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+
+// ─── Input Validation Schema ──────────────────────────────────────────────────
+
+const SubmitReviewSchema = z.discriminatedUnion('reviewType', [
+    z.object({
+        promptId: z.string().uuid('Invalid prompt ID'),
+        reviewType: z.literal('worked'),
+        workedReason: z.string().min(1, 'Please explain why this prompt worked').max(1000),
+        failureReason: z.string().optional(),
+        comment: z.string().max(2000).optional(),
+    }),
+    z.object({
+        promptId: z.string().uuid('Invalid prompt ID'),
+        reviewType: z.literal('failed'),
+        failureReason: z.string().min(1, 'Please explain why this prompt failed').max(1000),
+        workedReason: z.string().optional(),
+        comment: z.string().max(2000).optional(),
+    }),
+    z.object({
+        promptId: z.string().uuid('Invalid prompt ID'),
+        reviewType: z.literal('note'),
+        comment: z.string().min(1, 'Please provide a note').max(2000),
+        workedReason: z.string().optional(),
+        failureReason: z.string().optional(),
+    }),
+])
 
 export type ReviewType = 'worked' | 'failed' | 'note'
 
@@ -14,80 +40,61 @@ export interface SubmitReviewParams {
     comment?: string
 }
 
-export async function submitReview({
-    promptId,
-    reviewType,
-    workedReason,
-    failureReason,
-    comment
-}: SubmitReviewParams) {
-    // NUCLEAR OPTION: Bypass Supabase's broken SSR auth and read cookie directly
-    const cookieStore = await cookies()
-    const authCookie = cookieStore.get('sb-yknsbonffoaxxcwvxrls-auth-token')
+// ─── Server Action ─────────────────────────────────────────────────────────────
 
-    let user = null
-    if (authCookie?.value) {
-        try {
-            const sessionData = JSON.parse(authCookie.value)
-            user = sessionData.user
-            console.log('submitReview - Direct cookie parse successful:', user?.email)
-        } catch (e) {
-            console.error('submitReview - Failed to parse auth cookie:', e)
-        }
+export async function submitReview(params: SubmitReviewParams) {
+    // 1. Validate inputs before hitting the database
+    const parsed = SubmitReviewSchema.safeParse(params)
+    if (!parsed.success) {
+        const firstError = parsed.error.errors[0]
+        throw new Error(firstError?.message ?? 'Invalid review data')
     }
 
-    if (!user) {
-        throw new Error('You must be logged in to submit a review. Please sign out and sign back in.')
-    }
+    const { promptId, reviewType, workedReason, failureReason, comment } = parsed.data
 
-    // Now proceed with normal insertion
     const supabase = await createClient()
 
-    // Helper to sanitize
+    // 2. Verify the user's session server-side
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+        throw new Error('You must be logged in to submit a review.')
+    }
+
+    // 3. Verify the prompt exists and is publicly visible — prevents spoofed
+    //    reviews on deleted, hidden, or non-existent prompts
+    const { data: prompt, error: promptError } = await supabase
+        .from('prompts')
+        .select('id')
+        .eq('id', promptId)
+        .eq('is_deleted', false)
+        .eq('is_hidden', false)
+        .single()
+
+    if (promptError || !prompt) {
+        throw new Error('Prompt not found or is no longer available.')
+    }
+
+    // 4. Insert the review
     const clean = (s?: string) => s?.trim() || null
-
-    const payload: any = {
-        prompt_id: promptId,
-        user_id: user.id,
-        review_type: reviewType,
-        // Provide appropriate reason based on type
-        worked_reason: reviewType === 'worked' ? clean(workedReason) : null,
-        failure_reason: reviewType === 'failed' ? clean(failureReason) : null,
-        // We can map comment to a generic note column if it exists, or one of the reasons?
-        // The schema has `worked_reason` and `failure_reason`. It might also have `comment` or similar from before?
-        // Migration 1 did not remove columns. It added new ones.
-        // Let's assume `comment` column exists or we use `note` type?
-        // Migration 1: `review_type` enum has 'note'.
-        // Existing table likely had `comment`?
-        // I'll check schema if needed, but safe to assume we just want evidence columns.
-        // If 'note', where does it go? "Note can have comment only".
-        // I will check if `comment` column exists.
-        // I will try to insert `comment` if it's there.
-    }
-
-    // Check if `comment` column exists by trying to select it or just assume standard `prompt_reviews` structure.
-    // Previous chats mentioned `prompt_reviews` (criteria_met, criteria_failed, comment).
-    // So `comment` exists.
-    if (comment) {
-        payload.comment = clean(comment)
-    }
-
-    console.log('submitReview - Inserting payload:', { ...payload, worked_reason: payload.worked_reason ? '[redacted]' : null, failure_reason: payload.failure_reason ? '[redacted]' : null })
 
     const { error } = await supabase
         .from('prompt_reviews')
-        .insert(payload)
+        .insert({
+            prompt_id: promptId,
+            user_id: user.id,
+            review_type: reviewType,
+            worked_reason: reviewType === 'worked' ? clean(workedReason) : null,
+            failure_reason: reviewType === 'failed' ? clean(failureReason) : null,
+            comment: clean(comment),
+        })
 
     if (error) {
-        console.error('Submit review error:', error)
-        // Handle uniqueness constraint violation
-        if (error.code === '23505') { // unique_violation
+        if (error.code === '23505') {
             throw new Error('You have already submitted this type of review for this prompt today.')
         }
         throw new Error('Failed to submit review: ' + error.message)
     }
 
-    console.log('submitReview - Success!')
     revalidatePath(`/prompts/${promptId}`)
     return { success: true }
 }

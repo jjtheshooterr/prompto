@@ -27,7 +27,7 @@ export default function WorkspacePage() {
   useEffect(() => {
     const loadData = async () => {
       const supabase = createClient()
-      
+
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       if (!currentUser) {
         setLoading(false)
@@ -176,7 +176,7 @@ export default function WorkspacePage() {
 
         {ownedProblems.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-500 mb-4">You haven't created any problems yet.</p>
+            <p className="text-gray-500 mb-4">You haven&apos;t created any problems yet.</p>
             <Link
               href="/create/problem"
               className="text-blue-600 hover:underline font-medium"

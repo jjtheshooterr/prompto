@@ -11,14 +11,14 @@ export default function SimpleLoginForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
+
     if (loading) return // Prevent multiple submissions
-    
+
     console.log('Form submitted - preventDefault called')
-    
+
     setLoading(true)
     setError(null)
-    
+
     const formData = new FormData(e.currentTarget)
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -26,7 +26,7 @@ export default function SimpleLoginForm() {
     console.log('Attempting login for:', email)
 
     const supabase = createClient()
-    
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -40,11 +40,11 @@ export default function SimpleLoginForm() {
       } else if (data.session) {
         console.log('Login successful! User:', data.session.user.email)
         console.log('Session data:', data.session)
-        
+
         // Test redirect to a simple page first
         console.log('About to redirect to problems page for testing...')
         window.location.href = '/problems'
-        
+
       } else {
         setError('Login failed - no session created')
         setLoading(false)
@@ -67,7 +67,7 @@ export default function SimpleLoginForm() {
             Welcome back to Promptvexity
           </p>
         </div>
-        
+
         {error && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="text-sm text-red-700">
@@ -93,7 +93,7 @@ export default function SimpleLoginForm() {
                 placeholder="Enter your email"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -123,7 +123,7 @@ export default function SimpleLoginForm() {
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
               </a>

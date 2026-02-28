@@ -40,20 +40,21 @@ describe('PromptCard', () => {
 
   it('should render prompt title', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('Test Prompt')).toBeInTheDocument()
   })
 
   it('should render model and date', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
+    const expectedDate = new Date(mockPrompt.created_at).toLocaleDateString()
     expect(screen.getByText(/gpt-4/)).toBeInTheDocument()
-    expect(screen.getByText(/12\/31\/2023/)).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(expectedDate.replace(/\//g, '\\/')))).toBeInTheDocument()
   })
 
   it('should render stats correctly', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('7 Works')).toBeInTheDocument()
     expect(screen.getByText('1 Fails')).toBeInTheDocument()
     expect(screen.getByText('10')).toBeInTheDocument() // upvotes
@@ -63,26 +64,26 @@ describe('PromptCard', () => {
 
   it('should render system prompt', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('You are a helpful assistant')).toBeInTheDocument()
   })
 
   it('should render best_for tags', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('testing')).toBeInTheDocument()
     expect(screen.getByText('development')).toBeInTheDocument()
   })
 
   it('should render author attribution', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('Test User')).toBeInTheDocument()
   })
 
   it('should render View Details link', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     const link = screen.getByRole('link', { name: /View Details/i })
     expect(link).toHaveAttribute('href', '/prompts/prompt-123')
   })
@@ -95,7 +96,7 @@ describe('PromptCard', () => {
     }
 
     render(<PromptCard prompt={forkedPrompt} />)
-    
+
     expect(screen.getByText('Fork')).toBeInTheDocument()
     expect(screen.getByText(/Improved for better results/)).toBeInTheDocument()
   })
@@ -107,19 +108,19 @@ describe('PromptCard', () => {
     }
 
     render(<PromptCard prompt={improvedPrompt} />)
-    
+
     expect(screen.getByText(/Better accuracy and faster responses/)).toBeInTheDocument()
   })
 
   it('should render fork count when greater than 0', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('3 forks')).toBeInTheDocument()
   })
 
   it('should render view and copy counts', () => {
     render(<PromptCard prompt={mockPrompt} />)
-    
+
     expect(screen.getByText('100 views')).toBeInTheDocument()
     expect(screen.getByText('5 copies')).toBeInTheDocument()
   })

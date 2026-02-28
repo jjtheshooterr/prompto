@@ -14,23 +14,23 @@ export default function AuthCodeError() {
             Authentication Error
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Sorry, we couldn't sign you in. The authentication link may have expired or been used already.
+            Sorry, we couldn&apos;t sign you in. The authentication link may have expired or been used already.
           </p>
         </div>
-        
+
         <div className="mt-8 bg-white py-8 px-6 shadow rounded-lg text-center">
           <p className="text-gray-600 mb-6">
             Please try signing in again or contact support if the problem persists.
           </p>
-          
+
           <div className="space-y-3">
-            <Link 
+            <Link
               href="/login"
               className="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Back to Sign In
             </Link>
-            <Link 
+            <Link
               href="/signup"
               className="block w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
