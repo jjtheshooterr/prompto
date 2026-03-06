@@ -1095,31 +1095,31 @@ export default async function HomePage() {
       </div>
 
       {/* Final CTA */}
-      <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 py-24 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 border-t border-slate-200 py-24 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-200 rounded-full blur-3xl"></div>
         </div>
 
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-blue-300 font-medium">Join {userCount || 0}+ builders already using Promptvexity</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200 mb-6 shadow-sm">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
+            <span className="text-sm text-blue-800 font-semibold">Join {userCount || 0}+ builders already using Promptvexity</span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-black mb-6 text-white">
-            Stop guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Start evolving.</span>
+          <h2 className="text-4xl md:text-5xl font-black mb-6 text-slate-900">
+            Stop guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Start evolving.</span>
           </h2>
 
-          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
             Join thousands of indie founders building better AI features with production-ready prompts
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link
               href="/problems"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-b from-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#1E40AF] text-white font-bold rounded-lg shadow-lg shadow-blue-600/25 transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-b from-[#2563EB] to-[#1D4ED8] hover:from-[#1D4ED8] hover:to-[#1E40AF] text-white font-bold rounded-lg shadow-lg shadow-blue-600/25 transition-transform hover:scale-105"
             >
               Browse 50+ Problems
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1128,27 +1128,27 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-lg shadow-lg transition-all"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-900 font-bold rounded-lg shadow-md transition-all"
             >
               Sign Up Free
             </Link>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-slate-400 text-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-slate-600 text-sm font-medium">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>Free forever</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>No credit card required</span>
             </div>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>Start forking in minutes</span>
