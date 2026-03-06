@@ -55,25 +55,20 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
     last_reviewed_at: null,
   }
 
-  // Extract fork reason and changes summary from notes if this is a fork
+  // Extract fork reason from notes (legacy) - new forks use fix_summary column directly
   const getForkDetails = () => {
+    // Prefer dedicated columns (new forks)
+    if (prompt.fix_summary && prompt.parent_prompt_id) {
+      return { reason: prompt.fix_summary, changes: prompt.improvement_summary || null }
+    }
+    // Fallback: parse from notes (old forks)
     if (!prompt.parent_prompt_id || !prompt.notes) return { reason: null, changes: null }
-
-    // Extract the reason and changes from "Forked from {id}. {reason} | Changes: {changes}"
     const match = prompt.notes.match(/^Forked from [^.]+\.\s*([^|]+)(?:\s*\|\s*Changes:\s*(.+))?$/)
     if (match) {
-      return {
-        reason: match[1]?.trim() || null,
-        changes: match[2]?.trim() || null
-      }
+      return { reason: match[1]?.trim() || null, changes: match[2]?.trim() || null }
     }
-
-    // Fallback for old format
     const oldMatch = prompt.notes.match(/^Forked from [^.]+\.\s*(.+)$/)
-    return {
-      reason: oldMatch ? oldMatch[1] : null,
-      changes: null
-    }
+    return { reason: oldMatch ? oldMatch[1] : null, changes: null }
   }
 
   const forkDetails = getForkDetails()
@@ -239,7 +234,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
 
         <div className="mb-3 sm:mb-4 flex-1">
           <div className="text-xs sm:text-sm text-gray-600 mb-2">System Prompt:</div>
-          <div className="bg-gray-50 p-2 sm:p-3 rounded text-xs sm:text-sm font-mono line-clamp-3 relative group">
+          <div className="bg-gray-50 p-2 sm:p-3 rounded text-xs sm:text-sm font-mono line-clamp-3 relative group mb-3">
             {prompt.system_prompt}
             <button
               onClick={() => {
@@ -251,6 +246,24 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               Copy
             </button>
           </div>
+
+          {/* Tradeoffs & Usage Context */}
+          {(prompt.tradeoffs || prompt.usage_context) && (
+            <div className="flex flex-col sm:flex-row gap-3 mt-3">
+              {prompt.usage_context && (
+                <div className="flex-1 bg-slate-50 border border-slate-200 rounded p-3 text-xs sm:text-sm">
+                  <div className="font-semibold text-slate-800 mb-1">Usage Context:</div>
+                  <div className="text-slate-700 line-clamp-2">{prompt.usage_context}</div>
+                </div>
+              )}
+              {prompt.tradeoffs && (
+                <div className="flex-1 bg-purple-50 border border-purple-200 rounded p-3 text-xs sm:text-sm">
+                  <div className="font-semibold text-purple-800 mb-1">Tradeoffs:</div>
+                  <div className="text-purple-700 line-clamp-2">{prompt.tradeoffs}</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -27,6 +27,11 @@ export interface Problem {
   title: string
   description: string
   goal?: string
+  real_world_context?: string
+  known_failure_modes?: string[]
+  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  example_input?: string
+  expected_output?: string
   inputs?: ProblemInput[]
   constraints?: ProblemConstraint[]
   success_criteria?: ProblemSuccessCriterion[]

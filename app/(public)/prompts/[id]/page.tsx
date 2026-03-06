@@ -463,10 +463,47 @@ export default function PromptDetailPage() {
             </div>
           )}
 
-          {/* Fork Lineage */}
-          <ForkLineage
-            promptId={promptId}
-          />
+          {/* Usage Context and Tradeoffs */}
+          {(prompt.usage_context || prompt.tradeoffs) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {prompt.usage_context && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Usage Context</h3>
+                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
+                    <p className="text-sm text-slate-800">{prompt.usage_context}</p>
+                  </div>
+                </div>
+              )}
+              {prompt.tradeoffs && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Tradeoffs</h3>
+                  <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+                    <p className="text-sm text-purple-800">{prompt.tradeoffs}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Fork Lineage & Fix Summary */}
+          <div className="space-y-4">
+            {prompt.parent_prompt_id && prompt.fix_summary && (
+              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
+                <h3 className="text-sm font-semibold text-orange-900 mb-1 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                  Fix Summary (Fork)
+                </h3>
+                <p className="text-sm text-orange-800">{prompt.fix_summary}</p>
+              </div>
+            )}
+
+            {/* The visual fork tree component */}
+            <ForkLineage
+              promptId={promptId}
+            />
+          </div>
 
           {/* Review Form - Evidence */}
           <div className="mt-8 border-t pt-8">

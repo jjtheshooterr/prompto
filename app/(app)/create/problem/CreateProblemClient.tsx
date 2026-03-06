@@ -94,6 +94,15 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
         .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
       const industry = formData.get('industry') as string
       const visibility = formData.get('visibility') as string || 'public'
+      const real_world_context = formData.get('real_world_context') as string
+      const difficulty = formData.get('difficulty') as string
+      const example_input = formData.get('example_input') as string
+      const expected_output = formData.get('expected_output') as string
+
+      const known_failure_modes_raw = formData.get('known_failure_modes') as string
+      const known_failure_modes = known_failure_modes_raw
+        ? known_failure_modes_raw.split(',').map(m => m.trim()).filter(Boolean)
+        : []
 
       // Filter out empty inputs, constraints, and criteria
       const validInputs = inputs.filter(input => input.name.trim() && input.description.trim())
@@ -179,7 +188,12 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           is_listed: true,
           created_by: user.id,
           owner_id: user.id, // Set owner_id for new visibility system
-          workspace_id: workspace.id
+          workspace_id: workspace.id,
+          real_world_context: real_world_context || null,
+          difficulty: difficulty || null,
+          example_input: example_input || null,
+          expected_output: expected_output || null,
+          known_failure_modes
         })
         .select()
         .single()
@@ -257,6 +271,59 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Describe the problem in detail. What should the AI accomplish? What are the constraints?"
           />
+        </div>
+
+        <div>
+          <label htmlFor="real_world_context" className="block text-sm font-medium text-gray-700 mb-2">
+            Real World Context
+          </label>
+          <textarea
+            id="real_world_context"
+            name="real_world_context"
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Why is this required? What's the context for the builder?"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="known_failure_modes" className="block text-sm font-medium text-gray-700 mb-2">
+            Known Failure Modes
+          </label>
+          <input
+            type="text"
+            id="known_failure_modes"
+            name="known_failure_modes"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Hallucinates facts, JSON formatting issues (comma-separated)"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="example_input" className="block text-sm font-medium text-gray-700 mb-2">
+              Example Input
+            </label>
+            <textarea
+              id="example_input"
+              name="example_input"
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Provide a sample input snippet."
+            />
+          </div>
+          <div>
+            <label htmlFor="expected_output" className="block text-sm font-medium text-gray-700 mb-2">
+              Expected Output
+            </label>
+            <textarea
+              id="expected_output"
+              name="expected_output"
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Provide the desired resulting output snippet."
+            />
+          </div>
         </div>
 
         <div>
@@ -486,6 +553,23 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             <option value="support">Customer Support</option>
             <option value="hr">Human Resources</option>
             <option value="video">Video & Media</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
+            Difficulty
+          </label>
+          <select
+            id="difficulty"
+            name="difficulty"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Select difficulty</option>
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+            <option value="expert">Expert</option>
           </select>
         </div>
 

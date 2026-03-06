@@ -91,44 +91,50 @@ export default function ForkModal({
       // Prepare notes with attribution and changes summary
       const attributedNotes = `Forked from ${promptId}. ${forkReason}${changesSummary ? ` | Changes: ${changesSummary}` : ''}`
 
-      // Generate slug from title
-      const slug = newTitle
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+      // Insert with retry loop to handle slug collisions (UNIQUE(problem_id, slug))
+      let forkedPrompt: any = null
+      let insertError: any = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const attemptSlug = newTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
 
-      // Create forked prompt
-      const { data: forkedPrompt, error } = await supabase
-        .from('prompts')
-        .insert({
-          workspace_id: workspace.id,
-          problem_id: parentPrompt.problem_id,
-          visibility: parentPrompt.visibility,
-          title: newTitle,
-          slug,
-          system_prompt: parentPrompt.system_prompt,
-          user_prompt_template: parentPrompt.user_prompt_template,
-          model: parentPrompt.model,
-          params: parentPrompt.params,
-          example_input: parentPrompt.example_input,
-          example_output: parentPrompt.example_output,
-          known_failures: parentPrompt.known_failures,
-          notes: attributedNotes,
-          parent_prompt_id: promptId,
-          status: 'published', // Use published status for forked prompts
-          is_listed: true,
-          is_hidden: false,
-          created_by: user.id,
-          improvement_summary: improvementSummary || null,
-          best_for: bestFor ? bestFor.split(',').map(tag => tag.trim()).filter(tag => tag) : null
-        })
-        .select()
-        .single()
+        const { data: inserted, error: err } = await supabase
+          .from('prompts')
+          .insert({
+            workspace_id: workspace.id,
+            problem_id: parentPrompt.problem_id,
+            visibility: parentPrompt.visibility,
+            title: newTitle,
+            slug: attemptSlug,
+            system_prompt: parentPrompt.system_prompt,
+            user_prompt_template: parentPrompt.user_prompt_template,
+            model: parentPrompt.model,
+            params: parentPrompt.params,
+            example_input: parentPrompt.example_input,
+            example_output: parentPrompt.example_output,
+            known_failures: parentPrompt.known_failures,
+            notes: attributedNotes,
+            parent_prompt_id: promptId,
+            status: 'published',
+            is_listed: true,
+            is_hidden: false,
+            created_by: user.id,
+            improvement_summary: improvementSummary || 'Development fork initially',
+            fix_summary: changesSummary || 'Fork setup initial state',
+            best_for: bestFor ? bestFor.split(',').map(tag => tag.trim()).filter(tag => tag) : null
+          })
+          .select()
+          .single()
 
-      if (error) {
-        throw new Error(`Failed to fork prompt: ${error.message}`)
+        if (!err) { forkedPrompt = inserted; break }
+        if (err.code !== '23505') { insertError = err; break }
       }
+
+      if (insertError) throw new Error(`Failed to fork prompt: ${insertError.message}`)
+      if (!forkedPrompt) throw new Error('Slug collision after 3 attempts — please try again.')
 
       // Create prompt_stats for forked prompt - skip if RLS blocks it
       try {

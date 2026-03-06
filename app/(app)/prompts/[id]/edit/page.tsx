@@ -22,7 +22,11 @@ export default function EditPromptPage() {
     example_input: '',
     example_output: '',
     notes: '',
-    status: 'draft'
+    status: 'draft',
+    tradeoffs: '',
+    usage_context: '',
+    improvement_summary: '',
+    fix_summary: ''
   })
 
   useEffect(() => {
@@ -61,7 +65,11 @@ export default function EditPromptPage() {
         example_input: promptData.example_input || '',
         example_output: promptData.example_output || '',
         notes: promptData.notes || '',
-        status: promptData.status || 'draft'
+        status: promptData.status || 'draft',
+        tradeoffs: promptData.tradeoffs || '',
+        usage_context: promptData.usage_context || '',
+        improvement_summary: promptData.improvement_summary || '',
+        fix_summary: promptData.fix_summary || ''
       })
 
       setLoading(false)
@@ -104,6 +112,10 @@ export default function EditPromptPage() {
           example_output: formData.example_output,
           notes: formData.notes,
           status: formData.status,
+          tradeoffs: formData.tradeoffs,
+          usage_context: formData.usage_context,
+          improvement_summary: formData.improvement_summary,
+          fix_summary: formData.fix_summary,
           updated_at: new Date().toISOString()
         })
         .eq('id', promptId)
@@ -161,6 +173,10 @@ export default function EditPromptPage() {
           example_output: updatedFormData.example_output,
           notes: updatedFormData.notes,
           status: 'published',
+          tradeoffs: updatedFormData.tradeoffs,
+          usage_context: updatedFormData.usage_context,
+          improvement_summary: updatedFormData.improvement_summary,
+          fix_summary: updatedFormData.fix_summary,
           updated_at: new Date().toISOString()
         })
         .eq('id', promptId)
@@ -346,6 +362,61 @@ export default function EditPromptPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20"
               placeholder="Additional notes about this prompt..."
             />
+          </div>
+
+          {/* Solution Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="usage_context" className="block text-sm font-medium text-gray-700 mb-2">
+                Usage Context
+              </label>
+              <textarea
+                id="usage_context"
+                value={formData.usage_context}
+                onChange={(e) => setFormData({ ...formData, usage_context: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="tradeoffs" className="block text-sm font-medium text-gray-700 mb-2">
+                Tradeoffs
+              </label>
+              <textarea
+                id="tradeoffs"
+                value={formData.tradeoffs}
+                onChange={(e) => setFormData({ ...formData, tradeoffs: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="improvement_summary" className="block text-sm font-medium text-gray-700 mb-2">
+                Improvement Summary *
+              </label>
+              <textarea
+                id="improvement_summary"
+                value={formData.improvement_summary}
+                onChange={(e) => setFormData({ ...formData, improvement_summary: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"
+                required
+              />
+            </div>
+            {prompt.parent_prompt_id && (
+              <div>
+                <label htmlFor="fix_summary" className="block text-sm font-medium text-gray-700 mb-2">
+                  Fix Summary * (Required for forks)
+                </label>
+                <textarea
+                  id="fix_summary"
+                  value={formData.fix_summary}
+                  onChange={(e) => setFormData({ ...formData, fix_summary: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"
+                  required
+                />
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

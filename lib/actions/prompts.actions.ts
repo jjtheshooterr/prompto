@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { sendForkNotification } from '@/lib/email/fork-notification'
 
 const CreatePromptSchema = z.object({
   problem_id: z.string().uuid('Invalid problem ID'),
@@ -14,6 +15,10 @@ const CreatePromptSchema = z.object({
   example_input: z.string().max(5000).trim().optional(),
   example_output: z.string().max(5000).trim().optional(),
   status: z.enum(['draft', 'production', 'archived']).default('production'),
+  tradeoffs: z.string().max(5000).trim().optional(),
+  usage_context: z.string().max(5000).trim().optional(),
+  improvement_summary: z.string().max(1000).trim().optional(),
+  fix_summary: z.string().max(1000).trim().optional(),
 })
 
 export type PromptSort = 'newest' | 'top' | 'best' | 'most_improved'
@@ -25,7 +30,6 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
     .from('prompts')
     .select(`
       *,
-      author:profiles!created_by (id, username, display_name, avatar_url),
       prompt_stats (
         upvotes, downvotes, score, copy_count, view_count, fork_count,
         works_count, fails_count, reviews_count
@@ -43,6 +47,18 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
 
   if (!prompts || prompts.length === 0) return []
 
+  // Fetch authors mapping
+  const authorIds = Array.from(new Set(prompts.map(p => p.created_by).filter(Boolean)));
+  const { data: authorsData } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, avatar_url')
+    .in('id', authorIds);
+
+  const authorMap = (authorsData || []).reduce((acc: any, author: any) => {
+    acc[author.id] = author;
+    return acc;
+  }, {});
+
   const defaultStats = {
     upvotes: 0, downvotes: 0, score: 0,
     copy_count: 0, view_count: 0, fork_count: 0,
@@ -51,7 +67,7 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
 
   let promptsWithStats = prompts.map((prompt: any) => {
     const statsData = prompt.prompt_stats ? (Array.isArray(prompt.prompt_stats) ? prompt.prompt_stats[0] : prompt.prompt_stats) : null;
-    const authorData = prompt.author ? (Array.isArray(prompt.author) ? prompt.author[0] : prompt.author) : null;
+    const authorData = prompt.created_by ? authorMap[prompt.created_by] : null;
 
     return {
       ...prompt,
@@ -107,6 +123,18 @@ export async function getPromptById(id: string) {
     return null
   }
 
+  if (prompt && prompt.created_by) {
+    const { data: authorProfile } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', prompt.created_by)
+      .single()
+
+    if (authorProfile) {
+      prompt.author = authorProfile;
+    }
+  }
+
   return prompt
 }
 
@@ -152,6 +180,10 @@ export async function createPrompt(formData: FormData) {
       example_input: formData.get('example_input'),
       example_output: formData.get('example_output'),
       status: formData.get('status') || 'production',
+      tradeoffs: formData.get('tradeoffs'),
+      usage_context: formData.get('usage_context'),
+      improvement_summary: formData.get('improvement_summary') || 'Initial version',
+      fix_summary: formData.get('fix_summary'),
     }
 
     const parsed = CreatePromptSchema.safeParse(formDataObj)
@@ -169,7 +201,11 @@ export async function createPrompt(formData: FormData) {
       params,
       example_input: exampleInput,
       example_output: exampleOutput,
-      status
+      status,
+      tradeoffs,
+      usage_context,
+      improvement_summary,
+      fix_summary
     } = parsed.data
 
     // Get or create user's workspace
@@ -247,7 +283,11 @@ export async function createPrompt(formData: FormData) {
         visibility: 'public',
         is_listed: true,
         created_by: user.id,
-        workspace_id: workspace.id
+        workspace_id: workspace.id,
+        tradeoffs,
+        usage_context,
+        improvement_summary,
+        fix_summary
       })
       .select()
       .single()
@@ -322,7 +362,7 @@ export async function forkPrompt(parentPromptId: string) {
     workspace = newWorkspace
   }
 
-  // Generate slug for forked prompt
+  // Generate slug for forked prompt (retry on collision — UNIQUE(problem_id, slug))
   const forkTitle = `${parentPrompt.title} (Fork)`
   const cleanForkTitle = forkTitle
     .toLowerCase()
@@ -331,42 +371,53 @@ export async function forkPrompt(parentPromptId: string) {
     .replace(/\s+/g, '-')
     .substring(0, 50)
 
-  const slug = (cleanForkTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
+  let forkedPrompt: any = null
+  let forkInsertError: any = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const slug = (cleanForkTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
 
-  // Create forked prompt — use an explicit field list, never spread the parent.
-  // Spreading inherits is_reported, report_count, is_hidden, is_deleted,
-  // and the parent's workspace_id, all of which must be reset for a new fork.
-  const { data: forkedPrompt, error } = await supabase
-    .from('prompts')
-    .insert({
-      workspace_id: workspace.id,
-      problem_id: parentPrompt.problem_id,
-      title: forkTitle,
-      slug,
-      system_prompt: parentPrompt.system_prompt,
-      user_prompt_template: parentPrompt.user_prompt_template,
-      model: parentPrompt.model,
-      params: parentPrompt.params,
-      example_input: parentPrompt.example_input,
-      example_output: parentPrompt.example_output,
-      known_failures: parentPrompt.known_failures,
-      notes: `Forked from prompt ${parentPromptId}.`,
-      parent_prompt_id: parentPromptId,
-      visibility: parentPrompt.visibility,
-      status: 'draft',    // always start as draft
-      is_listed: true,
-      is_hidden: false,      // reset from parent
-      is_reported: false,      // reset from parent
-      report_count: 0,          // reset from parent
-      is_deleted: false,      // reset from parent
-      created_by: user.id,
-    })
-    .select()
-    .single()
+    const { data: inserted, error: err } = await supabase
+      .from('prompts')
+      .insert({
+        workspace_id: workspace.id,
+        problem_id: parentPrompt.problem_id,
+        title: forkTitle,
+        slug,
+        system_prompt: parentPrompt.system_prompt,
+        user_prompt_template: parentPrompt.user_prompt_template,
+        model: parentPrompt.model,
+        params: parentPrompt.params,
+        example_input: parentPrompt.example_input,
+        example_output: parentPrompt.example_output,
+        known_failures: parentPrompt.known_failures,
+        notes: `Forked from prompt ${parentPromptId}.`,
+        parent_prompt_id: parentPromptId,
+        visibility: parentPrompt.visibility,
+        status: 'draft',
+        is_listed: true,
+        is_hidden: false,
+        is_reported: false,
+        report_count: 0,
+        is_deleted: false,
+        created_by: user.id,
+        improvement_summary: 'Development fork initially',
+        fix_summary: 'Fork setup initial state',
+        tradeoffs: parentPrompt.tradeoffs || null,
+        usage_context: parentPrompt.usage_context || null
+      })
+      .select()
+      .single()
 
-  if (error) {
-    console.error('Failed to fork prompt:', error)
+    if (!err) { forkedPrompt = inserted; break }
+    if (err.code !== '23505') { forkInsertError = err; break }
+  }
+
+  if (forkInsertError) {
+    console.error('Failed to fork prompt:', forkInsertError)
     throw new Error('Failed to fork prompt due to an unexpected error. Please try again.')
+  }
+  if (!forkedPrompt) {
+    throw new Error('Failed to generate a unique slug for fork. Please try again.')
   }
 
   // Record the fork event on the parent
@@ -378,6 +429,38 @@ export async function forkPrompt(parentPromptId: string) {
 
   // Update fork count on parent (fire-and-forget — stats trigger handles the rest)
   await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
+
+  // Send fork notification email to parent prompt author (async, don't block fork)
+  try {
+    // Get parent prompt author details
+    const { data: authorProfile } = await supabase
+      .from('profiles')
+      .select('username, email')
+      .eq('id', parentPrompt.created_by)
+      .single()
+
+    // Get forker details
+    const { data: forkerProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+
+    if (authorProfile?.email && forkerProfile?.username) {
+      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}/prompts/${forkedPrompt.id}`
+
+      await sendForkNotification({
+        authorEmail: authorProfile.email,
+        authorName: authorProfile.username,
+        forkerName: forkerProfile.username,
+        promptTitle: parentPrompt.title,
+        forkedPromptLink,
+      })
+    }
+  } catch (emailError) {
+    // Log error but don't block fork completion
+    console.error('Failed to send fork notification email:', emailError)
+  }
 
   revalidatePath('/problems')
   revalidatePath(`/prompts/${parentPromptId}`)
@@ -485,7 +568,11 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
       is_hidden: false,
       is_reported: false,
       report_count: 0,
-      created_by: user.id
+      created_by: user.id,
+      improvement_summary: notes || 'Fork via modal',
+      fix_summary: notes || 'Fork setup',
+      tradeoffs: parentPrompt.tradeoffs || null,
+      usage_context: parentPrompt.usage_context || null
     })
     .select()
     .single()
@@ -509,6 +596,38 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
   // Update fork count on parent
   await supabase.rpc('increment_fork_count', { prompt_id: parentPromptId })
 
+  // Send fork notification email to parent prompt author (async, don't block fork)
+  try {
+    // Get parent prompt author details
+    const { data: authorProfile } = await supabase
+      .from('profiles')
+      .select('username, email')
+      .eq('id', parentPrompt.created_by)
+      .single()
+
+    // Get forker details
+    const { data: forkerProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single()
+
+    if (authorProfile?.email && forkerProfile?.username) {
+      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}/prompts/${forkedPrompt.id}`
+
+      await sendForkNotification({
+        authorEmail: authorProfile.email,
+        authorName: authorProfile.username,
+        forkerName: forkerProfile.username,
+        promptTitle: parentPrompt.title,
+        forkedPromptLink,
+      })
+    }
+  } catch (emailError) {
+    // Log error but don't block fork completion
+    console.error('Failed to send fork notification email:', emailError)
+  }
+
   revalidatePath('/problems')
   revalidatePath(`/prompts/${parentPromptId}`)
   return forkedPrompt
@@ -524,10 +643,7 @@ export async function getPromptForks(promptId: string) {
       title,
       created_at,
       created_by,
-      notes,
-      profiles!created_by (
-        username
-      )
+      notes
     `)
     .eq('parent_prompt_id', promptId)
     .order('created_at', { ascending: false })
@@ -538,10 +654,24 @@ export async function getPromptForks(promptId: string) {
     return []
   }
 
+  if (!data || data.length === 0) return [];
+
+  // Fetch author mapping
+  const authorIds = Array.from(new Set(data.map((p: any) => p.created_by).filter(Boolean)));
+  const { data: authorsData } = await supabase
+    .from('profiles')
+    .select('id, username')
+    .in('id', authorIds);
+
+  const authorMap = (authorsData || []).reduce((acc: any, author: any) => {
+    acc[author.id] = { username: author.username };
+    return acc;
+  }, {});
+
   // Transform the data to match our interface
-  return (data || []).map(fork => ({
+  return data.map((fork: any) => ({
     ...fork,
-    profiles: Array.isArray(fork.profiles) ? fork.profiles[0] : fork.profiles
+    profiles: fork.created_by ? authorMap[fork.created_by] : null
   }))
 }
 
@@ -582,6 +712,12 @@ export async function updatePrompt(promptId: string, formData: FormData) {
     const notes = formData.get('notes') as string
     const status = formData.get('status') as string
 
+    // New Solution Fields
+    const tradeoffs = formData.get('tradeoffs') as string
+    const usage_context = formData.get('usage_context') as string
+    const improvement_summary = formData.get('improvement_summary') as string
+    const fix_summary = formData.get('fix_summary') as string
+
     let parsedParams = {}
     try {
       parsedParams = params ? JSON.parse(params) : {}
@@ -601,6 +737,10 @@ export async function updatePrompt(promptId: string, formData: FormData) {
         example_output: exampleOutput,
         notes,
         status,
+        tradeoffs,
+        usage_context,
+        improvement_summary: improvement_summary || undefined, // Don't wipe if empty
+        fix_summary: fix_summary || undefined,
         updated_at: new Date().toISOString()
       })
       .eq('id', promptId)
@@ -648,7 +788,24 @@ export async function searchPrompts(searchQuery: string, limit: number = 20) {
     return []
   }
 
-  return data || []
+  if (!data || data.length === 0) return [];
+
+  // Fetch author mapping
+  const authorIds = Array.from(new Set(data.map((p: any) => p.created_by).filter(Boolean)));
+  const { data: authorsData } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, avatar_url')
+    .in('id', authorIds);
+
+  const authorMap = (authorsData || []).reduce((acc: any, author: any) => {
+    acc[author.id] = author;
+    return acc;
+  }, {});
+
+  return data.map((prompt: any) => ({
+    ...prompt,
+    author: prompt.created_by ? authorMap[prompt.created_by] : null
+  }));
 }
 
 export async function getPromptChildren(promptId: string) {

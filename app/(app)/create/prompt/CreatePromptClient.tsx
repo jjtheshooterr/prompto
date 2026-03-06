@@ -51,6 +51,8 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
       const exampleInput = formData.get('example_input') as string
       const exampleOutput = formData.get('example_output') as string
       const status = 'published' // Default to published, hidden from UI
+      const tradeoffs = formData.get('tradeoffs') as string
+      const usage_context = formData.get('usage_context') as string
 
       let parsedParams = {}
       if (params && params.trim()) {
@@ -117,38 +119,55 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         }
       }
 
-      console.log('Creating prompt with workspace:', workspace.id)
+      // Attempt insert with retry on slug collision
+      let prompt: any = null
+      let insertError: any = null
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const attemptSlug = title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
 
-      // Generate slug from title
-      const slug = title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+        const { data: inserted, error: err } = await supabase
+          .from('prompts')
+          .insert({
+            problem_id: problemId,
+            title,
+            slug: attemptSlug,
+            system_prompt: systemPrompt,
+            user_prompt_template: userPromptTemplate,
+            model,
+            params: parsedParams,
+            example_input: exampleInput,
+            example_output: exampleOutput,
+            status,
+            tradeoffs,
+            usage_context,
+            visibility: 'public',
+            is_listed: true,
+            created_by: user.id,
+            workspace_id: workspace.id
+          })
+          .select()
+          .single()
 
-      const { data: prompt, error } = await supabase
-        .from('prompts')
-        .insert({
-          problem_id: problemId,
-          title,
-          slug, // Add generated slug
-          system_prompt: systemPrompt,
-          user_prompt_template: userPromptTemplate,
-          model,
-          params: parsedParams,
-          example_input: exampleInput,
-          example_output: exampleOutput,
-          status,
-          visibility: 'public',
-          is_listed: true,
-          created_by: user.id,
-          workspace_id: workspace.id // Use actual workspace ID
-        })
-        .select()
-        .single()
+        if (!err) {
+          prompt = inserted
+          break
+        }
+        // 23505 = unique_violation (slug collision), retry
+        if (err.code !== '23505') {
+          insertError = err
+          break
+        }
+      }
 
-      if (error) {
-        throw new Error(`Failed to create prompt: ${error.message}`)
+      if (insertError) {
+        throw new Error(`Failed to create prompt: ${insertError.message}`)
+      }
+      if (!prompt) {
+        throw new Error('Failed to generate a unique slug after 3 attempts. Please try again.')
       }
 
       // Stats are now auto-created by database trigger
@@ -267,6 +286,34 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
               placeholder="SELECT DISTINCT c.* FROM customers c JOIN orders o ON c.id = o.customer_id WHERE o.created_at >= NOW() - INTERVAL 30 DAY;"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="usage_context" className="block text-sm font-medium text-gray-700 mb-2">
+              Usage Context
+            </label>
+            <textarea
+              id="usage_context"
+              name="usage_context"
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              placeholder="e.g. Best used in background asynchronous jobs where latency is not an issue."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="tradeoffs" className="block text-sm font-medium text-gray-700 mb-2">
+              Tradeoffs
+            </label>
+            <textarea
+              id="tradeoffs"
+              name="tradeoffs"
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              placeholder="e.g. High accuracy but uses complex regex matching that is slower."
             />
           </div>
         </div>

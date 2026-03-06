@@ -39,6 +39,42 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
         <h1 className="text-3xl font-bold mb-4">{problem.title}</h1>
         <p className="text-gray-600 text-lg mb-6">{problem.description}</p>
 
+        {/* Difficulty & Real World Context */}
+        {(problem.difficulty || problem.real_world_context) && (
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            {problem.difficulty && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex-1">
+                <h3 className="font-semibold text-purple-900 mb-1">Difficulty</h3>
+                <p className="text-purple-800 capitalize">{problem.difficulty}</p>
+              </div>
+            )}
+            {problem.real_world_context && (
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-[2]">
+                <h3 className="font-semibold text-slate-900 mb-1">Real World Context</h3>
+                <p className="text-slate-800">{problem.real_world_context}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Example Input / Output */}
+        {(problem.example_input || problem.expected_output) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {problem.example_input && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                <h3 className="font-semibold text-gray-900 mb-2 font-sans">Example Input</h3>
+                <pre className="text-gray-700 whitespace-pre-wrap">{problem.example_input}</pre>
+              </div>
+            )}
+            {problem.expected_output && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                <h3 className="font-semibold text-gray-900 mb-2 font-sans">Expected Output</h3>
+                <pre className="text-gray-700 whitespace-pre-wrap">{problem.expected_output}</pre>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Problem Goal */}
         {problem.goal && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -93,6 +129,21 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                     <li key={index} className="text-sm flex items-start">
                       <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 mt-1.5 flex-shrink-0"></span>
                       <span className="text-gray-700">{criterion.criterion}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Known Failure Modes */}
+            {problem.known_failure_modes && problem.known_failure_modes.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="font-semibold text-red-900 mb-3">Known Failure Modes</h3>
+                <ul className="space-y-2">
+                  {problem.known_failure_modes.map((mode: string, index: number) => (
+                    <li key={index} className="text-sm flex items-start">
+                      <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-2 mt-1.5 flex-shrink-0"></span>
+                      <span className="text-red-800">{mode}</span>
                     </li>
                   ))}
                 </ul>

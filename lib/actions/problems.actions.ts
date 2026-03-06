@@ -71,7 +71,7 @@ export async function listProblems({
 
   // Get unique user IDs
   const userIds = [...new Set(problems.map((p: any) => p.created_by).filter(Boolean))]
-  
+
   // Fetch author data separately
   let authorsMap: Record<string, any> = {}
   if (userIds.length > 0) {
@@ -79,9 +79,9 @@ export async function listProblems({
       .from('profiles')
       .select('id, username, display_name, avatar_url')
       .in('id', userIds)
-    
+
     console.log('Fetched authors:', authors) // Debug log
-    
+
     if (authors) {
       authorsMap = authors.reduce((acc, author) => {
         acc[author.id] = author
@@ -135,7 +135,7 @@ export async function getPublicProblemBySlug(slug: string) {
     if (data.problem_tags) {
       data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
     }
-    
+
     // Fetch author data separately
     if (data.created_by) {
       const { data: author } = await supabase
@@ -143,7 +143,7 @@ export async function getPublicProblemBySlug(slug: string) {
         .select('id, username, display_name, avatar_url')
         .eq('id', data.created_by)
         .single()
-      
+
       if (author) {
         data.author = author
       }
@@ -180,7 +180,7 @@ export async function getProblemBySlug(slug: string) {
     if (data.problem_tags) {
       data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
     }
-    
+
     // Fetch author data separately
     if (data.created_by) {
       const { data: author } = await supabase
@@ -188,7 +188,7 @@ export async function getProblemBySlug(slug: string) {
         .select('id, username, display_name, avatar_url')
         .eq('id', data.created_by)
         .single()
-      
+
       if (author) {
         data.author = author
       }
@@ -232,6 +232,16 @@ export async function createProblem(formData: FormData) {
     const industry = formData.get('industry') as string
     const visibility = formData.get('visibility') as string || 'public'
 
+    // Spec Fields
+    const real_world_context = formData.get('real_world_context') as string
+    const difficulty = formData.get('difficulty') as string
+    const example_input = formData.get('example_input') as string
+    const expected_output = formData.get('expected_output') as string
+    const known_failure_modes_raw = formData.get('known_failure_modes') as string
+    const known_failure_modes = known_failure_modes_raw
+      ? known_failure_modes_raw.split(',').map(m => m.trim()).filter(Boolean)
+      : []
+
     // Create slug from title
     const slug = title.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
@@ -273,7 +283,12 @@ export async function createProblem(formData: FormData) {
         is_listed: true,
         created_by: user.id,
         owner_id: user.id,
-        workspace_id: workspace?.id
+        workspace_id: workspace?.id,
+        real_world_context: real_world_context || null,
+        difficulty: difficulty || null,
+        example_input: example_input || null,
+        expected_output: expected_output || null,
+        known_failure_modes
       })
       .select()
       .single()

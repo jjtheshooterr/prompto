@@ -14,6 +14,7 @@
     "start": "next start",
     "lint": "eslint \"{app,components,lib}/**/*.{js,jsx,ts,tsx}\"",
     "seed": "tsx scripts/seed.ts",
+    "seed:validation": "tsx scripts/seed-validation.ts",
     "test": "vitest",
     "test:run": "vitest --run",
     "test:watch": "vitest",
@@ -37,6 +38,7 @@
     "next": "16.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "resend": "^6.9.3",
     "sonner": "^2.0.7",
     "zod": "^3.22.4"
   },
