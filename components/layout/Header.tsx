@@ -85,9 +85,7 @@ export default function Header() {
             <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
               Browse Problems
             </Link>
-            <Link href="/prompts" className="text-gray-600 hover:text-gray-900 transition-colors">
-              All Prompts
-            </Link>
+
             <Link
               href="/compare"
               className={`transition-colors relative ${compareCount > 0
@@ -190,13 +188,7 @@ export default function Header() {
               >
                 Browse Problems
               </Link>
-              <Link
-                href="/prompts"
-                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                onClick={closeMobileMenu}
-              >
-                All Prompts
-              </Link>
+
               <Link
                 href="/compare"
                 className={`transition-colors py-2 relative inline-block ${compareCount > 0

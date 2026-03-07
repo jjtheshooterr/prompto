@@ -8,6 +8,12 @@ body {
   background: #fff;
 }
 
+.glass-effect {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
 .animate-in {
   animation: animateIn 0.3s ease 0.15s both;
 }
