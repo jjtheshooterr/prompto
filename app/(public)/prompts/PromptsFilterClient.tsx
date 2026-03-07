@@ -67,7 +67,7 @@ export default function PromptsFilterClient({ filter, sort, search }: PromptsFil
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
               >
-                ⭐ Best
+                Best
               </Link>
               <Link
                 href={`/prompts?filter=${filter}&sort=top${search ? `&search=${search}` : ''}`}

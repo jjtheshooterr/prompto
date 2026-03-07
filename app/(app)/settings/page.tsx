@@ -12,10 +12,14 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [bio, setBio] = useState('');
+  const [headline, setHeadline] = useState('');
+  const [location, setLocation] = useState('');
+  const [websiteUrl, setWebsiteUrl] = useState('');
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [originalUsername, setOriginalUsername] = useState('');
@@ -27,25 +31,29 @@ export default function SettingsPage() {
   const loadProfile = async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (user) {
       setUser(user);
-      
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-      
+
       if (profile) {
         setProfile(profile);
         setDisplayName(profile.display_name || '');
         setUsername(profile.username || '');
         setOriginalUsername(profile.username || '');
         setAvatarUrl(profile.avatar_url || null);
+        setBio(profile.bio || '');
+        setHeadline(profile.headline || '');
+        setLocation(profile.location || '');
+        setWebsiteUrl(profile.website_url || '');
       }
     }
-    
+
     setLoading(false);
   };
 
@@ -77,7 +85,7 @@ export default function SettingsPage() {
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     setUsername(value);
-    
+
     // Debounce the check
     const timeoutId = setTimeout(() => checkUsername(value), 500);
     return () => clearTimeout(timeoutId);
@@ -114,7 +122,7 @@ export default function SettingsPage() {
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const fileName = `${user.id}/avatar-${timestamp}.${fileExt}`;
-      
+
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
         .upload(fileName, file);
@@ -173,7 +181,7 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     // Validate username if provided and changed
     if (username && username !== originalUsername && usernameAvailable !== true) {
       toast.error('Please choose an available username');
@@ -182,11 +190,15 @@ export default function SettingsPage() {
 
     setSaving(true);
     const supabase = createClient();
-    
+
     try {
       // Update profile fields using secure RPC
       const { data, error: profileError } = await supabase.rpc('update_profile', {
-        p_display_name: displayName || null
+        p_display_name: displayName || null,
+        p_bio: bio || null,
+        p_headline: headline || null,
+        p_location: location || null,
+        p_website_url: websiteUrl || null
       });
 
       if (profileError) {
@@ -220,7 +232,7 @@ export default function SettingsPage() {
 
       toast.success('Profile updated! Refreshing page to show changes...');
       setOriginalUsername(username);
-      
+
       // Force a page refresh after a short delay to clear all caches
       setTimeout(() => {
         window.location.reload();
@@ -376,11 +388,59 @@ export default function SettingsPage() {
           )}
         </div>
 
+        {/* Headline */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Headline</label>
+          <input
+            type="text"
+            value={headline}
+            onChange={(e) => setHeadline(e.target.value)}
+            placeholder="e.g. Senior Prompt Engineer"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Bio */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={4}
+            placeholder="Tell us about yourself..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+          />
+        </div>
+
+        {/* Location */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. San Francisco, CA"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Website */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+          <input
+            type="url"
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="e.g. https://yourdomain.com"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Current Profile URL */}
         {profile?.username && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm font-medium text-blue-900 mb-1">Your Profile URL</p>
-            <a 
+            <a
               href={`/u/${profile.username}`}
               target="_blank"
               rel="noopener noreferrer"

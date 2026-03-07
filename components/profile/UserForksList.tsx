@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { promptUrl } from '@/lib/utils/prompt-url';
 
 export function UserForksList({ userId }: { userId: string }) {
   const [forks, setForks] = useState<any[]>([]);
@@ -69,7 +70,7 @@ export function UserForksList({ userId }: { userId: string }) {
                   <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2 py-1 rounded">Fork</span>
                 </div>
                 <Link
-                  href={`/prompts/${fork.id}`}
+                  href={promptUrl({ id: fork.id, slug: fork.slug || '' })}
                   className="text-xl font-semibold hover:text-blue-600 transition-colors"
                 >
                   {fork.title}
@@ -90,7 +91,7 @@ export function UserForksList({ userId }: { userId: string }) {
             <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
               Forked from{' '}
               <Link
-                href={`/prompts/${fork.parent_prompt_id}`}
+                href={promptUrl({ id: fork.parent_prompt_id, slug: fork.parent_slug || '' })}
                 className="text-blue-600 hover:underline font-medium"
               >
                 {fork.parent_title}

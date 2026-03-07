@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { promptUrl } from '@/lib/utils/prompt-url'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/app/providers'
@@ -172,7 +173,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
       // Stats are now auto-created by database trigger
 
-      router.push(`/prompts/${prompt.id}`)
+      router.push(promptUrl(prompt))
     } catch (error) {
       console.error('Failed to create prompt:', error)
       alert(`Failed to create prompt: ${error instanceof Error ? error.message : 'Unknown error'}`)

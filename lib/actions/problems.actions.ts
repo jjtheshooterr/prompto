@@ -106,22 +106,53 @@ export async function listProblems({
   }
 }
 
-export async function getPublicProblemBySlug(slug: string) {
+export async function getPublicProblemBySlug(slugOrShortId: string, shortId?: string | null, isFullUuid?: boolean) {
   const supabase = await createClient()
 
   // RLS will handle visibility filtering, but we still check for soft deletes
-  const { data, error } = await supabase
+  let query = supabase
     .from('problems')
     .select(`
       *,
-      inputs,
-      constraints,
-      success_criteria,
+      real_world_context,
+      difficulty,
+      example_input,
+      expected_output,
+      known_failure_modes,
       problem_tags(tags(name))
     `)
-    .eq('slug', slug)
     .eq('is_deleted', false)
-    .single()
+
+  let data: any = null
+  let error: any = null
+
+  if (isFullUuid) {
+    const res = await query.eq('id', slugOrShortId).single()
+    data = res.data
+    error = res.error
+  } else if (shortId) {
+    // To gracefully handle missing short_id column on production, fetch by slug and filter by shortId in-memory
+    const res = await query.eq('slug', slugOrShortId)
+    if (res.error) {
+      error = res.error
+    } else if (res.data) {
+      data = res.data.find((p: any) => p.id.startsWith(shortId)) || (res.data.length > 0 ? res.data[0] : null)
+      if (data && !data.short_id) {
+        data.short_id = data.id.slice(0, 8)
+      }
+    }
+  } else {
+    // legacy or fallback: match by exact slug
+    const res = await query.eq('slug', slugOrShortId)
+    if (res.error) {
+      error = res.error
+    } else if (res.data && res.data.length > 0) {
+      data = res.data[0]
+      if (data && !data.short_id) {
+        data.short_id = data.id.slice(0, 8)
+      }
+    }
+  }
 
   if (error) {
     console.error('Error fetching problem:', error)
@@ -152,21 +183,52 @@ export async function getPublicProblemBySlug(slug: string) {
 }
 
 // New function that handles all problem access (public, unlisted, private with membership)
-export async function getProblemBySlug(slug: string) {
+export async function getProblemBySlug(slugOrShortId: string, shortId?: string | null, isFullUuid?: boolean) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('problems')
     .select(`
       *,
-      inputs,
-      constraints,
-      success_criteria,
+      real_world_context,
+      difficulty,
+      example_input,
+      expected_output,
+      known_failure_modes,
       problem_tags(tags(name))
     `)
-    .eq('slug', slug)
     .eq('is_deleted', false)
-    .single()
+
+  let data: any = null
+  let error: any = null
+
+  if (isFullUuid) {
+    const res = await query.eq('id', slugOrShortId).single()
+    data = res.data
+    error = res.error
+  } else if (shortId) {
+    // Graceful fallback for production schema safety
+    const res = await query.eq('slug', slugOrShortId)
+    if (res.error) {
+      error = res.error
+    } else if (res.data) {
+      data = res.data.find((p: any) => p.id.startsWith(shortId)) || (res.data.length > 0 ? res.data[0] : null)
+      if (data && !data.short_id) {
+        data.short_id = data.id.slice(0, 8)
+      }
+    }
+  } else {
+    // fallback
+    const res = await query.eq('slug', slugOrShortId)
+    if (res.error) {
+      error = res.error
+    } else if (res.data && res.data.length > 0) {
+      data = res.data[0]
+      if (data && !data.short_id) {
+        data.short_id = data.id.slice(0, 8)
+      }
+    }
+  }
 
   if (error) {
     console.error('Error fetching problem:', error)

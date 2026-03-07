@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import ReportModal from '@/components/moderation/ReportModal'
 import { AuthorChip } from '@/components/common/AuthorChip'
 import { toast } from 'sonner'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface PromptCardProps {
   prompt: any
@@ -111,7 +112,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
             </div>
 
             <Link
-              href={`/prompts/${prompt.id}`}
+              href={promptUrl(prompt)}
               className="text-lg sm:text-xl font-semibold hover:text-blue-600 transition-colors block"
             >
               {prompt.title}
@@ -161,7 +162,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                 )}
                 {parentPrompt && (
                   <div className="mt-1 text-xs text-orange-600">
-                    from <Link href={`/prompts/${parentPrompt.id}`} className="underline hover:text-orange-800">{parentPrompt.title}</Link>
+                    from <Link href={promptUrl({ id: parentPrompt.id, slug: '' })} className="underline hover:text-orange-800">{parentPrompt.title}</Link>
                   </div>
                 )}
               </div>
@@ -296,7 +297,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               </button>
             )}
             <Link
-              href={`/prompts/${prompt.id}`}
+              href={promptUrl(prompt)}
               className="btnPrimary text-white text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 flex-1 sm:flex-none text-center"
             >
               View Details

@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface TopRatedPrompt {
   id: string
+  slug: string
   title: string
   system_prompt: string
   user_prompt_template?: string
@@ -36,7 +38,7 @@ export default function TopRatedPrompts() {
         // Simplified query - get prompts first
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
-          .select('id, title, system_prompt, user_prompt_template, model, created_at, created_by, problem_id, best_for')
+          .select('id, slug, title, system_prompt, user_prompt_template, model, created_at, created_by, problem_id, best_for')
           .eq('is_listed', true)
           .eq('is_hidden', false)
           .eq('is_deleted', false)
@@ -86,6 +88,7 @@ export default function TopRatedPrompts() {
             const problem = problemsData?.find(p => p.id === prompt.problem_id)
             return {
               ...prompt,
+              slug: prompt.slug || '',
               upvotes: stats?.upvotes || 0,
               downvotes: stats?.downvotes || 0,
               score: stats?.score || 0,
@@ -154,7 +157,7 @@ export default function TopRatedPrompts() {
           {prompts.map((prompt, index) => (
             <Link
               key={prompt.id}
-              href={`/prompts/${prompt.id}`}
+              href={promptUrl(prompt)}
               className={`block card p-6 relative flex flex-col h-full ${index === 0 ? 'floatingCard' : ''}`}
             >
               {/* Ranking badge */}

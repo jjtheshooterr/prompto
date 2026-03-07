@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import PromptCard from '@/components/prompts/PromptCard';
+import { ProfilePromptCard } from './ProfilePromptCard';
 
 export function UserPromptsList({ userId }: { userId: string }) {
   const [prompts, setPrompts] = useState<any[]>([]);
@@ -48,11 +48,12 @@ export function UserPromptsList({ userId }: { userId: string }) {
   return (
     <div>
       {/* Sort dropdown */}
-      <div className="mb-4 flex justify-end">
+      <div className="mb-6 flex justify-between items-center">
+        <h2 className="text-xl font-bold text-slate-900">Original Prompts</h2>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-colors cursor-pointer hover:border-slate-300"
         >
           <option value="newest">Newest First</option>
           <option value="top">Top Rated</option>
@@ -60,26 +61,22 @@ export function UserPromptsList({ userId }: { userId: string }) {
         </select>
       </div>
 
-      {/* List */}
-      <div className="space-y-4">
+      {/* Grid List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {prompts.map((prompt) => (
-          <PromptCard
+          <ProfilePromptCard
             key={prompt.id}
             prompt={{
-              ...prompt,
-              problems: { title: prompt.problem_title, slug: prompt.problem_id },
-              prompt_stats: [{
-                score: prompt.score,
-                fork_count: prompt.fork_count,
-                works_count: prompt.works_count,
-                fails_count: prompt.fails_count,
-                upvotes: 0,
-                downvotes: 0,
-                copy_count: 0,
-                view_count: 0
-              }]
+              id: prompt.id,
+              title: prompt.title || 'Untitled Prompt',
+              slug: prompt.slug,
+              model: prompt.model || 'AI Model',
+              system_prompt: prompt.system_prompt || prompt.description || 'Click to view prompt details...',
+              score: prompt.score || 0,
+              copy_count: prompt.fork_count || 0,
+              works_count: prompt.works_count || 0,
+              fails_count: prompt.fails_count || 0,
             }}
-            showProblemTitle={true}
           />
         ))}
       </div>

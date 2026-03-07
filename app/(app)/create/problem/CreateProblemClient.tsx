@@ -1,11 +1,10 @@
-'use client'
-
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ProblemInput, ProblemConstraint, ProblemSuccessCriterion } from '@/types/problems'
 import { toast } from 'sonner'
 import { useAuth } from '@/app/providers'
+import { problemUrl } from '@/lib/utils/prompt-url'
 
 interface CreateProblemClientProps {
   user: any
@@ -227,7 +226,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           })
       }
 
-      router.push(`/problems/${problem.slug}`)
+      router.push(problemUrl({ id: problem.id, slug: problem.slug }))
     } catch (error) {
       console.error('Failed to create problem:', error)
       toast.error(`Failed to create problem: ${error instanceof Error ? error.message : 'Unknown error'}`)

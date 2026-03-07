@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { Report } from '@/types/reports'
+import { promptUrl, problemUrl } from '@/lib/utils/prompt-url'
 
 // ─── Server Actions ────────────────────────────────────────────────────────────
 
@@ -128,8 +129,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             key={tab.key}
             href={`/admin/reports?filter=${tab.key}`}
             className={`px-4 py-2 rounded-lg transition-colors ${activeFilter === tab.key
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             {tab.label} ({tab.count})
@@ -151,10 +152,10 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                   <div className="flex items-center gap-2 mb-2">
                     <span
                       className={`px-2 py-1 text-xs rounded font-medium ${report.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : report.status === 'resolved'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-800'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : report.status === 'resolved'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
                         }`}
                     >
                       {report.status}
@@ -175,8 +176,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                 <Link
                   href={
                     report.content_type === 'prompt'
-                      ? `/prompts/${report.content_id}`
-                      : `/problems/${report.content_id}`
+                      ? promptUrl({ id: report.content_id, slug: '' })
+                      : problemUrl({ id: report.content_id, slug: '' })
                   }
                   className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   target="_blank"

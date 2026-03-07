@@ -3,6 +3,7 @@ import Link from 'next/link'
 import QualitySignals from '@/components/problems/QualitySignals'
 import Pagination from '@/components/ui/Pagination'
 import React from 'react'
+import { problemUrl } from '@/lib/utils/prompt-url'
 
 // Enable ISR with 2-minute revalidation
 export const revalidate = 120
@@ -114,8 +115,8 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                       key={value}
                       href={`?${nextParams.toString()}`}
                       className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${isActive
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                         }`}
                     >
                       {label}
@@ -305,7 +306,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                           {/* Title + difficulty */}
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
-                              href={`/problems/${problem.slug}`}
+                              href={problemUrl({ id: problem.id, slug: problem.slug || '' })}
                               className="text-base font-semibold text-slate-900 group-hover:text-blue-600 transition-colors"
                             >
                               {problem.title}
@@ -352,7 +353,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                       {/* Right: SOLVE button */}
                       <div className="flex-shrink-0">
                         <Link
-                          href={`/problems/${problem.slug}`}
+                          href={problemUrl({ id: problem.id, slug: problem.slug || '' })}
                           className="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-colors whitespace-nowrap tracking-wide"
                         >
                           SOLVE

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getPromptChildren, getPromptLineage } from '@/lib/actions/prompts.actions'
 import Link from 'next/link'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface ForkLineageProps {
   promptId: string
@@ -52,7 +53,7 @@ export default function ForkLineage({ promptId }: ForkLineageProps) {
             {ancestors.map((item, index) => (
               <div key={item.id} className="flex items-center gap-2">
                 <Link
-                  href={`/prompts/${item.id}`}
+                  href={promptUrl({ id: item.id, slug: item.slug || '' })}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   {item.title}
@@ -86,7 +87,7 @@ export default function ForkLineage({ promptId }: ForkLineageProps) {
               <div key={child.id} className="group border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50/30 transition-all">
                 <div className="flex justify-between items-start mb-2">
                   <Link
-                    href={`/prompts/${child.id}`}
+                    href={promptUrl({ id: child.id, slug: child.slug || '' })}
                     className="font-medium text-gray-900 group-hover:text-blue-600 truncate mr-4"
                   >
                     {child.title}

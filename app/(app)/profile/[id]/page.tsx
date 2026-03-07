@@ -1,64 +1,75 @@
 import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ProfilePageClient } from '@/components/profile/ProfilePageClient';
+import { ProfileSidebarData } from '@/components/profile/ProfileSidebar';
+import { ProfileStatsData } from '@/components/profile/ProfileStatsRow';
+import { ActivityItemData } from '@/components/profile/ProfileActivityFeed';
 
 // Enable ISR with 5-minute revalidation
 export const revalidate = 300
 
-interface Profile {
-  id: string;
-  username: string | null;
-  display_name: string;
-  avatar_url: string | null;
-  created_at: string;
-  reputation: number;
-  upvotes_received: number;
-  forks_received: number;
-}
-
-export default async function ProfileByIdPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
+export default async function ProfileByIdPage({
+  params
+}: {
+  params: Promise<{ id: string }>
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  
-  const { data: profile, error } = await supabase
-    .from('public_profiles')
+
+  const { data: profileData, error } = await supabase
+    .from('profiles')
     .select('*')
     .eq('id', id)
     .single();
-    
-  if (error || !profile) {
+
+  if (error || !profileData) {
     notFound();
   }
-  
+
+  const profile = profileData as unknown as ProfileSidebarData;
+
   // Redirect to username URL if available
   if (profile.username) {
     redirect(`/u/${profile.username}`);
   }
-  
-  return <ProfilePageClient profile={profile as Profile} />;
+
+  // 2. Fetch Stats & Activity in parallel
+  const [statsRes, activityRes] = await Promise.all([
+    supabase.rpc('get_profile_stats', { p_user_id: profile.id }).single(),
+    supabase.rpc('get_user_activity', { p_user_id: profile.id, p_limit: 20 })
+  ]);
+
+  const stats = statsRes.data as unknown as ProfileStatsData;
+  const activities = (activityRes.data || []) as unknown as ActivityItemData[];
+
+  return (
+    <div className="bg-slate-50 min-h-screen py-8">
+      <ProfilePageClient
+        profile={profile}
+        stats={stats}
+        initialActivities={activities}
+      />
+    </div>
+  );
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from('public_profiles')
+  const { data: profileData } = await supabase
+    .from('profiles')
     .select('*')
     .eq('id', id)
     .single();
-    
-  if (!profile) {
+
+  if (!profileData) {
     return { title: 'User Not Found' };
   }
-  
-  const typedProfile = profile as Profile;
-  
+
+  const profile = profileData as unknown as ProfileSidebarData;
+
   return {
-    title: `${typedProfile.display_name} - Prompto`,
-    description: `View ${typedProfile.display_name}'s prompts, forks, and problems on Prompto.`
+    title: `${profile.display_name} - Prompto`,
+    description: profile.headline || profile.bio || `View ${profile.display_name}'s prompts, forks, and problems on Prompto.`
   };
 }

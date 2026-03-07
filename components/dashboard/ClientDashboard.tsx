@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/app/providers'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface UserStats {
   problemsCreated: number
@@ -79,7 +80,7 @@ export default function ClientDashboard() {
       // Load user's recent prompts
       const { data: userPrompts, error: userPromptsError } = await supabase
         .from('prompts')
-        .select('id, title, status, created_at, problem_id, best_for, improvement_summary')
+        .select('id, slug, title, status, created_at, problem_id, best_for, improvement_summary')
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
         .limit(5)
@@ -127,7 +128,7 @@ export default function ClientDashboard() {
       // Load top-rated prompts from the platform
       const { data: topPromptsData, error: topPromptsError } = await supabase
         .from('prompts')
-        .select('id, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, best_for, improvement_summary')
+        .select('id, slug, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, best_for, improvement_summary')
         .eq('is_listed', true)
         .eq('is_hidden', false)
         .eq('visibility', 'public')
@@ -366,7 +367,7 @@ export default function ClientDashboard() {
                               </div>
                             )}
                             <Link
-                              href={`/prompts/${prompt.id}`}
+                              href={promptUrl(prompt)}
                               className="font-medium text-gray-900 hover:text-blue-600"
                             >
                               {prompt.title}
@@ -429,7 +430,7 @@ export default function ClientDashboard() {
                               </div>
                             )}
                             <Link
-                              href={`/prompts/${prompt.id}`}
+                              href={promptUrl(prompt)}
                               className="font-medium text-gray-900 hover:text-blue-600"
                             >
                               {prompt.title}

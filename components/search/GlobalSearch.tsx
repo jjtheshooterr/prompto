@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface SearchResult {
   id: string
+  slug: string
   kind: 'prompt' | 'problem'
   title: string
   problem_title?: string
@@ -98,6 +100,7 @@ export default function GlobalSearch() {
           score: number
         }) => ({
           id: h.id,
+          slug: (h as any).slug || '',
           kind: 'prompt' as const,
           title: h.title,
           problem_id: h.problem_id,
@@ -114,6 +117,7 @@ export default function GlobalSearch() {
           score: number
         }) => ({
           id: p.id,
+          slug: '',
           kind: 'problem' as const,
           title: p.title,
           problem_slug: p.slug,
@@ -228,7 +232,7 @@ export default function GlobalSearch() {
                     href={
                       r.kind === 'problem'
                         ? `/problems/${r.problem_slug}`
-                        : `/prompts/${r.id}`
+                        : promptUrl({ id: r.id, slug: r.slug })
                     }
                     onClick={clear}
                     className="flex flex-col gap-1 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"

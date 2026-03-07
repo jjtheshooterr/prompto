@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { promptUrl, problemUrl } from '@/lib/utils/prompt-url'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://promptvexity.vercel.app'
@@ -30,14 +31,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Get public problems
   const { data: problems } = await supabase
     .from('problems')
-    .select('slug, updated_at')
+    .select('id, slug, updated_at')
     .eq('visibility', 'public')
     .eq('is_deleted', false)
     .order('updated_at', { ascending: false })
     .limit(1000)
 
   const problemPages: MetadataRoute.Sitemap = (problems || []).map((problem) => ({
-    url: `${baseUrl}/problems/${problem.slug}`,
+    url: `${baseUrl}${problemUrl({ id: problem.id, slug: problem.slug || '' })}`,
     lastModified: new Date(problem.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
@@ -46,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Get public prompts
   const { data: prompts } = await supabase
     .from('prompts')
-    .select('id, updated_at, problems!inner(visibility)')
+    .select('id, slug, updated_at, problems!inner(visibility)')
     .eq('is_listed', true)
     .eq('is_deleted', false)
     .eq('problems.visibility', 'public')
@@ -54,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .limit(1000)
 
   const promptPages: MetadataRoute.Sitemap = (prompts || []).map((prompt) => ({
-    url: `${baseUrl}/prompts/${prompt.id}`,
+    url: `${baseUrl}${promptUrl({ id: prompt.id, slug: (prompt as any).slug || '' })}`,
     lastModified: new Date(prompt.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.7,

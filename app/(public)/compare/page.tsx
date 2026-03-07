@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { promptUrl } from '@/lib/utils/prompt-url'
 
 function renderContent(content: any): string {
   if (typeof content === 'string') return content
@@ -112,7 +113,7 @@ export default function ComparePage() {
               return (
                 <div key={prompt.id} className="flex-1 min-w-[320px] p-5 space-y-4 bg-white">
                   <div>
-                    <Link href={`/prompts/${prompt.id}`} className="text-lg font-semibold hover:text-blue-600 transition-colors">
+                    <Link href={promptUrl(prompt)} className="text-lg font-semibold hover:text-blue-600 transition-colors">
                       {prompt.title}
                     </Link>
                     <div className="text-sm text-gray-500 mt-1">Model: {prompt.model}</div>
@@ -163,7 +164,7 @@ export default function ComparePage() {
                         Fork
                       </Link>
                     )}
-                    <Link href={`/prompts/${prompt.id}`} className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center">
+                    <Link href={promptUrl(prompt)} className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center">
                       View Details
                     </Link>
                   </div>
