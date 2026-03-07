@@ -4,26 +4,68 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ProfilePromptCard } from './ProfilePromptCard';
 
+const ITEMS_PER_PAGE = 8;
+
 export function UserPromptsList({ userId }: { userId: string }) {
   const [prompts, setPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [sort, setSort] = useState('newest');
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
-    async function loadPrompts() {
+    async function loadInitialPrompts() {
+      setLoading(true);
       const supabase = createClient();
       const { data } = await supabase
         .rpc('get_user_prompts', {
           user_id: userId,
           sort_by: sort,
-          limit_count: 20,
+          limit_count: ITEMS_PER_PAGE + 1,
           offset_count: 0
         });
-      setPrompts(data || []);
+
+      const results = data || [];
+      if (results.length > ITEMS_PER_PAGE) {
+        setPrompts(results.slice(0, ITEMS_PER_PAGE));
+        setHasMore(true);
+      } else {
+        setPrompts(results);
+        setHasMore(false);
+      }
+
+      setOffset(ITEMS_PER_PAGE);
       setLoading(false);
     }
-    loadPrompts();
+    loadInitialPrompts();
   }, [userId, sort]);
+
+  async function loadMore() {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    const supabase = createClient();
+    const { data } = await supabase
+      .rpc('get_user_prompts', {
+        user_id: userId,
+        sort_by: sort,
+        limit_count: ITEMS_PER_PAGE + 1,
+        offset_count: offset
+      });
+
+    const results = data || [];
+    if (results.length > ITEMS_PER_PAGE) {
+      setPrompts(prev => [...prev, ...results.slice(0, ITEMS_PER_PAGE)]);
+      setHasMore(true);
+    } else {
+      setPrompts(prev => [...prev, ...results]);
+      setHasMore(false);
+    }
+
+    setOffset(prev => prev + ITEMS_PER_PAGE);
+    setLoadingMore(false);
+  }
 
   if (loading) {
     return (
@@ -80,6 +122,19 @@ export function UserPromptsList({ userId }: { userId: string }) {
           />
         ))}
       </div>
+
+      {/* Pagination */}
+      {hasMore && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="px-6 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all shadow-sm"
+          >
+            {loadingMore ? 'Loading...' : 'Load More Prompts'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
