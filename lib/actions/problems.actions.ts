@@ -80,7 +80,6 @@ export async function listProblems({
       .select('id, username, display_name, avatar_url')
       .in('id', userIds)
 
-    console.log('Fetched authors:', authors) // Debug log
 
     if (authors) {
       authorsMap = authors.reduce((acc, author) => {
@@ -97,7 +96,6 @@ export async function listProblems({
       tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [],
       author: p.created_by ? authorsMap[p.created_by] : null
     }
-    console.log('Problem with author:', problem.title, problem.author) // Debug log
     return problem
   })
 

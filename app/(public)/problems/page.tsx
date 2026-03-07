@@ -61,35 +61,73 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
               </div>
             </div>
 
-            {/* Preserving their industry filter */}
+            {/* Difficulty - checkboxes */}
             <div className="mb-5">
-              <h3 className="text-sm font-medium mb-2 text-slate-900">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                Difficulty
+              </h3>
+              <div className="space-y-2">
+                {[
+                  { value: 'beginner', label: 'Beginner' },
+                  { value: 'intermediate', label: 'Intermediate' },
+                  { value: 'advanced', label: 'Advanced' },
+                ].map(({ value, label }) => (
+                  <label key={value} className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="difficulty"
+                      value={value}
+                      defaultChecked={(params as any).difficulty === value}
+                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <span className="text-sm text-slate-700 group-hover:text-slate-900">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Industry - tag pills */}
+            <div className="mb-5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
                 Industry
               </h3>
-              <select
-                name="industry"
-                defaultValue={params.industry}
-                className="w-full rounded border-slate-200 bg-slate-50 text-sm text-slate-900 focus:ring-blue-600 focus:border-blue-600 p-2"
-              >
-                <option value="">All Industries</option>
-                <option value="dev">Development & Technology</option>
-                <option value="marketing">Marketing</option>
-                <option value="content">Content Creation</option>
-                <option value="data">Data & Analytics</option>
-                <option value="finance">Finance</option>
-                <option value="healthcare">Healthcare</option>
-                <option value="education">Education</option>
-                <option value="legal">Legal</option>
-                <option value="sales">Sales</option>
-                <option value="support">Customer Support</option>
-                <option value="hr">Human Resources</option>
-                <option value="video">Video & Media</option>
-              </select>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'fintech', label: 'Fintech' },
+                  { value: 'healthcare', label: 'Healthcare' },
+                  { value: 'edtech', label: 'EdTech' },
+                  { value: 'saas', label: 'SaaS' },
+                  { value: 'dev', label: 'Dev' },
+                  { value: 'marketing', label: 'Marketing' },
+                  { value: 'data', label: 'Data' },
+                  { value: 'legal', label: 'Legal' },
+                  { value: 'sales', label: 'Sales' },
+                  { value: 'hr', label: 'HR' },
+                ].map(({ value, label }) => {
+                  const isActive = params.industry === value
+                  const nextParams = new URLSearchParams()
+                  if (params.search) nextParams.set('search', params.search)
+                  if (params.sort) nextParams.set('sort', params.sort)
+                  if (!isActive) nextParams.set('industry', value)
+                  return (
+                    <a
+                      key={value}
+                      href={`?${nextParams.toString()}`}
+                      className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${isActive
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        }`}
+                    >
+                      {label}
+                    </a>
+                  )
+                })}
+              </div>
             </div>
 
             {/* Sort filter */}
             <div className="mb-5">
-              <h3 className="text-sm font-medium mb-2 text-slate-900">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
                 Sort By
               </h3>
               <select
@@ -137,10 +175,9 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
           <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden flex-grow">
 
             {/* Table Header Row */}
-            <div className="grid grid-cols-12 gap-4 p-4 border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
-              <div className="col-span-12 md:col-span-6 lg:col-span-7">Problem</div>
-              <div className="hidden md:block md:col-span-3 lg:col-span-2 text-right">Metrics</div>
-              <div className="hidden md:block md:col-span-3 lg:col-span-3 text-right">Activity</div>
+            <div className="flex items-center px-5 py-3 border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <div className="flex-grow">Problem</div>
+              <div className="w-24 text-right">Action</div>
             </div>
 
             {/* Table Body */}
@@ -160,10 +197,28 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                   const tagList = problem.tags || []
                   const primaryTag = problem.industry || 'General'
                   const totalPrompts = problem.problem_stats?.total_prompts || 0
+                  const totalForks = problem.problem_stats?.total_forks || 0
                   const totalWorks = problem.problem_stats?.total_works || 0
                   const totalFails = problem.problem_stats?.total_fails || 0
                   const totalAttempts = totalWorks + totalFails
                   const successRate = totalAttempts > 0 ? `${Math.round((totalWorks / totalAttempts) * 100)}%` : '--'
+                  // Difficulty badge
+                  const difficulty = problem.difficulty as string | null
+                  const difficultyLabel = difficulty ? difficulty.charAt(0).toUpperCase() + difficulty.slice(1) : null
+                  const difficultyColor: Record<string, string> = {
+                    beginner: 'bg-green-100 text-green-700 border-green-200',
+                    intermediate: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                    advanced: 'bg-orange-100 text-orange-700 border-orange-200',
+                    expert: 'bg-red-100 text-red-700 border-red-200',
+                  }
+                  const difficultyClass = difficulty ? (difficultyColor[difficulty] || 'bg-slate-100 text-slate-600 border-slate-200') : ''
+                  // Active ago
+                  const activeDate = new Date(problem.updated_at || problem.created_at)
+                  const nowMs = Date.now()
+                  const diffMs = nowMs - activeDate.getTime()
+                  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+                  const diffDays = Math.floor(diffHours / 24)
+                  const activeAgo = diffDays > 0 ? `${diffDays}d ago` : diffHours > 0 ? `${diffHours}h ago` : 'Just now'
                   // Smart icon selection based on title keywords (to match mockup exactly) or industry fallback
                   let iconType = 'integration_instructions'
                   const titleLower = problem.title?.toLowerCase() || ''
@@ -241,69 +296,67 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                   }
 
                   return (
-                    <div key={problem.id} className="group grid grid-cols-12 gap-4 p-4 hover:bg-slate-50 transition-colors items-center">
-                      <div className="col-span-12 md:col-span-6 lg:col-span-7">
-                        <div className="flex items-start gap-3">
-                          {renderIcon()}
+                    <div key={problem.id} className="group flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                      {/* Left: icon + content */}
+                      <div className="flex items-start gap-3 flex-grow min-w-0">
+                        {renderIcon()}
 
-                          <div>
+                        <div className="min-w-0">
+                          {/* Title + difficulty */}
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Link
                               href={`/problems/${problem.slug}`}
                               className="text-base font-semibold text-slate-900 group-hover:text-blue-600 transition-colors"
                             >
                               {problem.title}
                             </Link>
-
-                            <p className="text-sm text-slate-500 mt-1 line-clamp-2">
-                              {problem.description}
-                            </p>
-
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-blue-100 text-blue-800 border-blue-200 capitalize">
-                                {primaryTag}
+                            {difficultyLabel && (
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold border uppercase tracking-wide ${difficultyClass}`}>
+                                {difficultyLabel}
                               </span>
-                              {problem.has_pinned_prompt && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-yellow-100 text-yellow-800 border-yellow-200">
-                                  Solved
-                                </span>
-                              )}
-                              {tagList.slice(0, 2).map((tag: string, i: number) => (
-                                <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-gray-100 text-gray-800 border-gray-200">
-                                  {tag}
-                                </span>
-                              ))}
-                              {tagList.length > 2 && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-gray-100 text-gray-800 border-gray-200">
-                                  +{tagList.length - 2} more
-                                </span>
-                              )}
-                            </div>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
+                            {problem.description}
+                          </p>
+
+                          {/* Bottom meta row: tag • prompts • forks • active */}
+                          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-slate-500">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded font-medium border bg-blue-100 text-blue-800 border-blue-200 capitalize">
+                              {primaryTag}
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              {/* chat/prompts icon */}
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" /></svg>
+                              {totalPrompts} Prompts
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              {/* fork icon */}
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                              {totalForks} Forks
+                            </span>
+
+                            <span className="flex items-center gap-1">
+                              {/* clock icon */}
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                              Active {activeAgo}
+                            </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="col-span-12 md:col-span-3 lg:col-span-2 flex md:flex-col md:items-end md:justify-center gap-4 md:gap-1 text-sm text-slate-500 mt-2 md:mt-0">
-                        <div>
-                          <span className="font-medium text-slate-900">
-                            {totalPrompts}
-                          </span>{' '}
-                          Prompts
-                        </div>
-                        <div>
-                          <span className="font-medium text-slate-900">
-                            {successRate}
-                          </span>{' '}
-                          Success Rate
-                        </div>
-                      </div>
-
-                      <div className="col-span-12 md:col-span-3 lg:col-span-3 flex md:flex-col md:items-end md:justify-center gap-4 md:gap-1 text-sm text-slate-500 mt-1 md:mt-0">
-                        <div>
-                          by <span className="text-slate-900">{problem.author?.display_name || problem.author?.username || 'Anonymous'}</span>
-                        </div>
-                        <div className="text-xs">
-                          {new Date(problem.created_at).toLocaleDateString()}
-                        </div>
+                      {/* Right: SOLVE button */}
+                      <div className="flex-shrink-0">
+                        <Link
+                          href={`/problems/${problem.slug}`}
+                          className="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-colors whitespace-nowrap tracking-wide"
+                        >
+                          SOLVE
+                        </Link>
                       </div>
                     </div>
                   )

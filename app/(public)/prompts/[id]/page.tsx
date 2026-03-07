@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+type Tab = 'system' | 'template' | 'example' | 'lineage'
+
 export default function PromptDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -22,133 +24,29 @@ export default function PromptDetailPage() {
   const [showForkModal, setShowForkModal] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
   const [reviews, setReviews] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState<Tab>('system')
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const loadInitialData = async () => {
       await loadData()
-
-      // Track view event client-side using new increment function
-      if (user) {
-        const supabase = createClient()
-
-        // Update view count using RPC function
-        try {
-          await supabase.rpc('increment_prompt_views', { prompt_id: promptId })
-        } catch (rpcError) {
-          console.warn('Failed to increment view count:', rpcError)
-        }
-      }
-
       setLoading(false)
     }
-
     loadInitialData()
   }, [promptId])
 
-  const handleVote = async (value: 1 | -1) => {
-    if (!user) {
-      toast('Please log in to vote')
-      return
-    }
-
-    try {
-      const supabase = createClient()
-
-      if (userVote === value) {
-        // Clear vote
-        console.log('Clearing vote for prompt:', promptId, 'user:', user.id)
-        const { error } = await supabase
-          .from('votes')
-          .delete()
-          .eq('prompt_id', promptId)
-          .eq('user_id', user.id)
-
-        if (error) {
-          console.error('Failed to clear vote:', error)
-          toast.error('Could not clear vote')
-          return
-        }
-
-        setUserVote(null)
-      } else {
-        // Check if vote exists first
-        console.log('Setting vote for prompt:', promptId, 'user:', user.id, 'value:', value)
-
-        const { data: existingVote, error: voteError } = await supabase
-          .from('votes')
-          .select('*')
-          .eq('prompt_id', promptId)
-          .eq('user_id', user.id)
-          .maybeSingle()
-
-        let error = null
-
-        if (voteError) {
-          console.error('Error checking existing vote:', voteError)
-        }
-
-        if (existingVote) {
-          // Update existing vote
-          console.log('Updating existing vote')
-          const result = await supabase
-            .from('votes')
-            .update({ value })
-            .eq('prompt_id', promptId)
-            .eq('user_id', user.id)
-          error = result.error
-        } else {
-          // Insert new vote
-          console.log('Inserting new vote')
-          const result = await supabase
-            .from('votes')
-            .insert({
-              prompt_id: promptId,
-              user_id: user.id,
-              value
-            })
-          error = result.error
-        }
-
-        if (error) {
-          console.error('Failed to vote:', error)
-          console.error('Error details:', JSON.stringify(error, null, 2))
-          toast.error('Could not record vote')
-          return
-        }
-
-        setUserVote(value)
-      }
-
-      // Note: Vote stats are updated by database triggers automatically
-      // Wait a moment for the trigger to complete, then refresh the data
-      setTimeout(async () => {
-        await loadData()
-      }, 500)
-    } catch (error) {
-      console.error('Vote failed:', error)
-      toast.error('Vote failed')
-    }
-  }
-
   const loadData = async () => {
     const supabase = createClient()
-
-    // Get user
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     setUser(currentUser)
 
-    // Get prompt with fresh stats using separate queries to avoid relationship conflicts
-    const { data: promptData, error: promptError } = await supabase
+    const { data: promptData } = await supabase
       .from('prompts')
       .select('*')
       .eq('id', promptId)
       .single()
 
-    console.log('Prompt query result:', promptData)
-    console.log('Prompt query error:', promptError)
-
     if (promptData) {
-      // Fetch problem separately to avoid relationship conflicts
       let problemData = null
       if (promptData.problem_id) {
         const { data: problem } = await supabase
@@ -159,90 +57,71 @@ export default function PromptDetailPage() {
         problemData = problem
       }
 
-      // Fetch stats separately to avoid nested query issues
-      const { data: statsData, error: statsError } = await supabase
+      const { data: statsData } = await supabase
         .from('prompt_stats')
         .select('*')
         .eq('prompt_id', promptId)
         .single()
 
-      console.log('Stats query result:', statsData)
-      console.log('Stats query error:', statsError)
-
-      if (statsData) {
-        promptData.prompt_stats = [statsData]
-      } else {
-        // Create default stats if none exist
-        promptData.prompt_stats = [{
-          upvotes: 0,
-          downvotes: 0,
-          score: 0,
-          copy_count: 0,
-          view_count: 0,
-          fork_count: 0
-        }]
-      }
-
-      // Add problem data to prompt
+      promptData.prompt_stats = [statsData || {
+        upvotes: 0, downvotes: 0, score: 0,
+        copy_count: 0, view_count: 0, fork_count: 0,
+        works_count: 0, fails_count: 0, reviews_count: 0,
+      }]
       promptData.problems = problemData
-
-      // Add problem data to prompt
-      promptData.problems = problemData
-
       setPrompt(promptData)
 
-      // Fetch recent reviews
       const { data: recentReviews } = await supabase
         .from('prompt_reviews')
         .select('*')
         .eq('prompt_id', promptId)
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(8)
 
-      if (recentReviews) {
-        setReviews(recentReviews)
-      }
+      if (recentReviews) setReviews(recentReviews)
     }
 
-    // Get user's vote if logged in
     if (currentUser) {
-      const { data: voteData, error: voteError } = await supabase
+      const { data: voteData } = await supabase
         .from('votes')
         .select('value')
         .eq('prompt_id', promptId)
         .eq('user_id', currentUser.id)
         .maybeSingle()
-
-      if (voteError) {
-        console.error('Error fetching user vote:', voteError)
-      }
-
       setUserVote(voteData?.value || null)
     }
   }
 
-  const handleCopy = async () => {
-    const text = `${prompt.system_prompt}\n\n${prompt.user_prompt_template}`
-    await navigator.clipboard.writeText(text)
-
-    if (user) {
-      // Track copy using new increment function
+  const handleVote = async (value: 1 | -1) => {
+    if (!user) { toast('Please log in to vote'); return }
+    try {
       const supabase = createClient()
-
-      // Update copy count using RPC function
-      try {
-        await supabase.rpc('increment_prompt_copies', { prompt_id: promptId })
-      } catch (rpcError) {
-        console.warn('Failed to increment copy count:', rpcError)
+      if (userVote === value) {
+        await supabase.from('votes').delete().eq('prompt_id', promptId).eq('user_id', user.id)
+        setUserVote(null)
+      } else {
+        const { data: existingVote } = await supabase.from('votes').select('*').eq('prompt_id', promptId).eq('user_id', user.id).maybeSingle()
+        if (existingVote) {
+          await supabase.from('votes').update({ value }).eq('prompt_id', promptId).eq('user_id', user.id)
+        } else {
+          await supabase.from('votes').insert({ prompt_id: promptId, user_id: user.id, value })
+        }
+        setUserVote(value)
       }
-    }
-
-    toast('Prompt copied to clipboard')
+      setTimeout(() => loadData(), 500)
+    } catch { toast.error('Vote failed') }
   }
 
-  const handleForkSuccess = (newPromptId: string) => {
-    // Redirect to edit the new forked prompt
-    router.push(`/prompts/${newPromptId}/edit`)
+  const handleCopy = async () => {
+    const text = `${prompt.system_prompt || ''}\n\n${prompt.user_prompt_template || ''}`
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    if (user) {
+      const supabase = createClient()
+      try { await supabase.rpc('increment_prompt_copies', { prompt_id: promptId }) } catch { }
+    }
+    toast('Prompt copied to clipboard')
   }
 
   const handleAddToCompare = () => {
@@ -250,13 +129,9 @@ export default function PromptDetailPage() {
     if (!selected.includes(promptId)) {
       selected.push(promptId)
       localStorage.setItem('comparePrompts', JSON.stringify(selected))
-      // Dispatch custom event to update header badge
       window.dispatchEvent(new CustomEvent('compareUpdated'))
       toast.success(`Added to comparison (${selected.length} total)`, {
-        action: {
-          label: 'View Comparison',
-          onClick: () => window.location.href = '/compare'
-        }
+        action: { label: 'View Comparison', onClick: () => window.location.href = '/compare' }
       })
     } else {
       toast('Already in comparison')
@@ -265,348 +140,469 @@ export default function PromptDetailPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="space-y-3 w-full max-w-4xl px-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+          ))}
+        </div>
       </div>
     )
   }
 
   if (!prompt) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Prompt not found</div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-slate-500">Prompt not found.</p>
       </div>
     )
   }
 
   const stats = prompt.prompt_stats?.[0] || {
-    upvotes: 0,
-    downvotes: 0,
-    score: 0,
-    copy_count: 0,
-    view_count: 0,
-    fork_count: 0,
-    works_count: 0,
-    fails_count: 0,
-    reviews_count: 0,
+    upvotes: 0, downvotes: 0, score: 0,
+    copy_count: 0, view_count: 0, fork_count: 0,
+    works_count: 0, fails_count: 0, reviews_count: 0,
   }
 
-  console.log('Prompt data:', prompt)
-  console.log('Stats data:', stats)
+  const totalReviews = (stats.works_count || 0) + (stats.fails_count || 0)
+  const successRate = totalReviews > 0
+    ? Math.round((stats.works_count / totalReviews) * 100)
+    : null
+
+  // Compute a quality score out of 100
+  const qualityScore = Math.min(100, Math.max(0,
+    50 + (stats.upvotes - stats.downvotes) * 5 + (stats.works_count - stats.fails_count) * 3
+  ))
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'system', label: 'System Prompt' },
+    { id: 'template', label: 'User Template' },
+    { id: 'example', label: 'Execution Example' },
+    { id: 'lineage', label: 'Prompt Lineage' },
+  ]
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/problems" className="hover:text-gray-700">Problems</Link>
-        <span>/</span>
-        <Link
-          href={`/problems/${prompt.problems?.slug}`}
-          className="hover:text-gray-700"
-        >
-          {prompt.problems?.title}
-        </Link>
-        <span>/</span>
-        <span>{prompt.title}</span>
-      </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <h1 className="text-3xl font-bold">{prompt.title}</h1>
-          {prompt.depth > 0 && (
-            <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold ring-1 ring-inset ring-blue-700/10">
-              Evolution Depth: {prompt.depth}
-            </span>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-slate-400 mb-5">
+          <Link href="/problems" className="hover:text-slate-600 transition-colors">Problems</Link>
+          {prompt.problems && (
+            <>
+              <span>/</span>
+              <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-slate-600 transition-colors">
+                {prompt.problems.title}
+              </Link>
+            </>
           )}
+          <span>/</span>
+          <span className="text-slate-600 font-medium truncate max-w-xs">{prompt.title}</span>
         </div>
 
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-sm text-gray-500">
-            Model: {prompt.model} • Created {new Date(prompt.created_at).toLocaleDateString()}
-            {prompt.status === 'draft' && (
-              <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                Draft
-              </span>
-            )}
+        {/* Page Header */}
+        <div className="flex items-start justify-between gap-4 mb-8">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-slate-900">{prompt.title}</h1>
+              {prompt.model && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded border border-slate-200 text-slate-500 bg-slate-50">
+                  {prompt.model}
+                </span>
+              )}
+              {prompt.depth > 0 && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 border border-blue-200">
+                  v{prompt.depth + 1}
+                </span>
+              )}
+              {prompt.status === 'draft' && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-700 border border-yellow-200">
+                  Draft
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-slate-400 mt-1">
+              Created {new Date(prompt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </p>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Vote buttons */}
+          {/* Header Actions */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             {user && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
                 <button
                   onClick={() => handleVote(1)}
-                  className={`px-3 py-1 rounded transition-colors ${userVote === 1
-                    ? 'bg-green-600 text-white'
-                    : 'border border-green-600 text-green-600 hover:bg-green-50'
-                    }`}
+                  className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === 1 ? 'bg-green-600 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
                 >
-                  ↑ {stats.upvotes}
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                  {stats.upvotes}
                 </button>
+                <div className="w-px h-6 bg-slate-200" />
                 <button
                   onClick={() => handleVote(-1)}
-                  className={`px-3 py-1 rounded transition-colors ${userVote === -1
-                    ? 'bg-red-600 text-white'
-                    : 'border border-red-600 text-red-600 hover:bg-red-50'
-                    }`}
+                  className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === -1 ? 'bg-red-600 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
                 >
-                  ↓ {stats.downvotes}
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  {stats.downvotes}
                 </button>
               </div>
             )}
-
-            <div className="text-sm text-gray-500">
-              Score: {stats.score}
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleCopy}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Copy Prompt
-          </button>
-
-          {user && (
             <button
-              onClick={() => setShowForkModal(true)}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={handleCopy}
+              className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
             >
-              Fork
+              {copied ? '✓ Copied' : 'Copy'}
             </button>
-          )}
-
-          <button
-            onClick={handleAddToCompare}
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Add to Compare
-          </button>
-
-          <button
-            onClick={() => setShowReportModal(true)}
-            className="px-3 py-2 text-gray-500 hover:text-red-600 transition-colors"
-            title="Report this prompt"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </button>
+            <button
+              onClick={handleAddToCompare}
+              className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600"
+            >
+              Compare
+            </button>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-slate-50"
+              title="Report"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* System Prompt */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">System Prompt</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <pre className="whitespace-pre-wrap font-mono text-sm">
-                {prompt.system_prompt}
-              </pre>
+        {/* ─── Metric Cards ─── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {/* Quality Score */}
+          <div className="border border-slate-200 rounded-xl p-5 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Quality Score</span>
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
             </div>
+            <div className="text-4xl font-bold text-slate-900">{qualityScore}<span className="text-lg font-normal text-slate-400">/100</span></div>
+            <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${qualityScore}%` }} />
+            </div>
+            <p className="text-xs text-slate-400 mt-2">Based on votes &amp; reviews</p>
           </div>
 
-          {/* User Prompt Template */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">User Prompt Template</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <pre className="whitespace-pre-wrap font-mono text-sm">
-                {prompt.user_prompt_template}
-              </pre>
+          {/* Success Rate */}
+          <div className="border border-slate-200 rounded-xl p-5 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Success Rate</span>
+              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-          </div>
-
-          {/* Example Input/Output */}
-          {(prompt.example_input || prompt.example_output) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {prompt.example_input && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Example Input</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {typeof prompt.example_input === 'string'
-                        ? prompt.example_input
-                        : (prompt.example_input?.text || JSON.stringify(prompt.example_input, null, 2))}
-                    </pre>
-                  </div>
-                </div>
-              )}
-
-              {prompt.example_output && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Example Output</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <pre className="whitespace-pre-wrap font-mono text-sm">
-                      {typeof prompt.example_output === 'string'
-                        ? prompt.example_output
-                        : (prompt.example_output?.text || JSON.stringify(prompt.example_output, null, 2))}
-                    </pre>
-                  </div>
-                </div>
-              )}
+            <div className="text-4xl font-bold text-slate-900">
+              {successRate !== null ? `${successRate}%` : '--'}
             </div>
-          )}
-
-          {/* Notes */}
-          {prompt.notes && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Notes</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm">{prompt.notes}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Usage Context and Tradeoffs */}
-          {(prompt.usage_context || prompt.tradeoffs) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {prompt.usage_context && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Usage Context</h3>
-                  <div className="bg-slate-50 border border-slate-200 p-4 rounded-lg">
-                    <p className="text-sm text-slate-800">{prompt.usage_context}</p>
-                  </div>
-                </div>
-              )}
-              {prompt.tradeoffs && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Tradeoffs</h3>
-                  <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
-                    <p className="text-sm text-purple-800">{prompt.tradeoffs}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Fork Lineage & Fix Summary */}
-          <div className="space-y-4">
-            {prompt.parent_prompt_id && prompt.fix_summary && (
-              <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg">
-                <h3 className="text-sm font-semibold text-orange-900 mb-1 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                  </svg>
-                  Fix Summary (Fork)
-                </h3>
-                <p className="text-sm text-orange-800">{prompt.fix_summary}</p>
+            {successRate !== null && (
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-green-500 rounded-full" style={{ width: `${successRate}%` }} />
               </div>
             )}
-
-            {/* The visual fork tree component */}
-            <ForkLineage
-              promptId={promptId}
-            />
+            <p className="text-xs text-slate-400 mt-2">
+              {totalReviews > 0 ? `Tested across ${totalReviews} instance${totalReviews !== 1 ? 's' : ''}` : 'No tests yet'}
+            </p>
           </div>
 
-          {/* Review Form - Evidence */}
-          <div className="mt-8 border-t pt-8">
-            <h3 className="text-lg font-semibold mb-4">Does it work?</h3>
-            <PromptReviewForm
-              promptId={promptId}
-              onSuccess={() => {
-                toast.success('Review added!')
-                // Refresh data
-                loadData()
-              }}
-            />
+          {/* Pass / Fail */}
+          <div className="border border-slate-200 rounded-xl p-5 bg-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pass / Fail</span>
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+            </div>
+            <div className="flex items-end gap-4 mb-3">
+              <div>
+                <span className="text-3xl font-bold text-green-600">{stats.works_count || 0}</span>
+                <span className="text-xs text-green-600 ml-1 font-medium">Works</span>
+              </div>
+              <div>
+                <span className="text-3xl font-bold text-red-500">{stats.fails_count || 0}</span>
+                <span className="text-xs text-red-500 ml-1 font-medium">Fail</span>
+              </div>
+            </div>
+            {totalReviews > 0 && (
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                <div className="h-full bg-green-500" style={{ width: `${(stats.works_count / totalReviews) * 100}%` }} />
+                <div className="h-full bg-red-400" style={{ width: `${(stats.fails_count / totalReviews) * 100}%` }} />
+              </div>
+            )}
+            <p className="text-xs text-slate-400 mt-2">{stats.view_count || 0} views · {stats.fork_count || 0} forks</p>
           </div>
+        </div>
 
-          {/* Recent Reviews List */}
-          {reviews.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">Recent Feedback</h3>
-              <div className="space-y-4">
-                {reviews.map((review) => (
-                  <div key={review.id} className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium border ${review.review_type === 'worked' ? 'bg-green-100 text-green-800 border-green-200' :
-                        review.review_type === 'failed' ? 'bg-red-100 text-red-800 border-red-200' :
-                          'bg-gray-100 text-gray-800 border-gray-200'
-                        }`}>
-                        {review.review_type === 'worked' ? '✅ Worked' :
-                          review.review_type === 'failed' ? '⚠️ Failed' : '📝 Note'}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(review.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                    {(review.worked_reason || review.failure_reason || review.comment) && (
-                      <p className="text-sm text-gray-700">
-                        {review.worked_reason || review.failure_reason || review.comment}
-                      </p>
+        {/* ─── Main Grid ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* ─── Left / Main (2 cols) ─── */}
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Tabs */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+              <div className="flex border-b border-slate-200 bg-slate-50">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-white -mb-px'
+                        : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-5">
+                {/* System Prompt Tab */}
+                {activeTab === 'system' && (
+                  <div>
+                    {prompt.system_prompt ? (
+                      <div className="relative group">
+                        <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-slate-50 rounded-lg p-4 leading-relaxed border border-slate-100 max-h-[480px] overflow-y-auto">
+                          {prompt.system_prompt}
+                        </pre>
+                        <button
+                          onClick={handleCopy}
+                          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50"
+                        >
+                          {copied ? '✓' : 'Copy'}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic text-sm">No system prompt provided.</p>
                     )}
+
+                    {/* Usage context / tradeoffs inline */}
+                    {(prompt.usage_context || prompt.tradeoffs) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
+                        {prompt.usage_context && (
+                          <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-1">Usage Context</p>
+                            <p className="text-sm text-blue-900">{prompt.usage_context}</p>
+                          </div>
+                        )}
+                        {prompt.tradeoffs && (
+                          <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-purple-500 mb-1">Tradeoffs</p>
+                            <p className="text-sm text-purple-900">{prompt.tradeoffs}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* User Template Tab */}
+                {activeTab === 'template' && (
+                  <div>
+                    {prompt.user_prompt_template ? (
+                      <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-slate-50 rounded-lg p-4 leading-relaxed border border-slate-100 max-h-[480px] overflow-y-auto">
+                        {prompt.user_prompt_template}
+                      </pre>
+                    ) : (
+                      <p className="text-slate-400 italic text-sm">No user template provided.</p>
+                    )}
+                    {prompt.notes && (
+                      <div className="mt-4 bg-amber-50 border border-amber-100 rounded-lg p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">Notes</p>
+                        <p className="text-sm text-amber-900">{prompt.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Execution Example Tab */}
+                {activeTab === 'example' && (
+                  <div>
+                    {(prompt.example_input || prompt.example_output) ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-slate-400 inline-block" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Input</span>
+                          </div>
+                          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 min-h-[120px]">
+                            <pre className="whitespace-pre-wrap font-mono text-xs text-slate-700">
+                              {typeof prompt.example_input === 'string'
+                                ? prompt.example_input
+                                : JSON.stringify(prompt.example_input, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Output</span>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4 min-h-[120px]">
+                            <pre className="whitespace-pre-wrap font-mono text-xs text-green-900">
+                              {typeof prompt.example_output === 'string'
+                                ? prompt.example_output
+                                : JSON.stringify(prompt.example_output, null, 2)}
+                            </pre>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic text-sm">No execution example provided.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Lineage Tab */}
+                {activeTab === 'lineage' && (
+                  <div>
+                    {prompt.parent_prompt_id && prompt.fix_summary && (
+                      <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-orange-500 mb-1">Fork Summary</p>
+                        <p className="text-sm text-orange-900">{prompt.fix_summary}</p>
+                      </div>
+                    )}
+                    <ForkLineage promptId={promptId} />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+              <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 className="font-semibold text-slate-900">Feedback</h3>
+                <span className="text-xs text-slate-400">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+              </div>
+
+              {reviews.length > 0 && (
+                <div className="divide-y divide-slate-100">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="px-5 py-4">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold border ${review.review_type === 'worked'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : review.review_type === 'failed'
+                              ? 'bg-red-50 text-red-700 border-red-200'
+                              : 'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}>
+                          {review.review_type === 'worked' ? '✓ Worked' : review.review_type === 'failed' ? '✗ Failed' : '📝 Note'}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {(review.worked_reason || review.failure_reason || review.comment) && (
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                          {review.worked_reason || review.failure_reason || review.comment}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="px-5 py-4 bg-slate-50 border-t border-slate-100">
+                <PromptReviewForm
+                  promptId={promptId}
+                  onSuccess={() => {
+                    toast.success('Review added!')
+                    loadData()
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ─── Right Sidebar ─── */}
+          <div className="space-y-5">
+
+            {/* Fork / Save CTA */}
+            <div className="border border-slate-200 rounded-xl p-5 bg-white">
+              <h3 className="font-semibold text-slate-900 mb-1">Run or Save</h3>
+              <p className="text-sm text-slate-400 mb-4">Fork this prompt to edit and test it in your own workspace.</p>
+              {user ? (
+                <button
+                  onClick={() => setShowForkModal(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors"
+                >
+                  Fork &amp; Edit
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors"
+                >
+                  Sign in to Fork
+                </Link>
+              )}
+              <button
+                onClick={handleCopy}
+                className="w-full mt-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm py-2.5 rounded-lg transition-colors"
+              >
+                {copied ? '✓ Copied!' : 'Copy Prompt Text'}
+              </button>
+            </div>
+
+            {/* Stats Card */}
+            <div className="border border-slate-200 rounded-xl p-5 bg-white">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Statistics</h3>
+              <div className="space-y-3">
+                {[
+                  { label: 'Views', value: stats.view_count || 0, icon: '👁' },
+                  { label: 'Copies', value: stats.copy_count || 0, icon: '📋' },
+                  { label: 'Forks', value: stats.fork_count || 0, icon: '⑂' },
+                  { label: 'Score', value: stats.score || 0, icon: '⭐' },
+                ].map(({ label, value, icon }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500 flex items-center gap-1.5">
+                      <span>{icon}</span> {label}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-900">{value}</span>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Model Parameters */}
-          {prompt.params && Object.keys(prompt.params).length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Parameters</h3>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm">
-                  {JSON.stringify(prompt.params, null, 2)}
-                </pre>
+            {/* Model Info */}
+            {(prompt.model || prompt.params) && (
+              <div className="border border-slate-200 rounded-xl p-5 bg-white">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Model</h3>
+                {prompt.model && (
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-slate-500">Model</span>
+                    <span className="text-sm font-semibold text-slate-900">{prompt.model}</span>
+                  </div>
+                )}
+                {prompt.params && Object.keys(prompt.params).length > 0 && (
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                    <pre className="text-xs text-slate-600 font-mono">
+                      {JSON.stringify(prompt.params, null, 2)}
+                    </pre>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Stats */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Statistics</h3>
-            <div className="bg-white border rounded-lg p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-2 mb-3 pb-3 border-b">
-                <div className="flex flex-col items-center p-2 bg-green-50 rounded border border-green-100">
-                  <span className="text-xl font-bold text-green-700">{stats.works_count}</span>
-                  <span className="text-xs text-green-800 font-medium">Works</span>
-                </div>
-                <div className="flex flex-col items-center p-2 bg-red-50 rounded border border-red-100">
-                  <span className="text-xl font-bold text-red-700">{stats.fails_count}</span>
-                  <span className="text-xs text-red-800 font-medium">Fails</span>
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Views</span>
-                <span className="font-medium">{stats.view_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Copies</span>
-                <span className="font-medium">{stats.copy_count}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Forks</span>
-                <span className="font-medium">{stats.fork_count}</span>
-              </div>
-              <div className="flex justify-between border-t pt-3">
-                <span className="text-gray-600">Total Score</span>
-                <span className="font-bold">{stats.score}</span>
-              </div>
+            {/* Compare Card */}
+            <div className="border border-slate-200 rounded-xl p-5 bg-white">
+              <h3 className="font-semibold text-slate-900 mb-1 text-sm">Compare Prompts</h3>
+              <p className="text-xs text-slate-400 mb-3">Add this to your comparison list to evaluate side-by-side.</p>
+              <button
+                onClick={handleAddToCompare}
+                className="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm py-2 rounded-lg transition-colors"
+              >
+                + Add to Compare
+              </button>
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* Fork Modal */}
+      {/* Modals */}
       <ForkModal
         isOpen={showForkModal}
         onClose={() => setShowForkModal(false)}
         promptId={promptId}
-        onSuccess={handleForkSuccess}
+        onSuccess={(newPromptId) => router.push(`/prompts/${newPromptId}/edit`)}
       />
-
-      {/* Report Modal */}
       <ReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
