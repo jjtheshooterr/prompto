@@ -5,6 +5,28 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/app/providers'
 import { promptUrl } from '@/lib/utils/prompt-url'
+import {
+  User,
+  Settings,
+  Bell,
+  Shield,
+  Paintbrush,
+  Edit3,
+  Eye,
+  GitCompare,
+  FolderOpen,
+  Terminal,
+  GitBranch,
+  ThumbsUp,
+  Activity,
+  ArrowRight
+} from 'lucide-react'
+
+interface UserProfile {
+  username: string
+  avatar_url: string | null
+  created_at: string
+}
 
 interface UserStats {
   problemsCreated: number
@@ -13,512 +35,424 @@ interface UserStats {
   promptsForked: number
 }
 
-interface RecentActivity {
+interface ActivityItem {
   id: string
   type: 'problem' | 'prompt' | 'vote' | 'fork'
   title: string
-  created_at: string
-  target_title?: string
+  date: string
+  link?: string
 }
 
 export default function ClientDashboard() {
   const { user, loading } = useAuth()
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats>({
     problemsCreated: 0,
     promptsSubmitted: 0,
     votesCast: 0,
     promptsForked: 0,
   })
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
-  const [myPrompts, setMyPrompts] = useState<any[]>([])
-  const [topPrompts, setTopPrompts] = useState<any[]>([])
+  const [recentPrompts, setRecentPrompts] = useState<any[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
 
   useEffect(() => {
-    if (loading) return  // wait for auth context to resolve
+    if (loading) return
     const loadDashboardData = async () => {
       const supabase = createClient()
 
-      if (!user) {
-        return
+      if (!user) return
+
+      // Load User Profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username, avatar_url, created_at')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData) {
+        setProfile(profileData)
       }
 
       // Load user statistics
       const [problemsResult, promptsResult, votesResult, forksResult] = await Promise.all([
-        // Problems created by user
-        supabase
-          .from('problems')
-          .select('id')
-          .eq('created_by', user.id),
+        supabase.from('problems').select('id, title, created_at, slug').eq('created_by', user.id).order('created_at', { ascending: false }).limit(5),
+        supabase.from('prompts').select('id, title, created_at, slug, problem_id, updated_at, parent_prompt_id').eq('created_by', user.id).order('created_at', { ascending: false }).limit(10),
+        supabase.from('votes').select('id, created_at, prompt_id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
+        supabase.from('prompts').select('id').eq('created_by', user.id).not('parent_prompt_id', 'is', null)
+      ])
 
-        // Prompts submitted by user
-        supabase
-          .from('prompts')
-          .select('id')
-          .eq('created_by', user.id),
+      // The top-level counts are fetched below precisely with count: exact
 
-        // Votes cast by user
-        supabase
-          .from('votes')
-          .select('prompt_id')
-          .eq('user_id', user.id),
-
-        // Prompts forked by user (prompts with parent_prompt_id)
-        supabase
-          .from('prompts')
-          .select('id')
-          .eq('created_by', user.id)
-          .not('parent_prompt_id', 'is', null)
+      // Fetch precise counts for top stats
+      const [probCount, promptCount, voteCount, forkCount] = await Promise.all([
+        supabase.from('problems').select('id', { count: 'exact', head: true }).eq('created_by', user.id),
+        supabase.from('prompts').select('id', { count: 'exact', head: true }).eq('created_by', user.id),
+        supabase.from('votes').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('prompts').select('id', { count: 'exact', head: true }).eq('created_by', user.id).not('parent_prompt_id', 'is', null)
       ])
 
       setStats({
-        problemsCreated: problemsResult.data?.length || 0,
-        promptsSubmitted: promptsResult.data?.length || 0,
-        votesCast: votesResult.data?.length || 0,
-        promptsForked: forksResult.data?.length || 0,
+        problemsCreated: probCount.count || 0,
+        promptsSubmitted: promptCount.count || 0,
+        votesCast: voteCount.count || 0,
+        promptsForked: forkCount.count || 0,
       })
 
-      // Load user's recent prompts
-      const { data: userPrompts, error: userPromptsError } = await supabase
+      // Process Recent Prompts for "Continue Working"
+      // We sort by updated_at to get recently edited ones
+      const { data: recentEdits } = await supabase
         .from('prompts')
-        .select('id, slug, title, status, created_at, problem_id, best_for, improvement_summary')
+        .select('*, problems(title)')
         .eq('created_by', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
-
-      console.log('User prompts query:', { data: userPrompts?.length, error: userPromptsError })
-
-      // Fetch stats separately for user prompts
-      if (userPrompts && userPrompts.length > 0) {
-        // Get problems for user prompts
-        const problemIds = [...new Set(userPrompts.map(p => p.problem_id).filter(Boolean))]
-        const { data: problemsData } = await supabase
-          .from('problems')
-          .select('id, title')
-          .in('id', problemIds)
-
-        const promptIds = userPrompts.map(p => p.id)
-        const { data: statsData } = await supabase
-          .from('prompt_stats')
-          .select('*')
-          .in('prompt_id', promptIds)
-
-        // Attach stats and problems to prompts
-        const promptsWithStats = userPrompts.map(prompt => {
-          const stats = statsData?.find(s => s.prompt_id === prompt.id)
-          const problem = problemsData?.find(p => p.id === prompt.problem_id)
-          return {
-            ...prompt,
-            problems: problem ? { title: problem.title } : null,
-            prompt_stats: stats ? [stats] : [{
-              upvotes: 0,
-              downvotes: 0,
-              score: 0,
-              copy_count: 0,
-              view_count: 0,
-              fork_count: 0
-            }]
-          }
-        })
-
-        setMyPrompts(promptsWithStats)
-      } else {
-        setMyPrompts([])
-      }
-
-      // Load top-rated prompts from the platform
-      const { data: topPromptsData, error: topPromptsError } = await supabase
-        .from('prompts')
-        .select('id, slug, title, system_prompt, model, created_at, parent_prompt_id, notes, problem_id, best_for, improvement_summary')
-        .eq('is_listed', true)
-        .eq('is_hidden', false)
-        .eq('visibility', 'public')
         .eq('is_deleted', false)
-        .order('created_at', { ascending: false })
-        .limit(5)
+        .order('updated_at', { ascending: false })
+        .limit(3)
 
-      console.log('Top prompts query:', { data: topPromptsData?.length, error: topPromptsError })
+      setRecentPrompts(recentEdits || [])
 
-      if (topPromptsData && topPromptsData.length > 0) {
-        // Get problems for top prompts
-        const problemIds = [...new Set(topPromptsData.map(p => p.problem_id).filter(Boolean))]
-        const { data: problemsData } = await supabase
-          .from('problems')
-          .select('id, title, slug')
-          .in('id', problemIds)
+      // Generate Activity Feed by merging recent items
+      const feedItems: ActivityItem[] = []
 
-        const promptIds = topPromptsData.map(p => p.id)
-        const { data: statsData } = await supabase
-          .from('prompt_stats')
-          .select('*')
-          .in('prompt_id', promptIds)
-
-        // Attach stats and problems to prompts and sort by upvotes
-        const promptsWithStats = topPromptsData.map(prompt => {
-          const stats = statsData?.find(s => s.prompt_id === prompt.id)
-          const problem = problemsData?.find(p => p.id === prompt.problem_id)
-          return {
-            ...prompt,
-            problems: problem ? { title: problem.title, slug: problem.slug } : null,
-            prompt_stats: stats ? [stats] : [{
-              upvotes: 0,
-              downvotes: 0,
-              score: 0,
-              copy_count: 0,
-              view_count: 0,
-              fork_count: 0
-            }]
-          }
-        }).sort((a, b) => {
-          const aUpvotes = a.prompt_stats[0]?.upvotes || 0
-          const bUpvotes = b.prompt_stats[0]?.upvotes || 0
-          return bUpvotes - aUpvotes
+      problemsResult.data?.forEach(p => {
+        feedItems.push({
+          id: `prob-${p.id}`,
+          type: 'problem',
+          title: `You created a new problem: "${p.title}"`,
+          date: p.created_at,
+          link: `/problems/${p.slug}`
         })
+      })
 
-        setTopPrompts(promptsWithStats)
-      } else {
-        setTopPrompts([])
+      promptsResult.data?.forEach(p => {
+        const isFork = p.parent_prompt_id !== null
+        feedItems.push({
+          id: `pmpt-${p.id}`,
+          type: isFork ? 'fork' : 'prompt',
+          title: isFork ? `You forked a prompt: "${p.title}"` : `You submitted a prompt: "${p.title}"`,
+          date: p.created_at,
+          link: promptUrl(p)
+        })
+      })
+
+      // To get vote details we'd need to join prompts, skipping for simplicity or running a quick fetch
+      if (votesResult.data && votesResult.data.length > 0) {
+        const promptIds = [...new Set(votesResult.data.map(v => v.prompt_id))]
+        const { data: votedPrompts } = await supabase.from('prompts').select('id, title, slug, short_id').in('id', promptIds)
+
+        votesResult.data.forEach(v => {
+          const prompt = votedPrompts?.find(p => p.id === v.prompt_id)
+          if (prompt) {
+            feedItems.push({
+              id: `vote-${v.id}`,
+              type: 'vote',
+              title: `You voted on "${prompt.title}"`,
+              date: v.created_at,
+              link: promptUrl(prompt)
+            })
+          }
+        })
       }
+
+      // Sort combined feed descending
+      feedItems.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      setActivities(feedItems.slice(0, 5))
     }
 
     loadDashboardData()
   }, [user, loading])
 
-  const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.href = '/login'
+  // Helper to get time ago
+  const timeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    let interval = seconds / 31536000
+    if (interval > 1) return Math.floor(interval) + " years ago"
+    interval = seconds / 2592000
+    if (interval > 1) return Math.floor(interval) + " months ago"
+    interval = seconds / 86400
+    if (interval > 1) {
+      if (Math.floor(interval) === 1) return "Yesterday"
+      return Math.floor(interval) + " days ago"
+    }
+    interval = seconds / 3600
+    if (interval > 1) return Math.floor(interval) + " hours ago"
+    interval = seconds / 60
+    if (interval > 1) return Math.floor(interval) + " minutes ago"
+    return "Just now"
   }
+
+  // Profile date format
+  const joinDate = profile?.created_at
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(new Date(profile.created_at))
+    : 'Recently'
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="text-center text-slate-500">Loading your command center...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your dashboard...</p>
+          <h1 className="text-2xl font-bold mb-4 text-slate-900">Access Denied</h1>
+          <p className="text-slate-600 mb-4">Please log in to view your dashboard.</p>
+          <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+            Login
+          </Link>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-600">Welcome to your Promptvexity dashboard</p>
+    <div className="min-h-screen bg-slate-50 font-sans pb-12">
+      <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
 
-          {user ? (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-green-700">✅ Welcome back, {user.email}!</p>
+        {/* 1. Profile Overview (Top Section) */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
+          <div className="w-24 h-24 rounded-full bg-blue-100 border-4 border-white shadow-md flex items-center justify-center flex-shrink-0 z-10 overflow-hidden">
+            {profile?.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-10 h-10 text-blue-600" />
+            )}
+          </div>
+
+          <div className="flex-1 text-center sm:text-left z-10">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+              {profile?.username || user.email?.split('@')[0] || 'User'}
+            </h1>
+            <p className="text-slate-500 mt-1">Member since {joinDate}</p>
+
+            <div className="mt-6 flex flex-wrap justify-center sm:justify-start gap-x-8 gap-y-4">
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-medium text-slate-500">Problems Created</p>
+                <p className="text-lg font-bold text-slate-900">{stats.problemsCreated}</p>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-medium text-slate-500">Prompts</p>
+                <p className="text-lg font-bold text-slate-900">{stats.promptsSubmitted}</p>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-medium text-slate-500">Forks</p>
+                <p className="text-lg font-bold text-slate-900">{stats.promptsForked}</p>
+              </div>
+              <div className="text-center sm:text-left">
+                <p className="text-sm font-medium text-slate-500">Votes Cast</p>
+                <p className="text-lg font-bold text-slate-900">{stats.votesCast}</p>
+              </div>
             </div>
-          ) : (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-700">❌ No user session found</p>
-              <Link href="/login" className="text-blue-600 underline">Go to Login</Link>
-            </div>
-          )}
+          </div>
+
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full opacity-60 z-0 pointer-events-none"></div>
         </div>
 
-        {user && (
-          <>
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-blue-600">{stats.problemsCreated}</div>
-                    <div className="text-sm text-gray-600">Problems Created</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">{stats.promptsSubmitted}</div>
-                    <div className="text-sm text-gray-600">Prompts Submitted</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-purple-600">{stats.votesCast}</div>
-                    <div className="text-sm text-gray-600">Votes Cast</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-lg border shadow-sm">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-orange-600">{stats.promptsForked}</div>
-                    <div className="text-sm text-gray-600">Prompts Forked</div>
-                  </div>
-                </div>
-              </div>
+        {/* 2. Activity Stats / Participation */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2">
+              <FolderOpen className="w-5 h-5" />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Link
-                href="/create/problem"
-                className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold">Create Problem</h3>
-                </div>
-                <p className="text-gray-600">Define a new coding problem for the community to solve</p>
-              </Link>
-
-              <Link
-                href="/problems"
-                className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold">Browse Problems</h3>
-                </div>
-                <p className="text-gray-600">Explore existing problems and their prompt solutions</p>
-              </Link>
-
-              <Link
-                href="/compare"
-                className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold">Compare Prompts</h3>
-                </div>
-                <p className="text-gray-600">Side-by-side comparison of different prompt approaches</p>
-              </Link>
-
-              <Link
-                href="/settings"
-                className="block p-6 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold">Settings</h3>
-                </div>
-                <p className="text-gray-600">Update your profile, username, and account preferences</p>
-              </Link>
+            <h3 className="text-2xl font-bold text-slate-900">{stats.problemsCreated}</h3>
+            <p className="text-xs text-slate-500 font-medium">Problems Created</p>
+          </div>
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center mb-2">
+              <Terminal className="w-5 h-5" />
             </div>
+            <h3 className="text-2xl font-bold text-slate-900">{stats.promptsSubmitted}</h3>
+            <p className="text-xs text-slate-500 font-medium">Prompts Submitted</p>
+          </div>
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center mb-2">
+              <GitBranch className="w-5 h-5" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900">{stats.promptsForked}</h3>
+            <p className="text-xs text-slate-500 font-medium">Prompts Forked</p>
+          </div>
+          <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+            <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mb-2">
+              <ThumbsUp className="w-5 h-5" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900">{stats.votesCast}</h3>
+            <p className="text-xs text-slate-500 font-medium">Votes Cast</p>
+          </div>
+        </div>
 
-            {/* My Recent Prompts */}
-            {myPrompts.length > 0 && (
-              <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">My Recent Prompts</h2>
-                  <Link href="/create/prompt" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    Create New →
-                  </Link>
-                </div>
-                <div className="space-y-4">
-                  {myPrompts.map((prompt) => (
-                    <div key={prompt.id} className={`p-4 border rounded-lg hover:bg-gray-50 ${prompt.parent_prompt_id ? 'border-l-4 border-l-orange-400' : 'border-gray-200'}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {prompt.parent_prompt_id && (
-                              <div className="flex items-center gap-1 text-orange-600">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                                </svg>
-                                <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
-                              </div>
-                            )}
-                            <Link
-                              href={promptUrl(prompt)}
-                              className="font-medium text-gray-900 hover:text-blue-600"
-                            >
-                              {prompt.title}
-                            </Link>
-                            {prompt.status === 'draft' && (
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                                Draft
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600">
-                            {prompt.problems?.title} • {new Date(prompt.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>↑ {prompt.prompt_stats?.[0]?.upvotes || 0}</span>
-                          <span>↓ {prompt.prompt_stats?.[0]?.downvotes || 0}</span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                            </svg>
-                            {prompt.prompt_stats?.[0]?.fork_count || 0}
-                          </span>
-                          <Link
-                            href={`/prompts/${prompt.id}/edit`}
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            Edit
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="grid md:grid-cols-3 gap-8">
 
-            {/* Top Rated Prompts Section */}
-            <div className="bg-white rounded-lg shadow p-6 mb-8">
+          {/* Main Column */}
+          <div className="md:col-span-2 space-y-8">
+
+            {/* 3. Continue Working */}
+            <section>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Top Rated Prompts</h2>
-                <Link href="/prompts?sort=top" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                  View All →
-                </Link>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-blue-600" />
+                  Continue Working
+                </h2>
+                {recentPrompts.length > 0 && (
+                  <Link href="/workspace" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center">
+                    All Prompts <ArrowRight className="w-3 h-3 ml-1" />
+                  </Link>
+                )}
               </div>
 
-              {topPrompts.length > 0 ? (
-                <div className="space-y-4">
-                  {topPrompts.map((prompt) => (
-                    <div key={prompt.id} className={`p-4 border rounded-lg hover:bg-gray-50 ${prompt.parent_prompt_id ? 'border-l-4 border-l-orange-400' : 'border-gray-200'}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {prompt.parent_prompt_id && (
-                              <div className="flex items-center gap-1 text-orange-600">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                                </svg>
-                                <span className="text-xs font-medium bg-orange-100 px-2 py-1 rounded">Fork</span>
-                              </div>
-                            )}
-                            <Link
-                              href={promptUrl(prompt)}
-                              className="font-medium text-gray-900 hover:text-blue-600"
-                            >
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                {recentPrompts.length > 0 ? (
+                  <div className="divide-y divide-slate-100">
+                    {recentPrompts.map(prompt => (
+                      <div key={prompt.id} className="p-5 hover:bg-slate-50 transition-colors">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <Link href={promptUrl(prompt)} className="font-semibold text-slate-900 hover:text-blue-600 truncate block text-lg">
                               {prompt.title}
                             </Link>
+                            <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                              {prompt.problems?.title && (
+                                <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">{prompt.problems.title}</span>
+                              )}
+                              <span>Last edited: {timeAgo(prompt.updated_at || prompt.created_at)}</span>
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {prompt.problems?.title} • {new Date(prompt.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="text-green-600">↑ {prompt.prompt_stats?.[0]?.upvotes || 0}</span>
-                          <span className="text-red-600">↓ {prompt.prompt_stats?.[0]?.downvotes || 0}</span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                            </svg>
-                            {prompt.prompt_stats?.[0]?.fork_count || 0}
-                          </span>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Link
+                              href={`/prompts/${prompt.id}/edit`}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                              title="Edit Prompt"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={promptUrl(prompt)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
+                              title="View Prompt"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={`/compare?p1=${prompt.id}`}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors"
+                              title="Compare"
+                            >
+                              <GitCompare className="w-4 h-4" />
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No top rated prompts yet</h3>
-                  <p className="text-gray-600 mb-4">Be the first to create and vote on prompts!</p>
-                  <Link
-                    href="/create/prompt"
-                    className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Create Prompt
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Getting Started Section (only show if user has no activity) */}
-            {stats.problemsCreated === 0 && stats.promptsSubmitted === 0 && (
-              <div className="bg-white rounded-lg shadow p-6 mb-8">
-                <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-blue-600 text-sm font-medium">1</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Create Your First Problem</h3>
-                      <p className="text-gray-600 text-sm">Define a coding challenge that needs AI prompt solutions</p>
-                    </div>
+                    ))}
                   </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-green-600 text-sm font-medium">2</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Browse Existing Problems</h3>
-                      <p className="text-gray-600 text-sm">Explore problems created by the community and add your prompt solutions</p>
-                    </div>
+                ) : (
+                  <div className="p-8 text-center bg-slate-50/50">
+                    <Terminal className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-sm font-semibold text-slate-900 mb-1">No recent prompts</h3>
+                    <p className="text-xs text-slate-500 mb-4">Start solving problems to see your work here.</p>
+                    <Link href="/problems" className="inline-flex items-center justify-center rounded-lg bg-white border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
+                      Browse Problems
+                    </Link>
                   </div>
-
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-purple-600 text-sm font-medium">3</span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Compare & Vote</h3>
-                      <p className="text-gray-600 text-sm">Compare different approaches and vote on the best solutions</p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-            )}
+            </section>
 
-            <div className="flex justify-center">
-              <button
-                onClick={handleSignOut}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Sign Out
+            {/* 4. Activity Feed */}
+            <section>
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+                <Activity className="w-5 h-5 text-blue-600" />
+                Recent Activity
+              </h2>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                {activities.length > 0 ? (
+                  <div className="relative border-l border-slate-200 ml-3 space-y-6 pb-2">
+                    {activities.map((item, index) => (
+                      <div key={item.id} className="relative pl-6">
+                        <div className={`absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white ${item.type === 'problem' ? 'bg-blue-500' :
+                          item.type === 'prompt' ? 'bg-green-500' :
+                            item.type === 'fork' ? 'bg-orange-500' : 'bg-purple-500'
+                          }`}></div>
+                        <div>
+                          {item.link ? (
+                            <Link href={item.link} className="text-sm font-medium text-slate-900 hover:text-blue-600 hover:underline">
+                              {item.title}
+                            </Link>
+                          ) : (
+                            <p className="text-sm font-medium text-slate-900">{item.title}</p>
+                          )}
+                          <p className="text-xs text-slate-500 mt-1">{timeAgo(item.date)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <p className="text-sm text-slate-500">No recent activity found. Jump into a problem and start contributing!</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+          </div>
+
+          {/* Right Column: Account & Tools */}
+          <div className="md:col-span-1 border-t md:border-t-0 pt-8 md:pt-0 border-slate-200">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <Settings className="w-5 h-5 text-slate-600" />
+              Account & Settings
+            </h2>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden divide-y divide-slate-100">
+              <Link href="/settings" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors group">
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900">Profile</h4>
+                  <p className="text-xs text-slate-500">Username, bio, avatar</p>
+                </div>
+              </Link>
+
+              <Link href="/settings?tab=account" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors group">
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                  <Shield className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900">Security</h4>
+                  <p className="text-xs text-slate-500">Password & email</p>
+                </div>
+              </Link>
+
+              <button disabled className="flex items-center gap-3 p-4 text-left w-full opacity-60 cursor-not-allowed">
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-slate-500 flex items-center justify-center">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900">Notifications</h4>
+                  <p className="text-xs text-slate-500">Coming soon</p>
+                </div>
+              </button>
+
+              <button disabled className="flex items-center gap-3 p-4 text-left w-full opacity-60 cursor-not-allowed">
+                <div className="w-8 h-8 rounded-md bg-slate-100 text-slate-500 flex items-center justify-center">
+                  <Paintbrush className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-900">Appearance</h4>
+                  <p className="text-xs text-slate-500">Coming soon</p>
+                </div>
               </button>
             </div>
-          </>
-        )}
+          </div>
+
+        </div>
       </div>
     </div>
   )
