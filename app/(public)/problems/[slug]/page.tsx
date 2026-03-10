@@ -71,7 +71,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
   const totalPrompts = prompts.length
 
   const bestScore = prompts.reduce((max: number, p: any) => {
-    const s = p.prompt_stats?.[0]?.score || 0
+    const s = p.prompt_stats?.[0]?.quality_score || 0
     return s > max ? s : max
   }, 0)
 
@@ -276,7 +276,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                   const s = prompt.prompt_stats?.[0] || {}
                   const works = s.works_count || 0
                   const fails = s.fails_count || 0
-                  const score = s.score || 0
+                  const score = s.quality_score || 0
                   const isForked = !!prompt.parent_prompt_id
 
                   return (

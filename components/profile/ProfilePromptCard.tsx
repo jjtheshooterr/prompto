@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CompactTokenBadge } from '@/components/prompts/TokenCostBadge';
 
 interface ProfilePromptCardProps {
     prompt: {
@@ -7,7 +8,7 @@ interface ProfilePromptCardProps {
         slug: string;
         model: string;
         system_prompt: string;
-        score: number;
+        quality_score?: number;
         views_count?: number;
         copy_count?: number;
         works_count?: number;
@@ -33,8 +34,16 @@ export function ProfilePromptCard({ prompt }: ProfilePromptCardProps) {
                 >
                     {prompt.title}
                 </Link>
-                <div className="shrink-0 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-md uppercase tracking-wide border border-emerald-100">
-                    {prompt.model}
+                <div className="flex items-center gap-2 shrink-0">
+                    <CompactTokenBadge 
+                        systemPrompt={prompt.system_prompt} 
+                        userPromptTemplate={undefined} 
+                        exampleOutput={undefined} 
+                        model={prompt.model}
+                    />
+                    <div className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-md uppercase tracking-wide border border-emerald-100">
+                        {prompt.model}
+                    </div>
                 </div>
             </div>
 
@@ -50,7 +59,7 @@ export function ProfilePromptCard({ prompt }: ProfilePromptCardProps) {
                         <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
                         </svg>
-                        {prompt.score}
+                        {prompt.quality_score || 0}
                     </div>
                     <div className="flex items-center gap-1.5" title="Forks">
                         <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

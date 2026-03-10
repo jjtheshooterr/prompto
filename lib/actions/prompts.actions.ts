@@ -31,7 +31,7 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
     .select(`
       *,
       prompt_stats (
-        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        upvotes, downvotes, score, quality_score, structure_score, ai_quality_score, copy_count, view_count, fork_count,
         works_count, fails_count, reviews_count
       )
     `)
@@ -60,7 +60,7 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
   }, {});
 
   const defaultStats = {
-    upvotes: 0, downvotes: 0, score: 0,
+    upvotes: 0, downvotes: 0, score: 0, quality_score: 0, structure_score: 0, ai_quality_score: 0,
     copy_count: 0, view_count: 0, fork_count: 0,
     works_count: 0, fails_count: 0, reviews_count: 0,
   }
@@ -111,7 +111,7 @@ export async function getPromptById(id: string) {
       *,
       problems!prompts_problem_id_fkey (title, slug),
       prompt_stats (
-        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        upvotes, downvotes, score, quality_score, structure_score, ai_quality_score, copy_count, view_count, fork_count,
         works_count, fails_count, reviews_count
       )
     `)
@@ -146,7 +146,7 @@ export async function getPromptsByIds(ids: string[]) {
     .select(`
       *,
       prompt_stats (
-        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        upvotes, downvotes, score, quality_score, structure_score, ai_quality_score, copy_count, view_count, fork_count,
         works_count, fails_count, reviews_count
       )
     `)
@@ -770,7 +770,7 @@ export async function searchPrompts(searchQuery: string, limit: number = 20) {
       *,
       problems!prompts_problem_id_fkey (title, slug),
       prompt_stats (
-        upvotes, downvotes, score, copy_count, view_count, fork_count,
+        upvotes, downvotes, score, quality_score, structure_score, ai_quality_score, copy_count, view_count, fork_count,
         works_count, fails_count, reviews_count
       )
     `)

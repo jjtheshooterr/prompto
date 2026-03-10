@@ -97,7 +97,7 @@ export default function GlobalSearch() {
           problem_title: string
           problem_slug: string
           tags: string[]
-          score: number
+          quality_score: number
         }) => ({
           id: h.id,
           slug: (h as any).slug || '',
@@ -107,14 +107,14 @@ export default function GlobalSearch() {
           problem_title: h.problem_title || undefined,
           problem_slug: h.problem_slug || undefined,
           tags: h.tags?.length ? h.tags : undefined,
-          score: h.score,
+          score: h.quality_score,
         })),
         ...(problemHits ?? []).map((p: {
           id: string
           title: string
           slug: string
           tags: string[]
-          score: number
+          quality_score: number
         }) => ({
           id: p.id,
           slug: '',
@@ -122,7 +122,7 @@ export default function GlobalSearch() {
           title: p.title,
           problem_slug: p.slug,
           tags: p.tags?.length ? p.tags : undefined,
-          score: p.score,
+          score: p.quality_score,
         })),
       ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
 
@@ -198,11 +198,10 @@ export default function GlobalSearch() {
           }}
           onBlur={() => setFocused(false)}
           className={[
-            'w-full py-2 pl-9 pr-8 text-sm',
-            'border border-gray-300 rounded-lg bg-white',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'transition-shadow duration-150',
-            focused && 'shadow-md',
+            'w-full py-2 pl-9 pr-8 text-sm transition-all duration-200',
+            'rounded-full bg-slate-100/80 border border-slate-200/50 text-slate-900 placeholder:text-slate-500',
+            'hover:bg-slate-100',
+            'focus:outline-none focus:bg-white focus:border-blue-500/30 focus:ring-4 focus:ring-blue-500/10 focus:shadow-sm',
           ]
             .filter(Boolean)
             .join(' ')}

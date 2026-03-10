@@ -7,6 +7,7 @@ import ReportModal from '@/components/moderation/ReportModal'
 import { AuthorChip } from '@/components/common/AuthorChip'
 import { toast } from 'sonner'
 import { promptUrl } from '@/lib/utils/prompt-url'
+import { CompactTokenBadge } from '@/components/prompts/TokenCostBadge'
 
 interface PromptCardProps {
   prompt: any
@@ -168,12 +169,21 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               </div>
             )}
 
-            <div className="text-xs sm:text-sm text-gray-500 mt-2">
-              Model: {prompt.model} • {new Date(prompt.created_at).toLocaleDateString()}
+            <div className="text-xs sm:text-sm text-gray-500 mt-2 flex items-center gap-2 flex-wrap">
+              <span>Model: {prompt.model}</span>
+              <span className="text-gray-300">•</span>
+              <CompactTokenBadge 
+                systemPrompt={prompt.system_prompt} 
+                userPromptTemplate={prompt.user_prompt_template} 
+                exampleOutput={prompt.example_output} 
+                model={prompt.model}
+              />
+              <span className="text-gray-300">•</span>
+              <span>{new Date(prompt.created_at).toLocaleDateString()}</span>
               {showProblemTitle && prompt.problems?.title && (
                 <>
-                  {' • '}
-                  <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-gray-700">
+                  <span className="text-gray-300">•</span>
+                  <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-gray-700 truncate max-w-[150px]">
                     {prompt.problems.title}
                   </Link>
                 </>
@@ -228,7 +238,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                   {stats.downvotes}
                 </span>
               </div>
-              <div>Score: {stats.score}</div>
+              <div>Score: {stats.quality_score || 0}</div>
             </div>
           </div>
         </div>

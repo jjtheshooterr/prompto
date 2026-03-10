@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
+import { TokenCostBadge } from '@/components/prompts/TokenCostBadge'
 
 type Tab = 'system' | 'template' | 'example' | 'lineage'
 
@@ -198,7 +199,7 @@ export default function PromptDetailPage() {
     }
 
     const stats = prompt.prompt_stats?.[0] || {
-        upvotes: 0, downvotes: 0, score: 0,
+        upvotes: 0, downvotes: 0, quality_score: 0,
         copy_count: 0, view_count: 0, fork_count: 0,
         works_count: 0, fails_count: 0, reviews_count: 0,
     }
@@ -208,9 +209,7 @@ export default function PromptDetailPage() {
         ? Math.round((stats.works_count / totalReviews) * 100)
         : null
 
-    const qualityScore = Math.min(100, Math.max(0,
-        50 + (stats.upvotes - stats.downvotes) * 5 + (stats.works_count - stats.fails_count) * 3
-    ))
+    const qualityScore = stats.quality_score || 0
 
     const tabs: { id: Tab; label: string }[] = [
         { id: 'system', label: 'System Prompt' },
@@ -248,6 +247,12 @@ export default function PromptDetailPage() {
                                     {prompt.model}
                                 </span>
                             )}
+                            <TokenCostBadge 
+                                systemPrompt={prompt.system_prompt} 
+                                userPromptTemplate={prompt.user_prompt_template} 
+                                exampleOutput={prompt.example_output}
+                                model={prompt.model} 
+                            />
                             {prompt.depth > 0 && (
                                 <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 border border-blue-200">
                                     v{prompt.depth + 1}
@@ -298,7 +303,7 @@ export default function PromptDetailPage() {
 
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <div className="border border-slate-200 rounded-xl p-5 bg-white">
+                    <div className="border border-slate-200 rounded-xl p-5 bg-white relative group">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Quality Score</span>
                             <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
@@ -307,7 +312,23 @@ export default function PromptDetailPage() {
                         <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div className="h-full bg-blue-500 rounded-full" style={{ width: `${qualityScore}%` }} />
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">Based on votes &amp; reviews</p>
+                        <p className="text-xs text-slate-400 mt-2 hover:text-blue-600 transition-colors cursor-help">Hover for breakdown</p>
+                        
+                        {/* Tooltip Breakdown */}
+                        <div className="absolute top-[80%] left-0 mt-2 w-64 bg-slate-900 border border-slate-800 text-white p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-sm">
+                            <div className="flex justify-between mb-1">
+                                <span className="text-slate-300">Structure</span>
+                                <span className="font-semibold text-blue-400">{stats.structure_score || 0}/70</span>
+                            </div>
+                            <div className="flex justify-between mb-1">
+                                <span className="text-slate-300">AI Evaluation</span>
+                                <span className="font-semibold text-purple-400">{stats.ai_quality_score || 0}/30</span>
+                            </div>
+                            <div className="flex justify-between pt-2 border-t border-slate-700 mt-2">
+                                <span className="text-slate-400 text-xs">Community Impact</span>
+                                <span className="text-slate-400 text-xs text-right truncate pl-2 max-w-[130px]" title="Dynamic Weighting dynamically shifts the final quality score progressively towards community votes over time.">Dynamic Weights</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="border border-slate-200 rounded-xl p-5 bg-white">
@@ -490,7 +511,7 @@ export default function PromptDetailPage() {
                                     { label: 'Views', value: stats.view_count || 0, icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> },
                                     { label: 'Copies', value: stats.copy_count || 0, icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> },
                                     { label: 'Forks', value: stats.fork_count || 0, icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" /></svg> },
-                                    { label: 'Score', value: stats.score || 0, icon: <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg> },
+                                    { label: 'Score', value: stats.quality_score || 0, icon: <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg> },
                                 ].map(({ label, value, icon }) => (
                                     <div key={label} className="flex items-center justify-between">
                                         <span className="text-sm text-slate-500 flex items-center gap-1.5">{icon} {label}</span>

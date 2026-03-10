@@ -114,7 +114,7 @@ export function UserPromptsList({ userId }: { userId: string }) {
               slug: prompt.slug,
               model: prompt.model || 'AI Model',
               system_prompt: prompt.system_prompt || prompt.description || 'Click to view prompt details...',
-              score: prompt.score || 0,
+              quality_score: prompt.quality_score || 0,
               copy_count: prompt.fork_count || 0,
               works_count: prompt.works_count || 0,
               fails_count: prompt.fails_count || 0,

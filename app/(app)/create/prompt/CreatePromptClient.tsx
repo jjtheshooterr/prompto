@@ -15,7 +15,30 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [paramsError, setParamsError] = useState('')
+  const [structureScore, setStructureScore] = useState(0)
   const { user: contextUser } = useAuth()
+
+  const handleFormChange = (e: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(e.currentTarget)
+    let score = 0
+    const sp = formData.get('system_prompt') as string || ''
+    const up = formData.get('user_prompt_template') as string || ''
+    const ei = formData.get('example_input') as string || ''
+    const eo = formData.get('example_output') as string || ''
+    const uc = formData.get('usage_context') as string || ''
+    const tr = formData.get('tradeoffs') as string || ''
+    const md = formData.get('model') as string || ''
+
+    if (sp.trim().length > 20) score += 10
+    if (up.trim().length > 20) score += 8
+    if (ei.trim() !== '') score += 6
+    if (eo.trim() !== '') score += 6
+    if (uc.trim().length > 10) score += 8
+    if (tr.trim().length > 10) score += 7
+    if (md.trim() !== '') score += 5
+
+    setStructureScore(score)
+  }
 
   const validateParams = (params: string) => {
     if (!params || !params.trim()) {
@@ -173,6 +196,13 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
       // Stats are now auto-created by database trigger
 
+      // Fire-and-forget background job to generate the AI Quality Score
+      fetch('/api/jobs/score-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promptId: prompt.id }),
+      }).catch(err => console.error('Failed to trigger AI score:', err))
+
       router.push(promptUrl(prompt))
     } catch (error) {
       console.error('Failed to create prompt:', error)
@@ -190,7 +220,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         </p>
       </div>
 
-      <form action={handleSubmit} className="space-y-6">
+      <form action={handleSubmit} onChange={handleFormChange} className="space-y-6">
         <input type="hidden" name="problem_id" value={problemId} />
 
         <div>
@@ -347,6 +377,20 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         </div>
 
 
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-blue-900">Live Structure Score Preview</h3>
+            <p className="text-xs text-blue-700 mt-1">
+              Add more detail to your templates, usage context, and examples to boost your prompt's initial ranking.
+              <br />
+              <span className="italic opacity-80">Note: Our Gemini AI agent will also evaluate your prompt's quality after you submit.</span>
+            </p>
+          </div>
+          <div className="text-3xl font-bold text-blue-600 pl-4 border-l border-blue-200">
+            {structureScore} <span className="text-lg text-blue-400 font-normal">/ 50</span>
+          </div>
+        </div>
 
         <div className="flex gap-4 pt-6">
           <button

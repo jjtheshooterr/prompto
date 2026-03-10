@@ -61,8 +61,8 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="container mx-auto px-4 py-4">
+    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md shadow-sm">
+      <div className="container mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
             <Image
@@ -81,16 +81,16 @@ export default function Header() {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/problems" className="text-gray-600 hover:text-gray-900 transition-colors">
+          <nav className="hidden md:flex items-center space-x-7 text-sm font-medium">
+            <Link href="/problems" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
               Browse Problems
             </Link>
 
             <Link
               href="/compare"
-              className={`transition-colors relative ${compareCount > 0
-                ? 'text-blue-600 hover:text-blue-700 font-medium'
-                : 'text-gray-600 hover:text-gray-900'
+              className={`transition-all relative px-3 py-1.5 rounded-md ${compareCount > 0
+                ? 'text-blue-700 hover:text-blue-800 bg-blue-50/50 hover:bg-blue-100/50'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
             >
               Compare
@@ -102,17 +102,17 @@ export default function Header() {
             </Link>
             {user && (
               <>
-                <Link href="/create/problem" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link href="/create/problem" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
                   Create Problem
                 </Link>
-                <Link href="/workspace" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link href="/workspace" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
                   Workspace
                 </Link>
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Link href="/dashboard" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
                   Dashboard
                 </Link>
                 {userProfile?.role === 'admin' && (
-                  <Link href="/admin/reports" className="text-red-600 hover:text-red-700 transition-colors font-medium">
+                  <Link href="/admin/reports" className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-md transition-all font-semibold">
                     Admin
                   </Link>
                 )}
@@ -121,14 +121,14 @@ export default function Header() {
           </nav>
 
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3 text-sm font-medium">
             {loading ? (
-              <div className="text-gray-400">Loading...</div>
+              <div className="text-slate-400">Loading...</div>
             ) : user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={handleSignOut}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-md hover:bg-slate-100 transition-all"
                 >
                   Sign Out
                 </button>
@@ -137,13 +137,13 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-4 py-2 rounded-lg transition-all"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/signup"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 shadow-sm hover:shadow-md transition-all font-semibold"
                 >
                   Sign Up
                 </Link>

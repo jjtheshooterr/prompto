@@ -91,7 +91,7 @@ export default function TopRatedPrompts() {
               slug: prompt.slug || '',
               upvotes: stats?.upvotes || 0,
               downvotes: stats?.downvotes || 0,
-              score: stats?.score || 0,
+              score: stats?.quality_score || 0,
               best_for: prompt.best_for || [],
               profiles: profile ? { username: profile.username } : null,
               problems: problem ? [{ title: problem.title, slug: problem.slug }] : []
