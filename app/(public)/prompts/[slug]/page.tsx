@@ -113,7 +113,7 @@ export default function PromptDetailPage() {
             setLoading(false)
         }
         init()
-    }, [slugParam])
+    }, [slugParam, router])
 
     const promptId = prompt?.id
 

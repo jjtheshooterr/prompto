@@ -382,9 +382,9 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           <div>
             <h3 className="text-sm font-semibold text-blue-900">Live Structure Score Preview</h3>
             <p className="text-xs text-blue-700 mt-1">
-              Add more detail to your templates, usage context, and examples to boost your prompt's initial ranking.
+              Add more detail to your templates, usage context, and examples to boost your prompt&apos;s initial ranking.
               <br />
-              <span className="italic opacity-80">Note: Our Gemini AI agent will also evaluate your prompt's quality after you submit.</span>
+              <span className="italic opacity-80">Note: Our Gemini AI agent will also evaluate your prompt&apos;s quality after you submit.</span>
             </p>
           </div>
           <div className="text-3xl font-bold text-blue-600 pl-4 border-l border-blue-200">

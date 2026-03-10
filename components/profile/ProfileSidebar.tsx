@@ -23,6 +23,7 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
             {/* Avatar */}
             <div className="w-full aspect-square rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 relative">
                 {profile.avatar_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                         src={profile.avatar_url}
                         alt={profile.display_name}

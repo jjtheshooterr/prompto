@@ -31,6 +31,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
 
   useEffect(() => {
     loadMembers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problemId])
 
   const loadMembers = async () => {

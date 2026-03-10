@@ -121,7 +121,7 @@ export default async function HomePage() {
                 </div>
                 <div className="space-y-4">
                   <div className="bg-slate-50 p-4 rounded-md border border-slate-100">
-                    <p className="text-xs font-mono text-slate-400 mb-2">// System Prompt</p>
+                    <p className="text-xs font-mono text-slate-400 mb-2">{`// System Prompt`}</p>
                     <p className="text-sm text-slate-700 leading-relaxed italic">
                       &quot;Act as a senior security engineer. Analyze the following code snippet for OWASP Top 10 vulnerabilities...&quot;
                     </p>
@@ -307,7 +307,7 @@ export default async function HomePage() {
                   <p className="text-slate-400">+++ v1.1.0</p>
                   <div className="text-red-600 bg-red-50 p-1 px-2 rounded">- Please summarize this text concisely.</div>
                   <div className="text-green-600 bg-green-50 p-1 px-2 rounded">+ Extract top 3 themes as JSON keys with 10-word values.</div>
-                  <p className="text-slate-400 pt-4">// Evaluation Results:</p>
+                  <p className="text-slate-400 pt-4">{`// Evaluation Results:`}</p>
                   <p className="text-slate-800 font-bold">Accuracy: 72% -{'>'} 91%</p>
                   <p className="text-slate-800 font-bold">Latency: 0.8s -{'>'} 1.1s</p>
                 </div>
