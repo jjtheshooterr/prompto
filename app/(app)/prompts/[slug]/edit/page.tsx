@@ -267,10 +267,20 @@ export default function EditPromptPage() {
                         <div>
                             <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-2">Model</label>
                             <select id="model" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="gpt-4">GPT-4</option>
-                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                <option value="claude-3-opus">Claude 3 Opus</option>
-                                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                                <option value="gpt-5.2">GPT-5.2</option>
+                                <option value="gpt-4o">GPT-4o</option>
+                                <option value="claude-opus-4.5">Claude Opus 4.5</option>
+                                <option value="claude-sonnet-4.5">Claude Sonnet 4.5</option>
+                                <option value="gemini-3-pro">Gemini 3 Pro</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="grok-4">Grok 4</option>
+                                <option value="llama-4-maverick">Llama 4 Maverick</option>
+                                <option value="mistral-large-2">Mistral Large 2</option>
+                                <option value="mixtral-8x22b">Mixtral 8x22B</option>
+                                <option value="command-r-plus">Command-R+</option>
+                                <option value="qwen3-max">Qwen3 Max</option>
+                                <option value="deepseek-v3">DeepSeek V3</option>
+                                <option value="other">Other</option>
                             </select>
                         </div>
                         <div>
