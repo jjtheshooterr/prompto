@@ -77,7 +77,7 @@ export const MODEL_PRICING: Record<AIModel, ModelPricing> = {
  * gpt-tokenizer provides a consistently accurate 95%+ baseline proxy for UI estimation.
  */
 export function calculateTokenCount(text: string | null | undefined): number {
-  if (!text) return 0;
+  if (!text || typeof text !== 'string') return 0;
   try {
     // encode returns an array of token IDs
     return encode(text).length;
@@ -97,7 +97,7 @@ export function estimateCost(inputTokens: number, outputTokens: number, modelId:
 
   const inputCost = (inputTokens / 1_000_000) * model.inputCostPerMillion;
   const outputCost = (outputTokens / 1_000_000) * model.outputCostPerMillion;
-  
+
   return { inputCost, outputCost, totalCost: inputCost + outputCost };
 }
 
@@ -107,7 +107,7 @@ export function estimateCost(inputTokens: number, outputTokens: number, modelId:
 export function formatEstimatedCost(cost: number): string {
   if (isNaN(cost) || cost === 0) return "$0.00";
   if (cost < 0.0001) return "~$0.0001";
-  
+
   // Show up to 4 decimal places for micro-transactions, dropping trailing zeros
   const raw = cost.toFixed(4);
   const trimmed = raw.replace(/0+$/, '').replace(/\.$/, '');
