@@ -9,7 +9,8 @@ vi.mock('sonner', () => ({
 
 describe('PromptCard', () => {
   const mockPrompt = {
-    id: 'prompt-123',
+    id: '12345678-abcd-efgh-ijkl',
+    slug: 'test-prompt',
     title: 'Test Prompt',
     system_prompt: 'You are a helpful assistant',
     model: 'gpt-4',
@@ -22,7 +23,7 @@ describe('PromptCard', () => {
     prompt_stats: [{
       upvotes: 10,
       downvotes: 2,
-      score: 8,
+      quality_score: 8,
       copy_count: 5,
       view_count: 100,
       fork_count: 3,
@@ -85,7 +86,7 @@ describe('PromptCard', () => {
     render(<PromptCard prompt={mockPrompt} />)
 
     const link = screen.getByRole('link', { name: /View Details/i })
-    expect(link).toHaveAttribute('href', '/prompts/prompt-123')
+    expect(link).toHaveAttribute('href', '/prompts/test-prompt-12345678')
   })
 
   it('should render fork indicator when prompt is a fork', () => {
