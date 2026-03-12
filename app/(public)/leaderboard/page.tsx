@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: 'Top prompt engineers and highest-rated AI prompts on PromptVexity.',
 }
 
-// Revalidate every 6 hours (21600 seconds) since the MV updates on that schedule
-export const revalidate = 21600
+// Revalidate every 24 hours (86400 seconds) since the MV updates on that schedule
+export const revalidate = 86400
 
 export default async function LeaderboardPage() {
   // Fetch both leaderboards in parallel
@@ -27,7 +27,7 @@ export default async function LeaderboardPage() {
           </h1>
           <p className="mt-3 text-base text-slate-600">
             Showcasing the top prompt engineers and the highest-rated solutions in the community.
-            Rankings are updated every 6 hours based on AI evaluations and community forks.
+            Rankings are updated every 24 hours based on AI evaluations and community forks.
           </p>
         </div>
 

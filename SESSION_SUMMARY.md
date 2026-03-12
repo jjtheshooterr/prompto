@@ -44,3 +44,12 @@ The Hybrid Scoring engine is complete and perfectly live. The UI operates fluidl
 - **Author Relation Fix**: Discovered that the missing author profile on the prompt details page was due to PostgREST failing the join because of a missing foreign key (`prompts.created_by` -> `profiles.id`). Generated the SQL migration `20260312035000_add_prompts_created_by_fkey.sql` to enforce database integrity.
 - **Profile UI Polish**: Removed the invasive layout banner on the user profile per user request, and restored clean flex margins.
 - **Professional Feedback Toast**: Updated the placeholder "Follow" buttons to elegantly drop down a professional `sonner` toast notification from the top-center ("Follow feature coming soon!"), rather than using an invasive browser alert.
+
+---
+
+## Session Updates: Hydration Fix, Guide Page, Nav Compaction (March 12, 2026)
+- **Hydration Mismatch Fix**: Replaced `Math.random()` in `TierBadge.tsx` SVG gradient IDs with React's `useId()` hook to ensure stable IDs between server and client renders, eliminating the console hydration error.
+- **Navigation Compaction**: Tightened header nav spacing (`space-x-7` to `space-x-3 lg:space-x-5`) and added a new "Guide" link with a book icon.
+- **Guide Page**: Built a full `/guide` page explaining the platform, scoring system (Structure 70pts, AI 30pts, Community modifier), and ranking tiers. Features animated score counters with red-to-green color shift, progressively styled tier rows (Novice is plain, Grandmaster has animated golden shimmer + gradient border + glow), and a Do/Avoid tips section.
+- **Build verified**: `next build` passed with 0 errors, 29 pages generated.
+- **Pushed**: Commit `37736e4` to `origin/main`.
