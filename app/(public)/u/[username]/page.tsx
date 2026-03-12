@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ProfilePageClient } from '@/components/profile/ProfilePageClient';
+import { PublicProfilePageClient } from '@/components/profile/PublicProfilePageClient';
 import { ProfileSidebarData } from '@/components/profile/ProfileSidebar';
 import { ProfileStatsData } from '@/components/profile/ProfileStatsRow';
-import { ActivityItemData } from '@/components/profile/ProfileActivityFeed';
+import { getUserProfileByUsername } from '@/lib/actions/users.actions';
 
 // Enable ISR with 5-minute revalidation
 export const revalidate = 300
@@ -14,34 +14,48 @@ export default async function ProfilePage({
   params: Promise<{ username: string }>
 }) {
   const { username } = await params;
-  const supabase = await createClient();
+  const usernameDecoded = decodeURIComponent(username);
+  
+  const data = await getUserProfileByUsername(usernameDecoded);
 
-  // 1. Fetch Profile
-  const { data: profileData, error } = await supabase
-    .rpc('get_profile_by_username', { u: username })
-    .single();
-
-  if (error || !profileData) {
+  if (!data || !data.profile) {
     notFound();
   }
 
-  const profile = profileData as unknown as ProfileSidebarData;
+  // data.stats from mv_user_leaderboard maps to ProfileStatsData mostly:
+  const rawStats: any = data.stats || {};
+  const stats: ProfileStatsData = {
+    total_prompts: data.prompts.length, // local counts
+    total_score: rawStats.total_quality_score || 0,
+    forks_created: rawStats.total_forks || 0,
+    forks_received: rawStats.total_forks || 0, // Fallback if needed
+    total_copies: 0,
+    total_views: 0,
+    success_rate: 0
+  };
 
-  // 2. Fetch Stats & Activity in parallel
-  const [statsRes, activityRes] = await Promise.all([
-    supabase.rpc('get_profile_stats', { p_user_id: profile.id }).single(),
-    supabase.rpc('get_user_activity', { p_user_id: profile.id, p_limit: 20 })
-  ]);
-
-  const stats = statsRes.data as unknown as ProfileStatsData;
-  const activities = (activityRes.data || []) as unknown as ActivityItemData[];
+  // Convert profile to SidebarData
+  const profile: ProfileSidebarData = {
+    id: data.profile.id,
+    display_name: data.profile.display_name || data.profile.username || 'Anonymous',
+    username: data.profile.username || 'unknown',
+    avatar_url: data.profile.avatar_url,
+    headline: rawStats.tier ? `${rawStats.tier} Tier Engineer` : 'Engineer',
+    bio: data.profile.bio || null,
+    location: data.profile.location || null,
+    website_url: data.profile.website_url || null,
+    reputation_score: rawStats.total_points || 0,
+    created_at: data.profile.created_at || new Date().toISOString()
+  };
 
   return (
-    <div className="bg-slate-50 min-h-screen py-8">
-      <ProfilePageClient
+    <div className="bg-slate-50 min-h-screen">
+      <PublicProfilePageClient
         profile={profile}
         stats={stats}
-        initialActivities={activities}
+        rawStats={data.stats || null}
+        prompts={data.prompts}
+        problems={data.problems}
       />
     </div>
   );

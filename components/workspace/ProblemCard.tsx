@@ -9,7 +9,7 @@ interface Problem {
   slug: string
   title: string
   description: string
-  visibility: 'public' | 'unlisted' | 'private'
+  visibility: 'public' | 'private'
   created_at: string
   prompts?: any[]
   member_role?: string
@@ -31,7 +31,7 @@ export default function ProblemCard({
   const [visibility, setVisibility] = useState(problem.visibility)
   const [updating, setUpdating] = useState(false)
 
-  const handleVisibilityChange = async (newVisibility: 'public' | 'unlisted' | 'private') => {
+  const handleVisibilityChange = async (newVisibility: 'public' | 'private') => {
     if (!isOwner) {
       console.log('Not owner, cannot change visibility')
       return
@@ -85,9 +85,7 @@ export default function ProblemCard({
 
   const getVisibilityColor = (vis: string) => {
     switch (vis) {
-      case 'public': return 'bg-green-100 text-green-800'
-      case 'unlisted': return 'bg-yellow-100 text-yellow-800'
-      case 'private': return 'bg-red-100 text-red-800'
+      case 'private': return 'bg-slate-100 text-slate-600'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -187,9 +185,7 @@ export default function ProblemCard({
             disabled={updating}
             className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
           >
-            <option value="public">Public - Anyone can see</option>
-            <option value="unlisted">Unlisted - Link only</option>
-            <option value="private">Private - Members only</option>
+            <option value="private">Private - Workspace only</option>
           </select>
         </div>
       )}

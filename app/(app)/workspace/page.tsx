@@ -36,7 +36,7 @@ interface Problem {
   slug: string
   title: string
   description: string
-  visibility: 'public' | 'unlisted' | 'private'
+  visibility: 'public' | 'private'
   created_at: string
   prompts?: any[]
   member_role?: string
@@ -49,7 +49,7 @@ export default function WorkspacePage() {
   const [loading, setLoading] = useState(true)
   const [selectedProblem, setSelectedProblem] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [filter, setFilter] = useState<'all' | 'public' | 'unlisted' | 'private'>('all')
+  const [filter, setFilter] = useState<'all' | 'public' | 'private'>('all')
 
   useEffect(() => {
     const loadData = async () => {
@@ -187,7 +187,6 @@ export default function WorkspacePage() {
 
   const publicProblems = allProblems.filter(p => p.visibility === 'public').length
   const privateProblems = allProblems.filter(p => p.visibility === 'private').length
-  const unlistedProblems = allProblems.filter(p => p.visibility === 'unlisted').length
 
   // Apply filters
   const displayedProblems = allProblems.filter(p => {
@@ -288,13 +287,6 @@ export default function WorkspacePage() {
           Public <span className={`text-xs ${filter === 'public' ? 'opacity-90 font-medium' : 'opacity-60 font-normal'}`}>{publicProblems}</span>
         </button>
         <button
-          onClick={() => setFilter('unlisted')}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === 'unlisted' ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-        >
-          <LinkIcon className="w-4 h-4" />
-          Unlisted <span className={`text-xs ${filter === 'unlisted' ? 'opacity-90 font-medium' : 'opacity-60 font-normal'}`}>{unlistedProblems}</span>
-        </button>
-        <button
           onClick={() => setFilter('private')}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === 'private' ? 'bg-blue-600 text-white font-semibold shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
         >
@@ -340,12 +332,6 @@ export default function WorkspacePage() {
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-500/20">
                     <Lock className="w-3.5 h-3.5" />
                     Private
-                  </span>
-                )}
-                {problem.visibility === 'unlisted' && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                    <LinkIcon className="w-3.5 h-3.5" />
-                    Unlisted
                   </span>
                 )}
                 <span className="text-xs text-slate-400">{formatDate(problem.created_at)}</span>

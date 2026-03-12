@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/app/providers'
 
@@ -29,12 +29,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
   const [newMemberRole, setNewMemberRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [adding, setAdding] = useState(false)
 
-  useEffect(() => {
-    loadMembers()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemId])
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     try {
       const supabase = createClient()
 
@@ -78,7 +73,11 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
       console.error('Error loading members:', error)
     }
     setLoading(false)
-  }
+  }, [problemId])
+
+  useEffect(() => {
+    loadMembers()
+  }, [loadMembers])
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault()

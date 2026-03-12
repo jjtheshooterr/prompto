@@ -81,10 +81,6 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 pv-animate-in pv-animate-delay-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wider">
-                <Zap className="w-3 h-3" />
-                Engineering Excellence
-              </div>
               <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
                 Turn Prompt Engineering Into a <span className="text-blue-600">Testable Discipline</span>
               </h1>
@@ -195,38 +191,49 @@ export default async function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-slate-900 rounded-3xl p-8 lg:p-16 text-white overflow-hidden relative shadow-2xl">
             <div className="relative z-10 max-w-2xl">
-              <h2 className="text-4xl font-bold mb-6">Problems Turn Prompts Into Solutions</h2>
-              <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
+                <Layers className="w-4 h-4" />
+                Architecture
+              </div>
+              <h2 className="text-4xl lg:text-5xl font-bold mb-6 tracking-tight">Problems Turn Prompts Into Solutions</h2>
+              <p className="text-slate-300 text-lg mb-10 leading-relaxed font-light">
                 In Promptvexity, a Prompt is never standalone. It is always a solution to a specific Problem. This hierarchy ensures that every token you write has a measurable purpose.
               </p>
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                    <CheckCircle2 className="w-5 h-5" />
+              
+              <div className="grid sm:grid-cols-2 gap-8">
+                <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-4">
+                    <CheckCircle2 className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-100">Defining Goals</h4>
-                    <p className="text-slate-400 text-sm">Problems define the constraints, success criteria, and test cases.</p>
-                  </div>
+                  <h4 className="text-xl font-semibold text-slate-100 mb-2">Defining Goals</h4>
+                  <p className="text-slate-400 leading-relaxed">Problems define the strict constraints, objective success criteria, and hidden test cases for evaluation.</p>
                 </div>
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                    <GitBranch className="w-5 h-5" />
+                
+                <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-4">
+                    <GitBranch className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-100">Versioning Solutions</h4>
-                    <p className="text-slate-400 text-sm">Branch prompts like code. Compare v1 vs v2 across identical problem sets.</p>
-                  </div>
+                  <h4 className="text-xl font-semibold text-slate-100 mb-2">Versioning Solutions</h4>
+                  <p className="text-slate-400 leading-relaxed">Branch prompts like source code. Compare v1 vs v2 head-to-head across the exact same problem sets.</p>
                 </div>
               </div>
             </div>
             {/* Abstract UI Decoration */}
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:block opacity-20 pointer-events-none">
-              <div className="w-full h-full border-l border-white/10 flex flex-col p-8 gap-4">
-                <div className="h-4 bg-white/20 rounded w-3/4"></div>
-                <div className="h-4 bg-white/10 rounded w-1/2"></div>
-                <div className="h-4 bg-white/20 rounded w-full"></div>
-                <div className="mt-8 h-32 bg-blue-500/20 rounded border border-blue-500/30"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:block opacity-40 pointer-events-none pr-8 pt-8 overflow-visible">
+              <div className="w-[120%] h-full rounded-2xl border border-white/10 bg-slate-800/80 backdrop-blur-md p-6 flex flex-col gap-4 shadow-2xl transform translate-x-8 translate-y-8 rotate-6">
+                <div className="flex gap-2 mb-2">
+                  <div className="w-3 h-3 rounded-full bg-red-400/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-400/80"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-400/80"></div>
+                </div>
+                <div className="h-4 bg-white/20 rounded w-1/3"></div>
+                <div className="h-4 bg-white/10 rounded w-2/3"></div>
+                <div className="h-4 bg-white/5 rounded w-1/2"></div>
+                <div className="flex-1 mt-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                   <div className="w-16 h-16 rounded-full border border-blue-400/20 flex items-center justify-center">
+                     <div className="w-8 h-8 rounded-full bg-blue-400/20 animate-pulse"></div>
+                   </div>
+                </div>
               </div>
             </div>
           </div>
@@ -358,7 +365,7 @@ export default async function HomePage() {
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="text-3xl font-bold text-slate-900">Top-Rated Prompts</h2>
-              <p className="text-slate-600 mt-2">Ranked by community testing, forks, and votes — not hype.</p>
+              <p className="text-slate-600 mt-2">Ranked by community testing, forks, and votes.</p>
             </div>
             <Link className="text-blue-600 font-semibold flex items-center gap-1 hover:underline" href="/problems">
               Browse Gallery <ChevronRight className="w-4 h-4" />

@@ -1,4 +1,6 @@
-import Link from 'next/link';
+import Link from 'next/link'
+import { toast } from 'sonner';
+import Image from 'next/image';
 
 export interface ProfileSidebarData {
     id: string;
@@ -23,11 +25,13 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
             {/* Avatar */}
             <div className="w-full aspect-square rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 relative">
                 {profile.avatar_url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <Image
                         src={profile.avatar_url}
                         alt={profile.display_name}
+                        width={288}
+                        height={288}
                         className="w-full h-full object-cover"
+                        unoptimized
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-slate-300">
@@ -64,7 +68,7 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
 
             {/* Actions (Mock for now) */}
             <div className="flex gap-3">
-                <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                <button onClick={() => toast('Follow feature coming soon!', { position: 'top-center' })} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     Follow
                 </button>
                 <button className="flex-1 bg-white hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg border border-slate-200 transition-colors shadow-sm">

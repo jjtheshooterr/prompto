@@ -43,12 +43,12 @@ export default function PromptDetailPage() {
 
             if (isFullUuid) {
                 // Legacy: full UUID in URL → redirect to canonical
-                const { data } = await supabase.from('prompts').select('*').eq('id', slugParam).single()
+                const { data } = await supabase.from('prompts').select('*, author:profiles!prompts_created_by_profile_fkey(id, username, display_name, avatar_url)').eq('id', slugParam).single()
                 promptData = data
             } else {
                 // Multiple prompts can have the same slug. Fetch them all and filter by shortId 
                 // to avoid 406 Not Acceptable from .single()
-                const { data } = await supabase.from('prompts').select('*').eq('slug', dbSlug)
+                const { data } = await supabase.from('prompts').select('*, author:profiles!prompts_created_by_profile_fkey(id, username, display_name, avatar_url)').eq('slug', dbSlug)
 
                 if (data && data.length > 0) {
                     if (shortId) {
@@ -264,9 +264,31 @@ export default function PromptDetailPage() {
                                 </span>
                             )}
                         </div>
-                        <p className="text-sm text-slate-400 mt-1">
-                            Created {new Date(prompt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                            {prompt.author && (
+                                <div className="flex items-center gap-2 text-sm">
+                                    {prompt.author.avatar_url ? (
+                                        <img src={prompt.author.avatar_url} alt="author" className="w-5 h-5 rounded-full object-cover" />
+                                    ) : (
+                                        <div className="w-5 h-5 bg-blue-100 text-blue-700 font-bold flex items-center justify-center rounded-full text-[10px]">
+                                            {(prompt.author.display_name || prompt.author.username || 'U')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                    <span className="text-slate-500">by</span>
+                                    {prompt.author.username ? (
+                                        <Link href={`/u/${prompt.author.username}`} className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+                                            {prompt.author.display_name || prompt.author.username}
+                                        </Link>
+                                    ) : (
+                                        <span className="font-medium text-slate-700">{prompt.author.display_name}</span>
+                                    )}
+                                </div>
+                            )}
+                            {prompt.author && <span className="text-slate-300">•</span>}
+                            <p className="text-sm text-slate-400">
+                                Created {new Date(prompt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0">
