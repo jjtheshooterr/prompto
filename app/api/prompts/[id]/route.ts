@@ -49,6 +49,9 @@ export async function GET(
             return NextResponse.json({ error: 'Prompt not found' }, { status: 404 })
         }
 
+        // Build response object with proper typing
+        const response: any = { ...prompt }
+
         // Fetch author profile
         if (prompt.created_by) {
             const { data: author } = await supabase
@@ -57,7 +60,7 @@ export async function GET(
                 .eq('id', prompt.created_by)
                 .single()
             
-            prompt.author = author
+            response.author = author
         }
 
         // Fetch problem info
@@ -69,14 +72,14 @@ export async function GET(
                 .single()
             
             if (problem) {
-                prompt.problemId = problem.id
-                prompt.problemSlug = problem.slug
-                prompt.problemTitle = problem.title
-                prompt.problemShortId = problem.short_id || problem.id.slice(0, 8)
+                response.problemId = problem.id
+                response.problemSlug = problem.slug
+                response.problemTitle = problem.title
+                response.problemShortId = problem.short_id || problem.id.slice(0, 8)
             }
         }
 
-        return NextResponse.json(prompt)
+        return NextResponse.json(response)
     } catch (error) {
         console.error('Error fetching prompt:', error)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
