@@ -23,6 +23,7 @@ export default function ForkModal({
   const [changesSummary, setChangesSummary] = useState('')
   const [improvementSummary, setImprovementSummary] = useState('')
   const [bestFor, setBestFor] = useState('')
+  const [visibility, setVisibility] = useState('public')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { user } = useAuth()
 
@@ -106,7 +107,7 @@ export default function ForkModal({
           .insert({
             workspace_id: workspace.id,
             problem_id: parentPrompt.problem_id,
-            visibility: parentPrompt.visibility,
+            visibility: visibility,
             title: newTitle,
             slug: attemptSlug,
             system_prompt: parentPrompt.system_prompt,
@@ -266,6 +267,25 @@ export default function ForkModal({
             />
             <p className="text-xs text-gray-500 mt-1">
               Comma-separated tags describing what this prompt works best for
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-1">
+              Visibility
+            </label>
+            <select
+              id="visibility"
+              value={visibility}
+              onChange={(e) => setVisibility(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="public">Public</option>
+              <option value="unlisted">Unlisted</option>
+              <option value="private">Private</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Public prompts are visible on your profile and on the problem page
             </p>
           </div>
 

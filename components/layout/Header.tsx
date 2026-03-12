@@ -100,6 +100,10 @@ export default function Header() {
                 </span>
               )}
             </Link>
+            <Link href="/leaderboard" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all flex items-center gap-1">
+              <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Leaderboard
+            </Link>
             {user && (
               <>
                 <Link href="/create/problem" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
@@ -203,6 +207,14 @@ export default function Header() {
                     {compareCount}
                   </span>
                 )}
+              </Link>
+              <Link
+                href="/leaderboard"
+                className="text-gray-600 hover:text-gray-900 transition-colors py-2 flex items-center gap-2"
+                onClick={closeMobileMenu}
+              >
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                Leaderboard
               </Link>
 
               {user ? (

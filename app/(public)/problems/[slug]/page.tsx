@@ -323,7 +323,16 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                               </span>
                               {prompt.author && (
                                 <span className="text-xs text-slate-400">
-                                  by <span className="text-slate-600 font-medium">{prompt.author.display_name || prompt.author.username}</span>
+                                  by{' '}
+                                  {prompt.author.username ? (
+                                    <Link href={`/u/${prompt.author.username}`} className="text-slate-600 font-medium hover:text-blue-600 transition-colors">
+                                      {prompt.author.display_name || prompt.author.username}
+                                    </Link>
+                                  ) : (
+                                    <span className="text-slate-600 font-medium">
+                                      {prompt.author.display_name}
+                                    </span>
+                                  )}
                                 </span>
                               )}
                             </div>
