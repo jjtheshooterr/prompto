@@ -64,7 +64,7 @@ export default function ForkModal({
         throw new Error('Parent prompt not found')
       }
 
-      // Check if prompt is hidden/unlisted and user has access
+      // Check if prompt is hidden and user has access
       if (parentPrompt.is_hidden || !parentPrompt.is_listed) {
         const { data: membership } = await supabase
           .from('workspace_members')
@@ -74,7 +74,7 @@ export default function ForkModal({
           .single()
 
         if (!membership) {
-          throw new Error('Cannot fork hidden or unlisted prompts')
+          throw new Error('Cannot fork hidden prompts')
         }
       }
 
@@ -281,7 +281,6 @@ export default function ForkModal({
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             >
               <option value="public">Public</option>
-              <option value="unlisted">Unlisted</option>
               <option value="private">Private</option>
             </select>
             <p className="text-xs text-gray-500 mt-1">

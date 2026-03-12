@@ -182,7 +182,7 @@ export async function getPublicProblemBySlug(slugOrShortId: string, shortId?: st
   return data
 }
 
-// New function that handles all problem access (public, unlisted, private with membership)
+// New function that handles all problem access (public, private with membership)
 export async function getProblemBySlug(slugOrShortId: string, shortId?: string | null, isFullUuid?: boolean) {
   const supabase = await createClient()
 

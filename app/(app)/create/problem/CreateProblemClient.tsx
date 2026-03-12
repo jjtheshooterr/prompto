@@ -670,7 +670,6 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                   className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
                 >
                   <option value="public">Public</option>
-                  <option value="unlisted">Unlisted</option>
                   <option value="private">Private</option>
                 </select>
               </div>

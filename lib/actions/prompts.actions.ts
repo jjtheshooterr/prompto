@@ -488,7 +488,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
     throw new Error('Parent prompt not found or is no longer available')
   }
 
-  // Check if prompt is hidden/unlisted and user has workspace access
+  // Check if prompt is hidden and user has workspace access
   if (parentPrompt.is_hidden || !parentPrompt.is_listed) {
     const { data: membership } = await supabase
       .from('workspace_members')
@@ -498,7 +498,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
       .single()
 
     if (!membership) {
-      throw new Error('Cannot fork hidden or unlisted prompts')
+      throw new Error('Cannot fork hidden prompts')
     }
   }
 

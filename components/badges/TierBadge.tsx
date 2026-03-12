@@ -66,7 +66,10 @@ const colorMap: Record<Tier | string, {
 
 const defaultColors = colorMap['Novice'];
 
+import { useId } from 'react';
+
 export function TierBadge({ tier, className = '', size = 'md' }: TierBadgeProps) {
+  const badgeId = useId();
   const colors = colorMap[tier] || defaultColors;
   
   const sizeClasses = {
@@ -81,7 +84,7 @@ export function TierBadge({ tier, className = '', size = 'md' }: TierBadgeProps)
   const hasComplexWings = tier === 'Master' || tier === 'Grandmaster';
   const hasInnerShadow = tier === 'Grandmaster';
 
-  const idSuffix = Math.random().toString(36).substr(2, 9); // For unique gradients
+  const idSuffix = badgeId.replace(/:/g, ''); // For unique gradients, standardizing characters
 
   return (
     <div className={`relative inline-flex items-center justify-center ${sizeClasses[size]} ${className}`} title={tier}>

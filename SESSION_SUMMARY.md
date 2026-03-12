@@ -36,3 +36,11 @@
 The Hybrid Scoring engine is complete and perfectly live. The UI operates fluidly, and the Database enforces rigorous data integrity standards behind the scenes.
 
 **Next Steps**: Please review the Gemini API Key limits in your Google AI Studio/Cloud Console to unblock the final background AI evaluation scores. Your code is now fully protected and live!
+
+---
+
+## Session Updates: Profile UI & Privacy (Late Session)
+- **Privacy Overhaul**: Completely purged the `unlisted` visibility option from the codebase (types, components, and backend checks). Only `public` and `private` remain.
+- **Author Relation Fix**: Discovered that the missing author profile on the prompt details page was due to PostgREST failing the join because of a missing foreign key (`prompts.created_by` -> `profiles.id`). Generated the SQL migration `20260312035000_add_prompts_created_by_fkey.sql` to enforce database integrity.
+- **Profile UI Polish**: Removed the invasive layout banner on the user profile per user request, and restored clean flex margins.
+- **Professional Feedback Toast**: Updated the placeholder "Follow" buttons to elegantly drop down a professional `sonner` toast notification from the top-center ("Follow feature coming soon!"), rather than using an invasive browser alert.

@@ -43,12 +43,12 @@ export default function PromptDetailPage() {
 
             if (isFullUuid) {
                 // Legacy: full UUID in URL → redirect to canonical
-                const { data } = await supabase.from('prompts').select('*, author:profiles!created_by(id, username, display_name, avatar_url)').eq('id', slugParam).single()
+                const { data } = await supabase.from('prompts').select('*, author:profiles!prompts_created_by_profile_fkey(id, username, display_name, avatar_url)').eq('id', slugParam).single()
                 promptData = data
             } else {
                 // Multiple prompts can have the same slug. Fetch them all and filter by shortId 
                 // to avoid 406 Not Acceptable from .single()
-                const { data } = await supabase.from('prompts').select('*, author:profiles!created_by(id, username, display_name, avatar_url)').eq('slug', dbSlug)
+                const { data } = await supabase.from('prompts').select('*, author:profiles!prompts_created_by_profile_fkey(id, username, display_name, avatar_url)').eq('slug', dbSlug)
 
                 if (data && data.length > 0) {
                     if (shortId) {

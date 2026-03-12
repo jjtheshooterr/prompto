@@ -37,7 +37,7 @@ export interface Problem {
   success_criteria?: ProblemSuccessCriterion[]
   tags?: string[]
   industry: string
-  visibility: 'public' | 'unlisted' | 'private'
+  visibility: 'public' | 'private'
   slug: string
   is_listed: boolean
   is_hidden: boolean
