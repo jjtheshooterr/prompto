@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface AuthorChipProps {
   userId: string;
@@ -44,11 +45,13 @@ export function AuthorChip({
       {showAvatar && (
         <div className={`${avatarSizes[size]} rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0`}>
           {avatarUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={avatarUrl}
               alt={name}
+              width={32}
+              height={32}
               className="w-full h-full object-cover"
+              unoptimized
             />
           ) : (
             <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export interface ProfileSidebarData {
     id: string;
@@ -23,11 +24,13 @@ export function ProfileSidebar({ profile }: ProfileSidebarProps) {
             {/* Avatar */}
             <div className="w-full aspect-square rounded-2xl border border-slate-200 overflow-hidden bg-slate-50 relative">
                 {profile.avatar_url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <Image
                         src={profile.avatar_url}
                         alt={profile.display_name}
+                        width={288}
+                        height={288}
                         className="w-full h-full object-cover"
+                        unoptimized
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-6xl font-bold text-slate-300">

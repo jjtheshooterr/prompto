@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/app/providers'
 import { promptUrl } from '@/lib/utils/prompt-url'
 import {
@@ -259,8 +260,7 @@ export default function ClientDashboard() {
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden">
           <div className="w-24 h-24 rounded-full bg-blue-100 border-4 border-white shadow-md flex items-center justify-center flex-shrink-0 z-10 overflow-hidden">
             {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              <Image src={profile.avatar_url} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
             ) : (
               <User className="w-10 h-10 text-blue-600" />
             )}

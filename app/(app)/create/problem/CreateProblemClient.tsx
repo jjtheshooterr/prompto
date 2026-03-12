@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ProblemInput, ProblemConstraint, ProblemSuccessCriterion } from '@/types/problems'
 import { toast } from 'sonner'
@@ -86,7 +86,8 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       const title = formData.get('title') as string
       const description = formData.get('description') as string
       const goal = formData.get('goal') as string
-      const tags = (formData.get('tags') as string)
+      const tagsRaw = formData.get('tags') as string || ''
+      const tags = tagsRaw
         .split(',')
         .map(tag => tag.trim().toLowerCase())
         .filter(Boolean)
@@ -234,381 +235,535 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
     }
   }
 
+  const steps = [
+    { id: 'core', label: 'Define', number: '01' },
+    { id: 'data', label: 'Data', number: '02' },
+    { id: 'eval', label: 'Evaluate', number: '03' },
+    { id: 'discovery', label: 'Classify', number: '04' },
+  ]
+
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Wire up Ctrl+Enter to submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault()
+        const form = document.getElementById('problem-form') as HTMLFormElement
+        if (form) form.requestSubmit()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">Create New Problem</h1>
-        <p className="text-gray-600">
-          Define a coding problem that the community can solve with prompts.
-        </p>
-      </div>
-
-      <form action={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-            Problem Title *
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g., Generate SQL queries from natural language"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            required
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Describe the problem in detail. What should the AI accomplish? What are the constraints?"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="real_world_context" className="block text-sm font-medium text-gray-700 mb-2">
-            Real World Context
-          </label>
-          <textarea
-            id="real_world_context"
-            name="real_world_context"
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Why is this required? What's the context for the builder?"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="known_failure_modes" className="block text-sm font-medium text-gray-700 mb-2">
-            Known Failure Modes
-          </label>
-          <input
-            type="text"
-            id="known_failure_modes"
-            name="known_failure_modes"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Hallucinates facts, JSON formatting issues (comma-separated)"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="example_input" className="block text-sm font-medium text-gray-700 mb-2">
-              Example Input
-            </label>
-            <textarea
-              id="example_input"
-              name="example_input"
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Provide a sample input snippet."
-            />
-          </div>
-          <div>
-            <label htmlFor="expected_output" className="block text-sm font-medium text-gray-700 mb-2">
-              Expected Output
-            </label>
-            <textarea
-              id="expected_output"
-              name="expected_output"
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Provide the desired resulting output snippet."
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="goal" className="block text-sm font-medium text-gray-700 mb-2">
-            Goal <span className="text-gray-500">(recommended)</span>
-          </label>
-          <input
-            type="text"
-            id="goal"
-            name="goal"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="e.g., Convert plain-English questions into correct, efficient SQL queries that run successfully on the first attempt"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            One clear sentence describing what success looks like.
-          </p>
-        </div>
-
-        {/* Inputs Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Expected Inputs <span className="text-gray-500">(optional)</span>
-            </label>
+    <div className="min-h-screen bg-slate-50/50">
+      {/* Top Bar */}
+      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={addInput}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              onClick={() => router.back()}
+              className="text-slate-400 hover:text-slate-900 transition-colors"
             >
-              + Add Input
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
+            <div className="h-5 w-px bg-slate-200" />
+            <h1 className="text-sm font-semibold text-slate-900 tracking-tight">New Problem</h1>
           </div>
-          <div className="space-y-3">
-            {inputs.map((input, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">Input {index + 1}</span>
-                  {inputs.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeInput(index)}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Input name (e.g., database_schema)"
-                    value={input.name}
-                    onChange={(e) => updateInput(index, 'name', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={input.description}
-                    onChange={(e) => updateInput(index, 'description', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="mt-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={input.required}
-                      onChange={(e) => updateInput(index, 'required', e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-600">Required</span>
-                  </label>
-                </div>
-              </div>
+          <div className="hidden md:flex items-center gap-1">
+            {steps.map((step, i) => (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => scrollToSection(step.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
+              >
+                <span className="font-mono text-[10px] text-slate-400">{step.number}</span>
+                {step.label}
+                {i < steps.length - 1 && <span className="ml-2 text-slate-300">›</span>}
+              </button>
             ))}
           </div>
-        </div>
-
-        {/* Constraints Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Constraints <span className="text-gray-500">(optional)</span>
-            </label>
-            <button
-              type="button"
-              onClick={addConstraint}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              + Add Constraint
-            </button>
-          </div>
-          <div className="space-y-3">
-            {constraints.map((constraint, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">Constraint {index + 1}</span>
-                  {constraints.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeConstraint(index)}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Rule (e.g., Do not use SELECT *)"
-                    value={constraint.rule}
-                    onChange={(e) => updateConstraint(index, 'rule', e.target.value)}
-                    className="md:col-span-2 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <select
-                    value={constraint.severity}
-                    onChange={(e) => updateConstraint(index, 'severity', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="hard">Hard (Must follow)</option>
-                    <option value="soft">Soft (Preferred)</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Success Criteria Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <label className="block text-sm font-medium text-gray-700">
-              Success Criteria <span className="text-gray-500">(optional)</span>
-            </label>
-            <button
-              type="button"
-              onClick={addSuccessCriterion}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              + Add Criterion
-            </button>
-          </div>
-          <div className="space-y-3">
-            {successCriteria.map((criterion, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">Criterion {index + 1}</span>
-                  {successCriteria.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeSuccessCriterion(index)}
-                      className="text-sm text-red-600 hover:text-red-700"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Success criterion (e.g., Query runs without errors)"
-                    value={criterion.criterion}
-                    onChange={(e) => updateSuccessCriterion(index, 'criterion', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description (optional)"
-                    value={criterion.description || ''}
-                    onChange={(e) => updateSuccessCriterion(index, 'description', e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-            Tags
-          </label>
-          <input
-            type="text"
-            id="tags"
-            name="tags"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="sql, database, query, natural-language (comma-separated)"
-            onBlur={(e) => {
-              // Clean up tags on blur
-              const cleanTags = e.target.value
-                .split(',')
-                .map(tag => tag.trim().toLowerCase())
-                .filter(Boolean)
-                .filter((tag, index, array) => array.indexOf(tag) === index)
-                .join(', ')
-              e.target.value = cleanTags
-            }}
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Separate tags with commas. Duplicates will be automatically removed. Use lowercase and hyphens for multi-word tags.
-          </p>
-        </div>
-
-        <div>
-          <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-2">
-            Industry *
-          </label>
-          <select
-            id="industry"
-            name="industry"
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select an industry</option>
-            <option value="dev">Development & Technology</option>
-            <option value="marketing">Marketing</option>
-            <option value="content">Content Creation</option>
-            <option value="data">Data & Analytics</option>
-            <option value="finance">Finance</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="education">Education</option>
-            <option value="legal">Legal</option>
-            <option value="sales">Sales</option>
-            <option value="support">Customer Support</option>
-            <option value="hr">Human Resources</option>
-            <option value="video">Video & Media</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
-            Difficulty
-          </label>
-          <select
-            id="difficulty"
-            name="difficulty"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">Select difficulty</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
-            <option value="expert">Expert</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-2">
-            Visibility
-          </label>
-          <select
-            id="visibility"
-            name="visibility"
-            defaultValue="public"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="public">Public - Anyone can see and contribute</option>
-            <option value="unlisted">Unlisted - Anyone with link can see and contribute</option>
-            <option value="private">Private - Only you and invited members</option>
-          </select>
-          <p className="text-sm text-gray-500 mt-1">
-            Public problems appear in browse and search. Unlisted problems are accessible via direct link. Private problems require explicit member invitations.
-          </p>
-        </div>
-
-        <div className="flex gap-4 pt-6">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? 'Creating...' : 'Create Problem'}
-          </button>
-
           <button
             type="button"
-            onClick={() => router.back()}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            onClick={() => {
+              const form = document.getElementById('problem-form') as HTMLFormElement
+              if (form) form.requestSubmit()
+            }}
+            disabled={submitting}
+            className="bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 px-4 py-1.5 rounded-md text-xs font-medium shadow-sm transition-all hover:shadow-md"
           >
-            Cancel
+            {submitting ? 'Creating...' : 'Publish'}
           </button>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
+
+      <form id="problem-form" action={handleSubmit}>
+        {/* Core Details */}
+        <section id="core" className="pb-10 scroll-mt-20">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">01</span>
+            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Problem Definition</h2>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-slate-900 mb-2">
+                Problem Title *
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                placeholder="e.g., Generate SQL queries from natural language"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-slate-900 mb-2">
+                Description *
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                required
+                rows={4}
+                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white resize-y"
+                placeholder="Describe the problem, constraints, and objective."
+              />
+            </div>
+
+            <div>
+              <label htmlFor="real_world_context" className="block text-sm font-medium text-slate-900 mb-2 flex justify-between items-center">
+                Real World Context
+                <span className="text-xs font-normal text-slate-400">Optional</span>
+              </label>
+              <textarea
+                id="real_world_context"
+                name="real_world_context"
+                rows={2}
+                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white resize-y"
+                placeholder="Why does this matter in production?"
+              />
+            </div>
+          </div>
+        </section>
+
+        <hr className="my-10 border-slate-200" />
+
+        {/* Data Targets */}
+        <section id="data" className="pb-10 scroll-mt-20">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">02</span>
+            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Data Scaffolding</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label htmlFor="example_input" className="block text-sm font-medium text-slate-900 mb-2">
+                Example Input
+              </label>
+              <textarea
+                id="example_input"
+                name="example_input"
+                rows={5}
+                className="w-full font-mono text-xs border-slate-200 rounded-lg px-4 py-3 shadow-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-slate-50 transition-shadow resize-none"
+                placeholder="Sample text or JSON block"
+              />
+            </div>
+            <div>
+              <label htmlFor="expected_output" className="block text-sm font-medium text-slate-900 mb-2">
+                Expected Output
+              </label>
+              <textarea
+                id="expected_output"
+                name="expected_output"
+                rows={5}
+                className="w-full font-mono text-xs border-slate-200 rounded-lg px-4 py-3 shadow-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-slate-50 transition-shadow resize-none"
+                placeholder="The perfect desired output"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="goal" className="block text-sm font-medium text-slate-900 mb-2 flex justify-between items-center">
+              Primary Goal Requirement
+              <span className="text-xs font-normal text-slate-400">Optional</span>
+            </label>
+            <input
+              type="text"
+              id="goal"
+              name="goal"
+              className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+              placeholder="e.g., Output must strictly be valid SQL"
+            />
+          </div>
+        </section>
+
+        <hr className="my-10 border-slate-200" />
+
+        {/* Evaluation Engine */}
+        <section id="eval" className="pb-10 scroll-mt-20">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">03</span>
+            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Evaluation Engine</h2>
+          </div>
+          
+          <div className="space-y-8">
+            <div>
+              <label htmlFor="known_failure_modes" className="block text-sm font-medium text-slate-900 mb-2">
+                Known Failure Modes
+              </label>
+              <input
+                type="text"
+                id="known_failure_modes"
+                name="known_failure_modes"
+                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                placeholder="e.g., Hallucinations, bad JSON syntax (comma-separated)"
+              />
+            </div>
+
+            {/* Inputs Array */}
+            <div>
+              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                <label className="text-sm font-medium text-slate-900">Dynamic Variables</label>
+                <button
+                  type="button"
+                  onClick={addInput}
+                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-2">
+                {inputs.map((input, index) => (
+                  <div key={index} className="flex gap-3 items-start relative group">
+                    <input
+                      type="text"
+                      placeholder="Variable (e.g., user_query)"
+                      value={input.name}
+                      onChange={(e) => updateInput(index, 'name', e.target.value)}
+                      className="w-1/3 font-mono text-xs border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={input.description}
+                      onChange={(e) => updateInput(index, 'description', e.target.value)}
+                      className="w-1/2 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                    />
+                    <div className="flex items-center h-9 pt-1">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-500 hover:text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={input.required}
+                          onChange={(e) => updateInput(index, 'required', e.target.checked)}
+                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 w-3.5 h-3.5"
+                        />
+                        Req
+                      </label>
+                      {inputs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeInput(index)}
+                          className="ml-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove variable"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Constraints Array */}
+            <div>
+              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                <label className="text-sm font-medium text-slate-900">System Constraints</label>
+                <button
+                  type="button"
+                  onClick={addConstraint}
+                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-2">
+                {constraints.map((constraint, index) => (
+                  <div key={index} className="flex gap-3 items-start group">
+                    <input
+                      type="text"
+                      placeholder="Rule constraint"
+                      value={constraint.rule}
+                      onChange={(e) => updateConstraint(index, 'rule', e.target.value)}
+                      className="w-2/3 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                    />
+                    <select
+                      value={constraint.severity}
+                      onChange={(e) => updateConstraint(index, 'severity', e.target.value)}
+                      className="w-1/4 text-xs border-slate-200 rounded-md px-3 py-2 text-slate-700 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                    >
+                      <option value="hard">Hard Limit</option>
+                      <option value="soft">Soft Guide</option>
+                    </select>
+                    <div className="flex items-center h-9">
+                      {constraints.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeConstraint(index)}
+                          className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove constraint"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Success Criteria Array */}
+            <div>
+              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                <label className="text-sm font-medium text-slate-900">Success Criteria</label>
+                <button
+                  type="button"
+                  onClick={addSuccessCriterion}
+                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-2">
+                {successCriteria.map((criterion, index) => (
+                  <div key={index} className="flex gap-3 items-start group">
+                    <input
+                      type="text"
+                      placeholder="Criterion definition"
+                      value={criterion.criterion}
+                      onChange={(e) => updateSuccessCriterion(index, 'criterion', e.target.value)}
+                      className="w-1/2 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Note (optional)"
+                      value={criterion.description || ''}
+                      onChange={(e) => updateSuccessCriterion(index, 'description', e.target.value)}
+                      className="w-1/3 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                    />
+                    <div className="flex items-center h-9">
+                      {successCriteria.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSuccessCriterion(index)}
+                          className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Remove criterion"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <hr className="my-10 border-slate-200" />
+
+        {/* Classification */}
+        <section id="discovery" className="pb-8 scroll-mt-20">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">04</span>
+            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Classification &amp; Discovery</h2>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <label htmlFor="tags" className="block text-sm font-medium text-slate-900 mb-2">
+                Tags
+              </label>
+              <input
+                type="text"
+                id="tags"
+                name="tags"
+                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                placeholder="sql, database, search (comma-separated)"
+                onBlur={(e) => {
+                  const cleanTags = e.target.value
+                    .split(',')
+                    .map(tag => tag.trim().toLowerCase())
+                    .filter(Boolean)
+                    .filter((tag, index, array) => array.indexOf(tag) === index)
+                    .join(', ')
+                  e.target.value = cleanTags
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label htmlFor="industry" className="block text-sm font-medium text-slate-900 mb-2">
+                  Category *
+                </label>
+                <select
+                  id="industry"
+                  name="industry"
+                  required
+                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                >
+                  <option value="">Select category</option>
+                  <option value="dev">Development</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="content">Content</option>
+                  <option value="data">Data</option>
+                  <option value="finance">Finance</option>
+                  <option value="healthcare">Healthcare</option>
+                  <option value="education">Education</option>
+                  <option value="legal">Legal</option>
+                  <option value="sales">Sales</option>
+                  <option value="support">Support</option>
+                  <option value="hr">HR</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="difficulty" className="block text-sm font-medium text-slate-900 mb-2">
+                  Difficulty
+                </label>
+                <select
+                  id="difficulty"
+                  name="difficulty"
+                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                >
+                  <option value="">Set difficulty</option>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                  <option value="expert">Expert</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="visibility" className="block text-sm font-medium text-slate-900 mb-2">
+                  Access Level
+                </label>
+                <select
+                  id="visibility"
+                  name="visibility"
+                  defaultValue="public"
+                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                >
+                  <option value="public">Public</option>
+                  <option value="unlisted">Unlisted</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom Publish Bar */}
+        <div className="mt-8 pt-8 border-t border-slate-200">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-400">All required fields marked with *</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 px-5 py-2 rounded-lg text-sm font-medium transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Creating...
+                  </>
+                ) : 'Publish Problem'}
+              </button>
+            </div>
+          </div>
+        </div>
       </form>
+
+          {/* Contextual Sidebar */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-20 space-y-5">
+
+              {/* Prompt Engineering Tips */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M12 2v4"/><path d="m6.34 7.34 2.83 2.83"/><path d="M2 12h4"/><path d="m6.34 16.66 2.83-2.83"/><path d="M12 18v4"/><path d="m17.66 16.66-2.83-2.83"/><path d="M18 12h4"/><path d="m17.66 7.34-2.83 2.83"/></svg>
+                  <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Boost Solver Quality</h3>
+                </div>
+                <ul className="space-y-2.5 text-xs text-slate-500 leading-relaxed">
+                  <li className="flex gap-2">
+                    <span className="text-emerald-400 font-bold mt-px">1</span>
+                    <span><strong className="text-slate-700">Be precise with constraints.</strong> Vague rules produce vague prompts. Specify exact formats, token limits, or output schemas.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-emerald-400 font-bold mt-px">2</span>
+                    <span><strong className="text-slate-700">Provide diverse examples.</strong> Include edge cases in your example input. Solvers craft better prompts when they see the hard cases up front.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-emerald-400 font-bold mt-px">3</span>
+                    <span><strong className="text-slate-700">Define failure modes.</strong> Listing known pitfalls (hallucinations, format drift) helps solvers build targeted guardrails.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-emerald-400 font-bold mt-px">4</span>
+                    <span><strong className="text-slate-700">Use success criteria.</strong> Measurable criteria (accuracy, latency, token cost) let the community objectively rank solutions.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Quick Reference */}
+              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Quick Reference</h3>
+                </div>
+                <div className="text-xs text-slate-500 leading-relaxed space-y-2">
+                  <p className="flex items-start gap-2">
+                    <span className="text-slate-300">&#x2022;</span> 
+                    <span>Use <code className="px-1 py-0.5 bg-slate-100 rounded text-slate-700 font-mono text-[11px]">JSON</code> or <code className="px-1 py-0.5 bg-slate-100 rounded text-slate-700 font-mono text-[11px]">plaintext</code> for inputs/outputs</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-slate-300">&#x2022;</span> 
+                    <span>Separate tags and failure modes with commas</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-slate-300">&#x2022;</span> 
+                    <span>Hard constraints fail the submission; soft ones are advisory</span>
+                  </p>
+                </div>
+              </div>
+
+
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>
   )
 }
