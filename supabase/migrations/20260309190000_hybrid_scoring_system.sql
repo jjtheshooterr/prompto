@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS user_rate_limits (
 
 -- RLS for Rate Limits
 ALTER TABLE user_rate_limits ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own limits" ON user_rate_limits;
 CREATE POLICY "Users can read own limits" ON user_rate_limits 
   FOR SELECT USING (auth.uid() = user_id);
 

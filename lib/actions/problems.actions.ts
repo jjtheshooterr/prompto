@@ -258,6 +258,150 @@ export async function getProblemBySlug(slugOrShortId: string, shortId?: string |
   return data
 }
 
+// Fetch problems suitable for comparison (2+ prompts, public)
+export async function getComparableProblems(limit = 12) {
+  const supabase = await createClient()
+
+  const { data: problems, error } = await supabase
+    .from('problems')
+    .select(`
+      *,
+      problem_stats(*)
+    `)
+    .eq('is_listed', true)
+    .eq('is_hidden', false)
+    .eq('is_deleted', false)
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+    .limit(50) // Fetch more to filter
+
+  if (error) {
+    console.error('Error fetching comparable problems:', error)
+    return []
+  }
+
+  // Filter to only problems with 2+ prompts
+  const filtered = (problems || [])
+    .filter((p: any) => {
+      const promptCount = p.problem_stats?.[0]?.total_prompts || 0
+      return promptCount >= 2
+    })
+    .slice(0, limit)
+
+  // Get unique user IDs
+  const userIds = [...new Set(filtered.map((p: any) => p.created_by).filter(Boolean))]
+
+  // Fetch author data
+  let authorsMap: Record<string, any> = {}
+  if (userIds.length > 0) {
+    const { data: authors } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .in('id', userIds)
+
+    if (authors) {
+      authorsMap = authors.reduce((acc, author) => {
+        acc[author.id] = author
+        return acc
+      }, {} as Record<string, any>)
+    }
+  }
+
+  return filtered.map((p: any) => ({
+    ...p,
+    author: p.created_by ? authorsMap[p.created_by] : null
+  }))
+}
+
+// Fetch recent comparisons with problem and prompt details
+export async function getRecentComparisons(limit = 6) {
+  const supabase = await createClient()
+
+  const { data: comparisons, error } = await supabase
+    .from('prompt_comparisons')
+    .select(`
+      id,
+      problem_id,
+      prompt_a_id,
+      prompt_b_id,
+      winner_prompt_id,
+      created_at,
+      problems!inner(
+        id,
+        title,
+        slug,
+        short_id,
+        visibility
+      )
+    `)
+    .eq('problems.visibility', 'public')
+    .eq('problems.is_listed', true)
+    .eq('problems.is_hidden', false)
+    .eq('problems.is_deleted', false)
+    .order('created_at', { ascending: false })
+    .limit(limit * 3) // Fetch more to group
+
+  if (error) {
+    // Table might not exist yet or schema cache needs refresh - gracefully return empty array
+    if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
+      // Silently return empty array - this is expected during schema updates
+      return []
+    }
+    console.error('Error fetching recent comparisons:', error)
+    return []
+  }
+
+  if (!comparisons || comparisons.length === 0) {
+    return []
+  }
+
+  // Group by problem and count unique comparisons
+  const problemMap = new Map<string, any>()
+  
+  for (const comp of comparisons) {
+    const problemId = comp.problem_id
+    if (!problemMap.has(problemId)) {
+      problemMap.set(problemId, {
+        problem: comp.problems,
+        comparisonCount: 0,
+        latestComparison: comp.created_at,
+        winnerPromptId: comp.winner_prompt_id
+      })
+    }
+    problemMap.get(problemId).comparisonCount++
+  }
+
+  // Convert to array and sort by latest comparison
+  const grouped = Array.from(problemMap.values())
+    .sort((a, b) => new Date(b.latestComparison).getTime() - new Date(a.latestComparison).getTime())
+    .slice(0, limit)
+
+  // Fetch winner prompt details for each
+  const winnerIds = grouped.map(g => g.winnerPromptId).filter(Boolean)
+  let winnersMap: Record<string, any> = {}
+  
+  if (winnerIds.length > 0) {
+    const { data: winners } = await supabase
+      .from('prompts')
+      .select('id, title, slug, short_id')
+      .in('id', winnerIds)
+
+    if (winners) {
+      winnersMap = winners.reduce((acc, w) => {
+        acc[w.id] = w
+        return acc
+      }, {} as Record<string, any>)
+    }
+  }
+
+  return grouped.map(g => ({
+    problem: g.problem,
+    comparisonCount: g.comparisonCount,
+    latestComparison: g.latestComparison,
+    winnerPrompt: g.winnerPromptId ? winnersMap[g.winnerPromptId] : null
+  }))
+}
+
 export async function createProblem(formData: FormData) {
   try {
     const supabase = await createClient()

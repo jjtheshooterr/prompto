@@ -11,7 +11,6 @@ export default function Header() {
   const { user, loading } = useAuth()
   const [userProfile, setUserProfile] = useState<any>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [compareCount, setCompareCount] = useState(0)
 
   // Fetch profile whenever the user changes
   useEffect(() => {
@@ -28,27 +27,6 @@ export default function Header() {
       .then(({ data }) => setUserProfile(data ?? null))
   }, [user])
 
-  // Track compare items count
-  useEffect(() => {
-    const updateCompareCount = () => {
-      const compareItems = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-      setCompareCount(compareItems.length)
-    }
-
-    // Initial count
-    updateCompareCount()
-
-    // Listen for storage changes
-    window.addEventListener('storage', updateCompareCount)
-
-    // Listen for custom events when items are added
-    window.addEventListener('compareUpdated', updateCompareCount)
-
-    return () => {
-      window.removeEventListener('storage', updateCompareCount)
-      window.removeEventListener('compareUpdated', updateCompareCount)
-    }
-  }, [])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -85,21 +63,11 @@ export default function Header() {
             <Link href="/problems" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
               Browse Problems
             </Link>
-
-            <Link
-              href="/compare"
-              className={`transition-all relative px-3 py-1.5 rounded-md ${compareCount > 0
-                ? 'text-blue-700 hover:text-blue-800 bg-blue-50/50 hover:bg-blue-100/50'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-            >
+            <Link href="/compare" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
               Compare
-              {compareCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                  {compareCount}
-                </span>
-              )}
             </Link>
+
+
             {user && (
               <>
                 <Link href="/create/problem" className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 px-3 py-1.5 rounded-md transition-all">
@@ -188,22 +156,15 @@ export default function Header() {
               >
                 Browse Problems
               </Link>
-
               <Link
                 href="/compare"
-                className={`transition-colors py-2 relative inline-block ${compareCount > 0
-                  ? 'text-blue-600 hover:text-blue-700 font-medium'
-                  : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
                 onClick={closeMobileMenu}
               >
                 Compare
-                {compareCount > 0 && (
-                  <span className="absolute -top-1 -right-6 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {compareCount}
-                  </span>
-                )}
               </Link>
+
+
 
               {user ? (
                 <>

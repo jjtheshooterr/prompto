@@ -1,189 +1,223 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { toast } from 'sonner'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { SimplePromptComparison } from '@/components/compare/SimplePromptComparison'
 
-function renderContent(content: any): string {
-  if (typeof content === 'string') return content
-  if (typeof content === 'object' && content !== null) return JSON.stringify(content, null, 2)
-  return String(content || '')
+interface PromptData {
+    id: string
+    title: string
+    problemId: string
+    problemSlug: string
+    problemTitle: string
+    problemShortId: string
+    model?: string
+    system_prompt?: string
+    user_prompt_template?: string
+    improvement_summary?: string
+    best_for?: string[]
+    tradeoffs?: string
+    created_at: string
+    created_by?: string
+    slug?: string
+    author?: {
+        username?: string
+        display_name?: string
+        avatar_url?: string
+    }
+    prompt_stats?: Array<{
+        score?: number
+        upvotes?: number
+        downvotes?: number
+        works_count?: number
+        fails_count?: number
+    }>
 }
 
 export default function ComparePage() {
-  const [prompts, setPrompts] = useState<any[]>([])
-  const [problem, setProblem] = useState<any>(null)
-  const [user, setUser] = useState<any>(null)
-  const [userVotes, setUserVotes] = useState<Record<string, number>>({})
-  const [loading, setLoading] = useState(true)
+    const router = useRouter()
+    const [prompts, setPrompts] = useState<PromptData[]>([])
+    const [loading, setLoading] = useState(true)
+    const [problemInfo, setProblemInfo] = useState<{ title: string; slug: string; shortId: string } | null>(null)
 
-  useEffect(() => {
-    const loadData = async () => {
-      const supabase = createClient()
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      setUser(currentUser)
+    useEffect(() => {
+        const loadPrompts = async () => {
+            const ids = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
+            
+            if (ids.length === 0) {
+                setLoading(false)
+                return
+            }
 
-      const urlParams = new URLSearchParams(window.location.search)
-      const urlIds = urlParams.get('ids')?.split(',') || []
-      const storageIds = JSON.parse(localStorage.getItem('comparePrompts') || '[]')
-      const promptIds = [...new Set([...urlIds, ...storageIds])].filter(Boolean)
+            try {
+                const response = await fetch('/api/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ promptIds: ids })
+                })
 
-      if (promptIds.length === 0) { setLoading(false); return }
-
-      const { data: promptsData, error: promptsError } = await supabase
-        .from('prompts').select('*').in('id', promptIds)
-
-      if (promptsError || !promptsData || promptsData.length === 0) { setLoading(false); return }
-
-      const problemIds = [...new Set(promptsData.map((p: any) => p.problem_id).filter(Boolean))]
-      const [{ data: problemsData }, { data: statsData }] = await Promise.all([
-        supabase.from('problems').select('id, title, goal, inputs, constraints, success_criteria').in('id', problemIds),
-        supabase.from('prompt_stats').select('*').in('prompt_id', promptIds),
-      ])
-
-      const promptsWithData = promptsData.map((prompt: any) => {
-        const stats = statsData?.find((s: any) => s.prompt_id === prompt.id)
-        const pb = problemsData?.find((p: any) => p.id === prompt.problem_id)
-        return {
-          ...prompt, problems: pb,
-          prompt_stats: stats ? [stats] : [{ upvotes: 0, downvotes: 0, score: 0, copy_count: 0, view_count: 0, fork_count: 0 }]
+                if (response.ok) {
+                    const data = await response.json()
+                    console.log('Compare API response:', data)
+                    
+                    setPrompts(data.prompts)
+                    
+                    if (data.problem) {
+                        setProblemInfo({
+                            title: data.problem.title,
+                            slug: data.problem.slug,
+                            shortId: data.problem.short_id || data.problem.id.slice(0, 8)
+                        })
+                    }
+                    
+                    // Clean up invalid IDs
+                    const validIds = data.prompts.map((p: PromptData) => p.id)
+                    if (validIds.length !== ids.length) {
+                        localStorage.setItem('comparePrompts', JSON.stringify(validIds))
+                    }
+                } else {
+                    const error = await response.json()
+                    console.error('Compare API error:', error)
+                    
+                    if (response.status === 400 && error.error?.includes('same problem')) {
+                        // Handle multi-problem error
+                        setLoading(false)
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load prompts:', error)
+            } finally {
+                setLoading(false)
+            }
         }
-      })
 
-      setPrompts(promptsWithData)
-      if (promptsWithData.length > 0 && promptsWithData[0].problems) setProblem(promptsWithData[0].problems)
+        loadPrompts()
+    }, [])
 
-      if (currentUser) {
-        const { data: votesData } = await supabase.from('votes').select('prompt_id, value').eq('user_id', currentUser.id).in('prompt_id', promptIds)
-        const votes: Record<string, number> = {}
-        votesData?.forEach((v: any) => { votes[v.prompt_id] = v.value })
-        setUserVotes(votes)
-      }
-
-      setLoading(false)
+    const handleRemovePrompt = (id: string) => {
+        const updated = prompts.filter(p => p.id !== id)
+        setPrompts(updated)
+        localStorage.setItem('comparePrompts', JSON.stringify(updated.map(p => p.id)))
+        
+        if (updated.length === 0) {
+            router.push('/problems')
+        }
     }
-    loadData()
-  }, [])
 
-  const handleVote = async (promptId: string, value: 1 | -1) => {
-    if (!user) { toast('Please log in to vote'); return }
-    const supabase = createClient()
-    if (userVotes[promptId] === value) {
-      await supabase.from('votes').delete().eq('prompt_id', promptId).eq('user_id', user.id)
-      setUserVotes(prev => ({ ...prev, [promptId]: 0 }))
-    } else {
-      const { data: existing } = await supabase.from('votes').select('id').eq('prompt_id', promptId).eq('user_id', user.id).maybeSingle()
-      const { error } = existing
-        ? await supabase.from('votes').update({ value }).eq('prompt_id', promptId).eq('user_id', user.id)
-        : await supabase.from('votes').insert({ prompt_id: promptId, user_id: user.id, value })
-      if (error) { toast.error('Could not record vote'); return }
-      setUserVotes(prev => ({ ...prev, [promptId]: value }))
+    const handleClear = () => {
+        localStorage.removeItem('comparePrompts')
+        router.push('/problems')
     }
-  }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Compare Prompts</h1>
-
-      {!loading && prompts.length > 0 && (
-        <>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Manual Comparison</h2>
-            <button
-              onClick={() => { localStorage.removeItem('comparePrompts'); setPrompts([]) }}
-              className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-            >
-              Clear Selection
-            </button>
-          </div>
-
-          {/* Problem context */}
-          {problem && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-blue-900 mb-1">Problem: {problem.title}</h3>
-              {problem.goal && <p className="text-blue-800 text-sm">{problem.goal}</p>}
-            </div>
-          )}
-
-          <div className="flex flex-col lg:flex-row overflow-x-auto divide-y lg:divide-y-0 lg:divide-x divide-gray-200 border border-gray-200 rounded-lg bg-white shadow-sm">
-            {prompts.map((prompt: any) => {
-              const stats = prompt.prompt_stats?.[0] || { upvotes: 0, downvotes: 0, score: 0, copy_count: 0, view_count: 0, fork_count: 0 }
-              return (
-                <div key={prompt.id} className="flex-1 min-w-[320px] p-5 space-y-4 bg-white">
-                  <div>
-                    <Link href={promptUrl(prompt)} className="text-lg font-semibold hover:text-blue-600 transition-colors">
-                      {prompt.title}
-                    </Link>
-                    <div className="text-sm text-gray-500 mt-1">Model: {prompt.model}</div>
-                  </div>
-
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="text-green-600">↑{stats.upvotes}</span>
-                      <span className="text-red-600">↓{stats.downvotes}</span>
-                      <span className="text-gray-500">Score: {stats.score}</span>
-                    </div>
-                    {user && (
-                      <div className="flex gap-1">
-                        {([1, -1] as const).map(v => (
-                          <button
-                            key={v}
-                            onClick={() => handleVote(prompt.id, v)}
-                            className={`p-1 rounded transition-colors text-xs border ${userVotes[prompt.id] === v
-                              ? (v === 1 ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600')
-                              : (v === 1 ? 'border-green-600 text-green-600 hover:bg-green-50' : 'border-red-600 text-red-600 hover:bg-red-50')
-                              }`}
-                          >
-                            {v === 1 ? '▲' : '▼'}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 mb-1">System Prompt</div>
-                    <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-48 overflow-y-auto">{renderContent(prompt.system_prompt)}</div>
-                  </div>
-
-                  {prompt.user_prompt_template && (
-                    <div>
-                      <div className="text-sm font-medium text-gray-700 mb-1">User Template</div>
-                      <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-28 overflow-y-auto">{renderContent(prompt.user_prompt_template)}</div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 pt-2">
-                    {user && (
-                      <Link
-                        href={`/create/prompt?fork=${prompt.id}&problem=${prompt.problem_id}`}
-                        className="flex-1 px-3 py-1.5 text-xs border border-orange-400 text-orange-600 rounded hover:bg-orange-50 transition-colors text-center"
-                      >
-                        Fork
-                      </Link>
-                    )}
-                    <Link href={promptUrl(prompt)} className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center">
-                      View Details
-                    </Link>
-                  </div>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-slate-500">Loading comparison...</p>
                 </div>
-              )
-            })}
-          </div>
-        </>
-      )}
+            </div>
+        )
+    }
 
-      {!loading && prompts.length === 0 && (
-        <div className="text-center py-8 text-sm text-gray-500">
-          <p className="mb-3">No prompts in your comparison queue.</p>
-          <p>Browse problems and click <strong>Compare</strong> on any prompt card.</p>
-          <Link href="/problems" className="mt-4 inline-block px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
-            Browse Problems
-          </Link>
+    if (prompts.length === 0) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6">
+                    <svg className="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <h2 className="text-xl font-bold text-slate-900 mb-2">No Prompts Selected</h2>
+                    <p className="text-slate-500 mb-6">
+                        Select 2-4 prompts from a problem page to compare them side-by-side.
+                    </p>
+                    <Link
+                        href="/problems"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                        Browse Problems
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    // Check if all prompts are from same problem
+    const problemIds = [...new Set(prompts.map(p => p.problemId))]
+    const isMultiProblem = problemIds.length > 1
+
+    if (isMultiProblem) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+                    <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-lg font-bold text-slate-900 mb-2">Different Problems Selected</h2>
+                    <p className="text-slate-500 text-sm mb-6">
+                        You can only compare prompts from the same problem. Please clear your selection and choose prompts from one problem.
+                    </p>
+                    <button
+                        onClick={handleClear}
+                        className="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm"
+                    >
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-slate-50 pb-20">
+            {/* Header */}
+            <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                            {problemInfo && (
+                                <Link
+                                    href={`/problems/${problemInfo.slug}-${problemInfo.shortId}`}
+                                    className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </Link>
+                            )}
+                            <div className="min-w-0">
+                                <h1 className="text-lg font-bold text-slate-900 truncate">
+                                    Compare Prompts
+                                </h1>
+                                {problemInfo && (
+                                    <p className="text-sm text-slate-500 truncate">
+                                        Problem: {problemInfo.title}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                                {prompts.length} prompts selected
+                            </span>
+                            <button
+                                onClick={handleClear}
+                                className="text-sm font-semibold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Comparison */}
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <SimplePromptComparison prompts={prompts} onRemovePrompt={handleRemovePrompt} />
+            </main>
         </div>
-      )}
-    </div>
-  )
+    )
 }
