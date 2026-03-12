@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { LeaderboardUser, LeaderboardPrompt } from '@/lib/actions/leaderboard.actions'
 import { problemUrl, promptUrl } from '@/lib/utils/prompt-url'
+import { TierBadge } from '@/components/badges/TierBadge'
 
 interface LeaderboardClientProps {
   initialUsers: LeaderboardUser[]
@@ -64,16 +65,6 @@ function UserTable({ users }: { users: LeaderboardUser[] }) {
         No engineers found yet. Be the first to solve a problem!
       </div>
     )
-  }
-
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'Grandmaster': return 'bg-purple-100 text-purple-700 border-purple-200'
-      case 'Master': return 'bg-rose-100 text-rose-700 border-rose-200'
-      case 'Expert': return 'bg-orange-100 text-orange-700 border-orange-200'
-      case 'Contributor': return 'bg-blue-100 text-blue-700 border-blue-200'
-      default: return 'bg-slate-100 text-slate-600 border-slate-200'
-    }
   }
 
   return (
@@ -141,9 +132,12 @@ function UserTable({ users }: { users: LeaderboardUser[] }) {
                 </div>
               </td>
               <td className="px-6 py-4 text-center">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border uppercase tracking-widest shadow-sm ${getTierColor(user.tier)}`}>
-                  {user.tier}
-                </span>
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <TierBadge tier={user.tier} size="md" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    {user.tier}
+                  </span>
+                </div>
               </td>
               <td className="px-6 py-4 text-right font-bold text-slate-900">
                 {user.total_points.toLocaleString()}

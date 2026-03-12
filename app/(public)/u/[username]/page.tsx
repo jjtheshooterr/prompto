@@ -49,10 +49,11 @@ export default async function ProfilePage({
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen py-8">
+    <div className="bg-slate-50 min-h-screen">
       <PublicProfilePageClient
         profile={profile}
         stats={stats}
+        rawStats={data.stats || null}
         prompts={data.prompts}
         problems={data.problems}
       />
