@@ -378,17 +378,17 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
 
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 flex items-center justify-between">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-blue-900">Live Structure Score Preview</h3>
-            <p className="text-xs text-blue-700 mt-1">
+            <h3 className="text-sm font-semibold text-gray-900">Live Structure Score Preview</h3>
+            <p className="text-xs text-gray-600 mt-1">
               Add more detail to your templates, usage context, and examples to boost your prompt&apos;s initial ranking.
               <br />
               {/* Removed AI note per user request */}
             </p>
           </div>
-          <div className="text-3xl font-bold text-blue-600 pl-4 border-l border-blue-200">
-            {structureScore} <span className="text-lg text-blue-400 font-normal">/ 50</span>
+          <div className="text-3xl font-bold text-gray-900 pl-4 border-l border-gray-200">
+            {structureScore} <span className="text-lg text-gray-500 font-normal">/ 50</span>
           </div>
         </div>
 
