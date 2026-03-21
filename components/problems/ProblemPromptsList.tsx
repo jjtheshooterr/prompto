@@ -191,7 +191,7 @@ export function ProblemPromptsList({ prompts, problemSlug }: Props) {
                                         <div>
                                             <div className="text-xs text-slate-400 mb-0.5">Model</div>
                                             <div className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded font-mono mt-0.5 truncate max-w-[90px]">
-                                                {prompt.model || '—'}
+                                                {prompt.model || '-'}
                                             </div>
                                         </div>
                                     </div>

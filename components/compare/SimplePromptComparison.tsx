@@ -194,7 +194,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             )}
                                         </>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -220,7 +220,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             )}
                                         </>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -234,7 +234,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             {prompt.improvement_summary}
                                         </p>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -253,7 +253,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             ))}
                                         </ul>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -267,7 +267,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             {prompt.tradeoffs}
                                         </p>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -281,7 +281,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             {prompt.fix_summary}
                                         </p>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
 
@@ -295,7 +295,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                             {prompt.usage_context}
                                         </p>
                                     ) : (
-                                        <p className="text-sm text-slate-400 italic py-0.5">— Not provided</p>
+                                        <p className="text-sm text-slate-400 italic py-0.5">- Not provided</p>
                                     )}
                                 </div>
                             </div>

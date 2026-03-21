@@ -35,8 +35,8 @@ export function PromptComparisonMatrix({ prompts }: Props) {
         }
     })
 
-    const formatCost = (c: number | null) => c !== null ? `$${c.toFixed(5)}` : '—'
-    const formatRate = (r: number | null) => r !== null ? `${Math.round(r * 100)}%` : '—'
+    const formatCost = (c: number | null) => c !== null ? `$${c.toFixed(5)}` : '-'
+    const formatRate = (r: number | null) => r !== null ? `${Math.round(r * 100)}%` : '-'
     const formatNum = (n: number | null | undefined) => n !== null && n !== undefined ? n.toLocaleString() : '0'
     const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
@@ -75,7 +75,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                     <tr><td colSpan={columns.length + 1} className={sectionHeaderClass}>Performance</td></tr>
                     <tr className={trClass}>
                         <td className={tdLabelClass}>AI Quality Score</td>
-                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-bold text-lg">{c.stats.quality_score || '—'}</span></td>)}
+                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-bold text-lg">{c.stats.quality_score || '-'}</span></td>)}
                     </tr>
                     <tr className={trClass}>
                         <td className={tdLabelClass}>Success Rate</td>
@@ -128,7 +128,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                         <td className={tdLabelClass}>Target Model</td>
                         {columns.map(c => (
                             <td key={c.prompt.id} className={tdValueClass}>
-                                <span className="bg-slate-100 text-slate-700 px-2 py-1 flex items-center w-max rounded text-xs font-mono border border-slate-200">{c.prompt.model || '—'}</span>
+                                <span className="bg-slate-100 text-slate-700 px-2 py-1 flex items-center w-max rounded text-xs font-mono border border-slate-200">{c.prompt.model || '-'}</span>
                             </td>
                         ))}
                     </tr>
