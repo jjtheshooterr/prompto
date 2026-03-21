@@ -384,7 +384,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             <p className="text-xs text-blue-700 mt-1">
               Add more detail to your templates, usage context, and examples to boost your prompt&apos;s initial ranking.
               <br />
-              <span className="italic opacity-80">Note: Our Gemini AI agent will also evaluate your prompt&apos;s quality after you submit.</span>
+              {/* Removed AI note per user request */}
             </p>
           </div>
           <div className="text-3xl font-bold text-blue-600 pl-4 border-l border-blue-200">
