@@ -4,6 +4,16 @@ import QualitySignals from '@/components/problems/QualitySignals'
 import Pagination from '@/components/ui/Pagination'
 import React from 'react'
 import { problemUrl } from '@/lib/utils/prompt-url'
+import { JsonLd } from '@/components/seo/JsonLd'
+import type { Metadata } from 'next'
+
+const BASE_URL = 'https://promptvexity.com'
+
+export const metadata: Metadata = {
+  title: 'Browse AI Problems - Community Prompt Solutions | Promptvexity',
+  description: 'Explore real-world problems and find community-tested AI prompt solutions. Compare approaches, vote on the best prompts, and fork to improve.',
+  alternates: { canonical: '/problems' },
+}
 
 // Enable ISR with 2-minute revalidation
 export const revalidate = 120
@@ -35,8 +45,36 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
   const start = safeTotal === 0 ? 0 : (currentPage - 1) * limit + 1
   const end = Math.min(start + limit - 1, safeTotal)
 
+  const collectionData = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'AI Problems & Prompt Solutions',
+    description: 'Browse real-world problems with community-voted AI prompt solutions.',
+    url: `${BASE_URL}/problems`,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: safeTotal,
+      itemListElement: (problems || []).slice(0, 10).map((p: any, i: number) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${BASE_URL}${problemUrl(p)}`,
+        name: p.title,
+      })),
+    },
+  }
+
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Problems', item: `${BASE_URL}/problems` },
+    ],
+  }
+
   return (
     <div className="bg-background min-h-screen text-foreground flex flex-col pt-8">
+      <JsonLd data={[collectionData, breadcrumbData]} />
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full flex flex-col md:flex-row gap-8">
 
         {/* LEFT SIDEBAR - FILTERS */}

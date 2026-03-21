@@ -5,6 +5,8 @@ import { notFound, redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
 import { ProblemPromptsList } from '@/components/problems/ProblemPromptsList'
+import { JsonLd } from '@/components/seo/JsonLd'
+import type { Metadata } from 'next'
 
 export const revalidate = 300
 
@@ -13,6 +15,45 @@ interface ProblemDetailPageProps {
   searchParams: Promise<{ sort?: PromptSort }>
 }
 
+const BASE_URL = 'https://promptvexity.com'
+
+export async function generateMetadata({ params }: ProblemDetailPageProps): Promise<Metadata> {
+  const { slug: slugParam } = await params
+  const { dbSlug, shortId, isFullUuid } = extractDbSlug(slugParam)
+  const problem = await getProblemBySlug(dbSlug, shortId, isFullUuid)
+
+  if (!problem) {
+    return { title: 'Problem Not Found - Promptvexity' }
+  }
+
+  const prompts = await listPromptsByProblem(problem.id, 'best')
+  const promptCount = prompts.length
+  const canonicalPath = problemUrl(problem)
+
+  const title = `${problem.title} - AI Prompt Solutions | Promptvexity`
+  const description = promptCount > 0
+    ? `${promptCount} community-tested AI prompt${promptCount !== 1 ? 's' : ''} for ${problem.title}. Compare approaches, see votes, and fork the best solutions.`
+    : `${problem.title} — submit the first AI prompt solution. Community-driven prompt engineering on Promptvexity.`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}${canonicalPath}`,
+      type: 'article',
+      images: [{ url: `${BASE_URL}/api/og?type=problem&slug=${slugParam}`, width: 1200, height: 630, alt: problem.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${BASE_URL}/api/og?type=problem&slug=${slugParam}`],
+    },
+  }
+}
 
 export default async function ProblemDetailPage({ params, searchParams }: ProblemDetailPageProps) {
   const { slug: slugParam } = await params
@@ -54,8 +95,63 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
     { value: 'newest', label: 'Newest' },
   ]
 
+  // ─── Build JSON-LD structured data ───────────────────────────────────────
+  const canonicalUrl = `${BASE_URL}${problemUrl(problem)}`
+
+  const topPrompts = [...prompts]
+    .sort((a: any, b: any) => (b.prompt_stats?.[0]?.upvotes || 0) - (a.prompt_stats?.[0]?.upvotes || 0))
+    .slice(0, 4)
+
+  const acceptedAnswer = topPrompts[0]
+  const suggestedAnswers = topPrompts.slice(1)
+
+  const buildAnswer = (p: any) => ({
+    '@type': 'Answer',
+    text: (p.system_prompt || p.title || '').slice(0, 500),
+    dateCreated: p.created_at,
+    upvoteCount: p.prompt_stats?.[0]?.upvotes || 0,
+    url: `${BASE_URL}${promptUrl(p)}`,
+    author: p.author ? {
+      '@type': 'Person',
+      name: p.author.display_name || p.author.username,
+      url: `${BASE_URL}/u/${p.author.username}`,
+    } : undefined,
+  })
+
+  const qaPageData: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'QAPage',
+    mainEntity: {
+      '@type': 'Question',
+      name: problem.title,
+      text: problem.description || '',
+      dateCreated: problem.created_at,
+      answerCount: totalPrompts,
+      ...(problem.author ? {
+        author: {
+          '@type': 'Person',
+          name: problem.author.display_name || problem.author.username,
+          url: `${BASE_URL}/u/${problem.author.username}`,
+        },
+      } : {}),
+      ...(acceptedAnswer ? { acceptedAnswer: buildAnswer(acceptedAnswer) } : {}),
+      ...(suggestedAnswers.length > 0 ? { suggestedAnswer: suggestedAnswers.map(buildAnswer) } : {}),
+    },
+  }
+
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Problems', item: `${BASE_URL}/problems` },
+      { '@type': 'ListItem', position: 3, name: problem.title, item: canonicalUrl },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <JsonLd data={[qaPageData, breadcrumbData]} />
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
         {/* ── Breadcrumb ────────────────────────────────────────────────── */}

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import TopRatedPrompts from '@/components/home/TopRatedPrompts'
 import { createClient } from '@/lib/supabase/server'
+import { JsonLd } from '@/components/seo/JsonLd'
 import {
   Layers,
   Zap,
@@ -74,8 +75,56 @@ export default async function HomePage() {
     .select('*', { count: 'exact', head: true })
     .not('parent_prompt_id', 'is', null)
 
+  const faqData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is Promptvexity?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Promptvexity is a community-driven platform where users submit real-world problems and contribute AI prompts as solutions. Think of it as Stack Overflow for prompts — you can vote on the best solutions, fork and improve existing prompts, and compare different approaches side by side.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How is Promptvexity different from other prompt libraries?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Unlike prompt marketplaces or galleries, Promptvexity organizes content by real-world problems, not by AI model or aesthetic category. Every prompt is a solution to a specific challenge, with community voting to surface the best approaches. You can also fork prompts to create improved versions and compare solutions side by side.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is Promptvexity free to use?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. Browsing problems, viewing prompts, and voting are completely free. Contributing prompts and forking existing ones requires a free account.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is prompt forking?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Prompt forking lets you take an existing prompt and create your own improved version. The fork maintains a link to the original, creating a version history that shows how prompts evolve through community iteration — similar to how code evolves on GitHub.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How does voting and scoring work?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Community members can upvote or downvote prompts. Prompts also receive a quality score based on structure analysis, AI evaluation, and community feedback. Users can mark prompts as "worked" or "failed" to build a real-world success rate for each prompt.',
+        },
+      },
+    ],
+  }
+
   return (
     <div className="bg-background">
+      <JsonLd data={faqData} />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

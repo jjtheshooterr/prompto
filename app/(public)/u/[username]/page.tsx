@@ -4,6 +4,7 @@ import { PublicProfilePageClient } from '@/components/profile/PublicProfilePageC
 import { ProfileSidebarData } from '@/components/profile/ProfileSidebar';
 import { ProfileStatsData } from '@/components/profile/ProfileStatsRow';
 import { getUserProfileByUsername } from '@/lib/actions/users.actions';
+import { JsonLd } from '@/components/seo/JsonLd';
 
 // Enable ISR with 5-minute revalidation
 export const revalidate = 300
@@ -48,8 +49,34 @@ export default async function ProfilePage({
     created_at: data.profile.created_at || new Date().toISOString()
   };
 
+  const personData = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: profile.display_name,
+      alternateName: profile.username,
+      url: `https://promptvexity.com/u/${profile.username}`,
+      ...(profile.bio ? { description: profile.bio } : {}),
+      ...(profile.website_url ? { sameAs: [profile.website_url] } : {}),
+      interactionStatistic: [
+        { '@type': 'InteractionCounter', interactionType: 'https://schema.org/WriteAction', userInteractionCount: stats.total_prompts },
+      ],
+    },
+  }
+
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://promptvexity.com' },
+      { '@type': 'ListItem', position: 2, name: profile.display_name, item: `https://promptvexity.com/u/${profile.username}` },
+    ],
+  }
+
   return (
     <div className="bg-background min-h-screen">
+      <JsonLd data={[personData, breadcrumbData]} />
       <PublicProfilePageClient
         profile={profile}
         stats={stats}

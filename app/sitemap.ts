@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { promptUrl, problemUrl } from '@/lib/utils/prompt-url'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://promptvexity.vercel.app'
+  const baseUrl = 'https://promptvexity.com'
   const supabase = await createClient()
 
   // Static pages
