@@ -216,7 +216,7 @@ export default function GuidePage() {
                 </div>
               </div>
               <p className="text-slate-500 text-sm leading-relaxed mb-5">
-                Calculated instantly on submit. A deterministic check of your prompt's architecture.
+                Calculated instantly on submit. A deterministic check of your prompt&apos;s architecture.
               </p>
               <ul className="text-sm text-slate-500 space-y-2.5">
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>Defines a role or persona</li>
@@ -261,7 +261,7 @@ export default function GuidePage() {
               </p>
               <ul className="text-sm text-slate-500 space-y-2.5">
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Upvote/downvote ratio</li>
-                <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>"Works" vs "Fails" confirmations</li>
+                <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>&quot;Works&quot; vs &quot;Fails&quot; confirmations</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Statistical confidence weighting</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Resistant to vote manipulation</li>
               </ul>
@@ -435,7 +435,7 @@ export default function GuidePage() {
                 Do
               </h3>
               <ul className="text-sm text-slate-600 space-y-3.5">
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Define a clear persona or role ("You are a senior data analyst...")</li>
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Define a clear persona or role (&quot;You are a senior data analyst...&quot;)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>State the exact output format (JSON, markdown table, numbered steps)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Include edge cases or boundary conditions</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Break complex tasks into numbered sub-tasks</li>
@@ -450,11 +450,11 @@ export default function GuidePage() {
                 Avoid
               </h3>
               <ul className="text-sm text-slate-600 space-y-3.5">
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Vague instructions like "write something good about X"</li>
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Vague instructions like &quot;write something good about X&quot;</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Missing context about the audience or use case</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Leaving the output format entirely up to the model</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Overly long prompts that bury the actual task</li>
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Ignoring negative constraints ("do not include...")</li>
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Ignoring negative constraints (&quot;do not include...&quot;)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Assuming the model knows your domain-specific jargon</li>
               </ul>
             </div>
