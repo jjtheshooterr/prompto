@@ -1,4 +1,4 @@
-import ClientDashboard from '@/components/dashboard/ClientDashboard'
+import DashboardTabs from '@/components/dashboard/DashboardTabs'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 }
 
 export default function DashboardPage() {
-  return <ClientDashboard />
+  return <DashboardTabs />
 }
