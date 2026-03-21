@@ -60,13 +60,13 @@ export default function SignInForm() {
   if (success) {
     return (
       <div className="text-center space-y-4">
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+        <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 px-4 py-3 rounded">
           ✅ Login successful! Redirecting to dashboard...
         </div>
         
         <button
           onClick={() => window.location.href = '/dashboard'}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition-colors"
         >
           Go to Dashboard (Click if not redirected)
         </button>
@@ -77,13 +77,13 @@ export default function SignInForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded text-sm">
           {error}
         </div>
       )}
       
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-foreground">
           Email
         </label>
         <input
@@ -92,13 +92,13 @@ export default function SignInForm() {
           type="email"
           required
           autoComplete="email"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter your email"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-foreground">
           Password
         </label>
         <input
@@ -107,7 +107,7 @@ export default function SignInForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full px-3 py-2 bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter your password"
         />
       </div>
@@ -115,7 +115,7 @@ export default function SignInForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? 'Signing in...' : 'Sign in'}
       </button>

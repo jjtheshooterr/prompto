@@ -101,15 +101,15 @@ export default function SignUpForm() {
   return (
     <form onSubmit={handleSignUp} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-700">
+        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-4">
+          <div className="text-sm text-destructive">
             {error}
           </div>
         </div>
       )}
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="block text-sm font-medium text-foreground">
           Email address
         </label>
         <input
@@ -118,13 +118,13 @@ export default function SignUpForm() {
           type="email"
           autoComplete="email"
           required
-          className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          className="mt-1 appearance-none relative block w-full px-3 py-2 bg-transparent border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:z-10 sm:text-sm transition-all"
           placeholder="Enter your email"
         />
       </div>
 
       <div>
-        <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="display_name" className="block text-sm font-medium text-foreground">
           Display Name
         </label>
         <input
@@ -132,17 +132,17 @@ export default function SignUpForm() {
           name="display_name"
           type="text"
           autoComplete="name"
-          className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          className="mt-1 appearance-none relative block w-full px-3 py-2 bg-transparent border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:z-10 sm:text-sm transition-all"
           placeholder="Your name"
         />
       </div>
 
       <div>
-        <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="username" className="block text-sm font-medium text-foreground">
           Username (optional)
         </label>
         <div className="mt-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">@</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
           <input
             id="username"
             name="username"
@@ -150,36 +150,36 @@ export default function SignUpForm() {
             value={username}
             onChange={handleUsernameChange}
             pattern="[a-z0-9_]{3,20}"
-            className="appearance-none relative block w-full pl-8 pr-10 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+            className="appearance-none relative block w-full pl-8 pr-10 py-2 bg-transparent border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:z-10 sm:text-sm transition-all"
             placeholder="username"
           />
           {checkingUsername && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">⏳</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50">⏳</span>
           )}
           {!checkingUsername && usernameAvailable === true && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">✓</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">✓</span>
           )}
           {!checkingUsername && usernameAvailable === false && username.length >= 3 && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-600">✗</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-destructive">✗</span>
           )}
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-muted-foreground pt-1">
           3-20 characters • lowercase letters, numbers, and underscores only
         </p>
         {usernameAvailable === true && username && (
-          <p className="mt-1 text-xs text-green-600">
+          <p className="mt-1 text-xs text-emerald-500">
             ✓ Available! Your profile will be at prompto.com/u/{username}
           </p>
         )}
         {usernameAvailable === false && username.length >= 3 && (
-          <p className="mt-1 text-xs text-red-600">
+          <p className="mt-1 text-xs text-destructive">
             ✗ Username taken or invalid format
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="block text-sm font-medium text-foreground">
           Password
         </label>
         <input
@@ -188,7 +188,7 @@ export default function SignUpForm() {
           type="password"
           autoComplete="new-password"
           required
-          className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+          className="mt-1 appearance-none relative block w-full px-3 py-2 bg-transparent border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:z-10 sm:text-sm transition-all"
           placeholder="Create a password"
         />
       </div>
@@ -196,7 +196,7 @@ export default function SignUpForm() {
       <button
         type="submit"
         disabled={loading}
-        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? 'Creating account...' : 'Create account'}
       </button>

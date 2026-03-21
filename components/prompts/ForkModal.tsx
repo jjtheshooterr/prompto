@@ -181,14 +181,14 @@ export default function ForkModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-card text-card-foreground border border-border shadow-lg rounded-lg p-6 w-full max-w-md mx-4 animate-in fade-in zoom-in-95 duration-200">
         <h2 className="text-xl font-bold mb-4">Fork this prompt</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Fork Title <span className="text-red-500">*</span>
+            <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
+              Fork Title <span className="text-destructive">*</span>
             </label>
             <input
               type="text"
@@ -196,66 +196,66 @@ export default function ForkModal({
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g., Behavior-Driven Email Personalization"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Give your fork a clean, descriptive title
             </p>
           </div>
 
           <div>
-            <label htmlFor="forkReason" className="block text-sm font-medium text-gray-700 mb-1">
-              Why are you forking this? <span className="text-red-500">*</span>
+            <label htmlFor="forkReason" className="block text-sm font-medium text-foreground mb-1">
+              Why are you forking this? <span className="text-destructive">*</span>
             </label>
             <textarea
               id="forkReason"
               value={forkReason}
               onChange={(e) => setForkReason(e.target.value)}
               placeholder="e.g., To satisfy constraint #2, To improve success criterion #1, To handle edge case better..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+              className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-20 resize-none transition-all"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Reference specific constraints or success criteria from the problem
             </p>
           </div>
 
           <div>
-            <label htmlFor="changesSummary" className="block text-sm font-medium text-gray-700 mb-1">
-              What will you change? <span className="text-gray-400">(optional)</span>
+            <label htmlFor="changesSummary" className="block text-sm font-medium text-foreground mb-1">
+              What will you change? <span className="text-muted-foreground">(optional)</span>
             </label>
             <textarea
               id="changesSummary"
               value={changesSummary}
               onChange={(e) => setChangesSummary(e.target.value)}
               placeholder="e.g., Updated system prompt with behavioral triggers, Added JSON schema validation, Simplified language for cheaper models..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+              className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-20 resize-none transition-all"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Describe the specific changes you plan to make
             </p>
           </div>
 
           <div>
-            <label htmlFor="improvementSummary" className="block text-sm font-medium text-gray-700 mb-1">
-              How does this improve the original? <span className="text-gray-400">(optional)</span>
+            <label htmlFor="improvementSummary" className="block text-sm font-medium text-foreground mb-1">
+              How does this improve the original? <span className="text-muted-foreground">(optional)</span>
             </label>
             <textarea
               id="improvementSummary"
               value={improvementSummary}
               onChange={(e) => setImprovementSummary(e.target.value)}
               placeholder="e.g., Reduces hallucination by 30%, Better handles edge cases, More consistent output format..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+              className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary h-20 resize-none transition-all"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Explain the specific improvements this fork provides
             </p>
           </div>
 
           <div>
-            <label htmlFor="bestFor" className="block text-sm font-medium text-gray-700 mb-1">
-              Best for (tags) <span className="text-gray-400">(optional)</span>
+            <label htmlFor="bestFor" className="block text-sm font-medium text-foreground mb-1">
+              Best for (tags) <span className="text-muted-foreground">(optional)</span>
             </label>
             <input
               type="text"
@@ -263,27 +263,27 @@ export default function ForkModal({
               value={bestFor}
               onChange={(e) => setBestFor(e.target.value)}
               placeholder="e.g., beginners, complex data, creative writing, technical docs"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Comma-separated tags describing what this prompt works best for
             </p>
           </div>
 
           <div>
-            <label htmlFor="visibility" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="visibility" className="block text-sm font-medium text-foreground mb-1">
               Visibility
             </label>
             <select
               id="visibility"
               value={visibility}
               onChange={(e) => setVisibility(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 bg-background border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             >
               <option value="public">Public</option>
               <option value="private">Private</option>
             </select>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Public prompts are visible on your profile and on the problem page
             </p>
           </div>
@@ -292,14 +292,14 @@ export default function ForkModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-border text-foreground rounded-md hover:bg-accent transition-colors"
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Forking...' : 'Fork Prompt'}

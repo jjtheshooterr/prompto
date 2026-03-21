@@ -105,12 +105,12 @@ export default function TrendingProblems() {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white p-6 rounded-lg border animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
+          <div key={i} className="bg-card p-6 rounded-lg border border-border animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-muted rounded w-full mb-4"></div>
             <div className="flex gap-2">
-              <div className="h-6 bg-gray-200 rounded w-16"></div>
-              <div className="h-6 bg-gray-200 rounded w-20"></div>
+              <div className="h-6 bg-muted rounded w-16"></div>
+              <div className="h-6 bg-muted rounded w-20"></div>
             </div>
           </div>
         ))}
@@ -121,10 +121,10 @@ export default function TrendingProblems() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Trending Problems</h2>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Trending Problems</h2>
         <Link 
           href="/problems" 
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-primary hover:text-primary/80 font-medium transition-colors"
         >
           View All →
         </Link>
@@ -136,19 +136,19 @@ export default function TrendingProblems() {
             <Link
               key={problem.id}
               href={`/problems/${problem.slug}`}
-              className="block bg-white p-6 rounded-lg border hover:shadow-md transition-shadow"
+              className="block bg-card p-6 rounded-xl border border-border hover:shadow-lg hover:border-primary/20 transition-all"
             >
               <div className="flex items-start justify-between mb-3">
                 <span className={`px-2 py-1 text-xs rounded font-medium ${
-                  problem.industry === 'dev' ? 'bg-blue-100 text-blue-700' :
-                  problem.industry === 'marketing' ? 'bg-green-100 text-green-700' :
-                  problem.industry === 'content' ? 'bg-purple-100 text-purple-700' :
-                  problem.industry === 'data' ? 'bg-orange-100 text-orange-700' :
-                  'bg-gray-100 text-gray-700'
+                  problem.industry === 'dev' ? 'bg-primary/10 text-primary' :
+                  problem.industry === 'marketing' ? 'bg-emerald-500/10 text-emerald-500' :
+                  problem.industry === 'content' ? 'bg-purple-500/10 text-purple-500' :
+                  problem.industry === 'data' ? 'bg-orange-500/10 text-orange-500' :
+                  'bg-muted text-muted-foreground'
                 }`}>
                   {problem.industry}
                 </span>
-                <div className="flex items-center gap-3 text-sm text-gray-500">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -164,15 +164,15 @@ export default function TrendingProblems() {
                 </div>
               </div>
               
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+              <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
                 {problem.title}
               </h3>
               
-              <p className="text-gray-600 text-sm line-clamp-3 mb-3">
+              <p className="text-muted-foreground text-sm line-clamp-3 mb-3">
                 {problem.description}
               </p>
               
-              <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border mt-auto">
                 <span>by {problem.profiles?.[0]?.username || 'Anonymous'}</span>
                 <span>{new Date(problem.created_at).toLocaleDateString()}</span>
               </div>
@@ -181,14 +181,14 @@ export default function TrendingProblems() {
         </div>
       ) : (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No problems yet</h3>
-          <p className="text-gray-600 mb-4">Be the first to create a problem for the community!</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">No problems yet</h3>
+          <p className="text-muted-foreground mb-4">Be the first to create a problem for the community!</p>
           <Link 
             href="/create/problem"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
           >
             Create Problem
           </Link>

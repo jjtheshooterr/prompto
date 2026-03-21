@@ -34,7 +34,7 @@ export default function QualitySignals({
     if (promptCount === 0) {
         return (
             <div className="flex items-center justify-end mt-3">
-                <span className="px-2 py-1 text-xs bg-slate-100 text-slate-500 rounded">
+                <span className="px-2 py-1 text-xs bg-muted text-muted-foreground rounded">
                     No solutions yet
                 </span>
             </div>
@@ -46,18 +46,18 @@ export default function QualitySignals({
 
     // Show quality signals
     return (
-        <div className="flex items-center justify-end gap-3 mt-3 text-xs text-slate-500">
+        <div className="flex items-center justify-end gap-3 mt-3 text-xs text-muted-foreground">
             {/* Confidence / Evidence */}
             {totalReviews > 0 && (
                 <div className="flex items-center gap-2">
                     {worksCount > 0 && (
-                        <span className="px-1.5 py-0.5 bg-green-50 text-green-700 border border-green-200 rounded text-[10px] font-medium">
+                        <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 rounded text-[10px] font-medium">
                             {worksCount} Works
                         </span>
                     )}
                     {/* Only show failures if relevant */}
                     {failsCount > 0 && (
-                        <span className="px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded text-[10px] font-medium">
+                        <span className="px-1.5 py-0.5 bg-destructive/10 text-destructive border border-destructive/20 rounded text-[10px] font-medium">
                             {failsCount} Fails
                         </span>
                     )}
@@ -66,17 +66,17 @@ export default function QualitySignals({
 
             {/* Needs Testing Badge */}
             {totalReviews < 3 && promptCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[10px]">
+                <span className="px-1.5 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded text-[10px]">
                     Needs Testing
                 </span>
             )}
 
             {hasPinnedPrompt && (
                 <div className="flex items-center gap-1">
-                    <svg className="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-blue-600 font-medium">Pinned</span>
+                    <span className="text-primary font-medium">Pinned</span>
                 </div>
             )}
 

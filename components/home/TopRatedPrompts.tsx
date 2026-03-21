@@ -127,12 +127,12 @@ export default function TopRatedPrompts() {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white p-6 rounded-lg border animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
+          <div key={i} className="bg-card p-6 rounded-xl border border-border animate-pulse">
+            <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-muted rounded w-full mb-4"></div>
             <div className="flex gap-2">
-              <div className="h-6 bg-gray-200 rounded w-16"></div>
-              <div className="h-6 bg-gray-200 rounded w-20"></div>
+              <div className="h-6 bg-muted rounded w-16"></div>
+              <div className="h-6 bg-muted rounded w-20"></div>
             </div>
           </div>
         ))}
@@ -143,10 +143,10 @@ export default function TopRatedPrompts() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Top Rated Prompts</h2>
+        <h2 className="text-2xl font-bold text-foreground tracking-tight">Top Rated Prompts</h2>
         <Link
           href="/prompts?sort=top"
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-primary hover:text-primary/80 font-medium transition-colors"
         >
           View All →
         </Link>
@@ -158,29 +158,29 @@ export default function TopRatedPrompts() {
             <Link
               key={prompt.id}
               href={promptUrl(prompt)}
-              className={`block card p-6 relative flex flex-col h-full ${index === 0 ? 'floatingCard' : ''}`}
+              className={`block bg-card p-6 rounded-xl border border-border hover:shadow-lg hover:border-primary/20 transition-all relative flex flex-col h-full ${index === 0 ? 'floatingCard' : ''}`}
             >
               {/* Ranking badge */}
-              <div className="rankBadge absolute -top-2 -left-2">
+              <div className="rankBadge absolute -top-2 -left-2 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
                 {index + 1}
               </div>
 
               {/* Top row - header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 text-xs rounded font-medium bg-slate-100 text-slate-700">
+                  <span className="px-2 py-1 text-xs rounded font-medium bg-muted text-muted-foreground border border-border/50">
                     {prompt.model}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm shrink-0">
-                  <span className="flex items-center gap-1 text-green-600 font-medium">
+                  <span className="flex items-center gap-1 text-emerald-500 font-medium">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                     </svg>
                     {prompt.upvotes}
                   </span>
                   {prompt.downvotes > 0 && (
-                    <span className="flex items-center gap-1 text-red-600">
+                    <span className="flex items-center gap-1 text-destructive">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -192,16 +192,16 @@ export default function TopRatedPrompts() {
 
               {/* Main content - flexible */}
               <div className="flex-grow flex flex-col">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 leading-snug">
+                <h3 className="text-lg font-semibold text-foreground mb-2 leading-snug">
                   {prompt.title.length > 60 ? prompt.title.substring(0, 60) + '...' : prompt.title}
                 </h3>
 
-                <p className="text-gray-600 text-sm leading-relaxed mb-3">
+                <p className="text-muted-foreground text-sm leading-relaxed mb-3">
                   {prompt.system_prompt.length > 120 ? prompt.system_prompt.substring(0, 120) + '...' : prompt.system_prompt}
                 </p>
 
                 {/* Signal density - ONE micro-signal per card */}
-                <div className="text-xs text-slate-500 mb-4">
+                <div className="text-xs text-muted-foreground mb-4">
                   {prompt.best_for && prompt.best_for.length > 0 ? (
                     <span>Best for: {prompt.best_for.slice(0, 2).join(', ')}</span>
                   ) : (
@@ -211,30 +211,30 @@ export default function TopRatedPrompts() {
               </div>
 
               {/* Footer - pinned at bottom */}
-              <div className="pt-4 mt-auto border-t border-slate-100 flex items-end justify-between text-xs text-slate-500">
+              <div className="pt-4 mt-auto border-t border-border flex items-end justify-between text-xs text-muted-foreground">
                 <div className="min-w-0 flex flex-col gap-1">
                   <div className="truncate">by {prompt.profiles?.username || 'Anonymous'}</div>
                   {prompt.problems && prompt.problems.length > 0 && (
-                    <div className="text-blue-600 truncate">
+                    <div className="text-primary truncate">
                       {prompt.problems[0].title}
                     </div>
                   )}
                 </div>
-                <div className="shrink-0 text-slate-400">{new Date(prompt.created_at).toLocaleDateString()}</div>
+                <div className="shrink-0 text-muted-foreground/60">{new Date(prompt.created_at).toLocaleDateString()}</div>
               </div>
             </Link>
           ))}
         </div>
       ) : (
         <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No top rated prompts yet</h3>
-          <p className="text-gray-600 mb-4">Be the first to create and vote on prompts!</p>
+          <h3 className="text-lg font-medium text-foreground mb-2">No top rated prompts yet</h3>
+          <p className="text-muted-foreground mb-4">Be the first to create and vote on prompts!</p>
           <Link
             href="/create/prompt"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
           >
             Create Prompt
           </Link>

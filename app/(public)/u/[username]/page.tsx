@@ -49,7 +49,7 @@ export default async function ProfilePage({
   };
 
   return (
-    <div className="bg-slate-50 min-h-screen">
+    <div className="bg-background min-h-screen">
       <PublicProfilePageClient
         profile={profile}
         stats={stats}

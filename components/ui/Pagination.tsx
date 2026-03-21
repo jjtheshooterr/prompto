@@ -28,20 +28,20 @@ export default function Pagination({ currentPage, totalPages }: PaginationProps)
         <div className="flex justify-center items-center gap-2 mt-8">
             <Link
                 href={createPageURL(currentPage - 1)}
-                className={`px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors ${currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
+                className={`px-4 py-2 border border-border bg-card text-card-foreground rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors ${currentPage <= 1 ? 'pointer-events-none opacity-50' : ''
                     }`}
                 aria-disabled={currentPage <= 1}
             >
                 Previous
             </Link>
 
-            <span className="text-sm text-gray-600 px-2">
+            <span className="text-sm text-muted-foreground px-2">
                 Page {currentPage} of {totalPages}
             </span>
 
             <Link
                 href={createPageURL(currentPage + 1)}
-                className={`px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors ${currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
+                className={`px-4 py-2 border border-border bg-card text-card-foreground rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors ${currentPage >= totalPages ? 'pointer-events-none opacity-50' : ''
                     }`}
                 aria-disabled={currentPage >= totalPages}
             >

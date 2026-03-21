@@ -82,9 +82,9 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
     // Assuming parent checks login or action throws.
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-4 bg-gray-50 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900">Did this prompt work for you?</h3>
+        <div className="bg-card rounded-lg shadow-sm border border-border overflow-hidden">
+            <div className="p-4 bg-muted/50 border-b border-border">
+                <h3 className="font-semibold text-foreground">Did this prompt work for you?</h3>
             </div>
 
             <div className="p-4">
@@ -92,7 +92,7 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                     <div className="flex gap-3">
                         <button
                             onClick={() => setReviewType('worked')}
-                            className="flex-1 py-3 px-4 rounded-lg border border-green-200 bg-green-50 text-green-700 hover:bg-green-100 transition-colors flex flex-col items-center gap-1"
+                            className="flex-1 py-3 px-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors flex flex-col items-center gap-1"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -101,7 +101,7 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                         </button>
                         <button
                             onClick={() => setReviewType('failed')}
-                            className="flex-1 py-3 px-4 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1"
+                            className="flex-1 py-3 px-4 rounded-lg border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors flex flex-col items-center gap-1"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -110,7 +110,7 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                         </button>
                         <button
                             onClick={() => setReviewType('note')}
-                            className="flex-1 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-colors flex flex-col items-center gap-1"
+                            className="flex-1 py-3 px-4 rounded-lg border border-border bg-muted/50 text-foreground hover:bg-accent transition-colors flex flex-col items-center gap-1"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -121,9 +121,9 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="flex items-center justify-between mb-2">
-                            <span className={`font-medium px-2 py-1 rounded text-sm flex items-center gap-1.5 ${reviewType === 'worked' ? 'bg-green-100 text-green-800' :
-                                reviewType === 'failed' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
+                            <span className={`font-medium px-2 py-1 rounded text-sm flex items-center gap-1.5 ${reviewType === 'worked' ? 'bg-emerald-500/20 text-emerald-600' :
+                                reviewType === 'failed' ? 'bg-destructive/20 text-destructive' :
+                                    'bg-accent text-foreground'
                                 }`}>
                                 {reviewType === 'worked' ? (
                                     <>
@@ -151,14 +151,14 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                             <button
                                 type="button"
                                 onClick={() => setReviewType(null)}
-                                className="text-sm text-gray-500 hover:text-gray-700"
+                                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 Change
                             </button>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-sm font-medium text-foreground mb-1">
                                 {reviewType === 'worked' ? 'One sentence: Who/what did it work for?' :
                                     reviewType === 'failed' ? 'One sentence: How did it fail?' :
                                         'Your thoughts'}
@@ -166,7 +166,7 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                             <textarea
                                 value={reason}
                                 onChange={(e) => setReason(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                                className="w-full px-3 py-2 bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all"
                                 rows={2}
                                 placeholder={
                                     reviewType === 'worked' ? 'e.g. Worked perfectly for Python debugging' :
@@ -181,20 +181,20 @@ export default function PromptReviewForm({ promptId, onSuccess }: PromptReviewFo
                             <button
                                 type="button"
                                 onClick={() => setReviewType(null)}
-                                className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 rounded"
+                                className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={isPending}
-                                className="px-4 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                className="px-4 py-1.5 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:opacity-50"
                             >
                                 {isPending ? 'Submitting...' : 'Submit Review'}
                             </button>
                         </div>
 
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-muted-foreground mt-2">
                             Shared publicly to help others.
                         </p>
                     </form>

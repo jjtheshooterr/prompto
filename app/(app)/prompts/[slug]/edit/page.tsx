@@ -223,14 +223,14 @@ export default function EditPromptPage() {
                     <div>
                         <h1 className="text-3xl font-bold">Edit Prompt</h1>
                         {prompt.parent_prompt_id && (
-                            <p className="text-gray-600 mt-2">Editing fork of original prompt</p>
+                            <p className="text-muted-foreground mt-2">Editing fork of original prompt</p>
                         )}
                     </div>
                     <div className="flex gap-3">
                         <button
                             type="button"
                             onClick={() => router.back()}
-                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                            className="px-4 py-2 border border-border rounded-lg hover:bg-muted"
                         >
                             Cancel
                         </button>
@@ -249,24 +249,24 @@ export default function EditPromptPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                        <input type="text" id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <label htmlFor="title" className="block text-sm font-medium text-foreground mb-2">Title *</label>
+                        <input type="text" id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
                     </div>
 
                     <div>
-                        <label htmlFor="system_prompt" className="block text-sm font-medium text-gray-700 mb-2">System Prompt *</label>
-                        <textarea id="system_prompt" value={formData.system_prompt} onChange={(e) => setFormData({ ...formData, system_prompt: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32" required />
+                        <label htmlFor="system_prompt" className="block text-sm font-medium text-foreground mb-2">System Prompt *</label>
+                        <textarea id="system_prompt" value={formData.system_prompt} onChange={(e) => setFormData({ ...formData, system_prompt: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-32" required />
                     </div>
 
                     <div>
-                        <label htmlFor="user_prompt_template" className="block text-sm font-medium text-gray-700 mb-2">User Prompt Template *</label>
-                        <textarea id="user_prompt_template" value={formData.user_prompt_template} onChange={(e) => setFormData({ ...formData, user_prompt_template: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32" required />
+                        <label htmlFor="user_prompt_template" className="block text-sm font-medium text-foreground mb-2">User Prompt Template *</label>
+                        <textarea id="user_prompt_template" value={formData.user_prompt_template} onChange={(e) => setFormData({ ...formData, user_prompt_template: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-32" required />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                            <select id="model" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <label htmlFor="model" className="block text-sm font-medium text-foreground mb-2">Model</label>
+                            <select id="model" value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                                 <option value="gpt-5.2">GPT-5.2</option>
                                 <option value="gpt-4o">GPT-4o</option>
                                 <option value="claude-opus-4.5">Claude Opus 4.5</option>
@@ -284,53 +284,53 @@ export default function EditPromptPage() {
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="params" className="block text-sm font-medium text-gray-700 mb-2">Parameters (JSON)</label>
-                            <textarea id="params" value={formData.params} onChange={(e) => setFormData({ ...formData, params: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 font-mono text-sm" placeholder='{"temperature": 0.7}' />
+                            <label htmlFor="params" className="block text-sm font-medium text-foreground mb-2">Parameters (JSON)</label>
+                            <textarea id="params" value={formData.params} onChange={(e) => setFormData({ ...formData, params: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-20 font-mono text-sm" placeholder='{"temperature": 0.7}' />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="example_input" className="block text-sm font-medium text-gray-700 mb-2">Example Input</label>
-                            <textarea id="example_input" value={formData.example_input} onChange={(e) => setFormData({ ...formData, example_input: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24" />
+                            <label htmlFor="example_input" className="block text-sm font-medium text-foreground mb-2">Example Input</label>
+                            <textarea id="example_input" value={formData.example_input} onChange={(e) => setFormData({ ...formData, example_input: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24" />
                         </div>
                         <div>
-                            <label htmlFor="example_output" className="block text-sm font-medium text-gray-700 mb-2">Example Output</label>
-                            <textarea id="example_output" value={formData.example_output} onChange={(e) => setFormData({ ...formData, example_output: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24" />
+                            <label htmlFor="example_output" className="block text-sm font-medium text-foreground mb-2">Example Output</label>
+                            <textarea id="example_output" value={formData.example_output} onChange={(e) => setFormData({ ...formData, example_output: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24" />
                         </div>
                     </div>
 
                     <div>
-                        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                        <textarea id="notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20" />
+                        <label htmlFor="notes" className="block text-sm font-medium text-foreground mb-2">Notes</label>
+                        <textarea id="notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-20" />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="usage_context" className="block text-sm font-medium text-gray-700 mb-2">Usage Context</label>
-                            <textarea id="usage_context" value={formData.usage_context} onChange={(e) => setFormData({ ...formData, usage_context: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm" />
+                            <label htmlFor="usage_context" className="block text-sm font-medium text-foreground mb-2">Usage Context</label>
+                            <textarea id="usage_context" value={formData.usage_context} onChange={(e) => setFormData({ ...formData, usage_context: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24 font-mono text-sm" />
                         </div>
                         <div>
-                            <label htmlFor="tradeoffs" className="block text-sm font-medium text-gray-700 mb-2">Tradeoffs</label>
-                            <textarea id="tradeoffs" value={formData.tradeoffs} onChange={(e) => setFormData({ ...formData, tradeoffs: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm" />
+                            <label htmlFor="tradeoffs" className="block text-sm font-medium text-foreground mb-2">Tradeoffs</label>
+                            <textarea id="tradeoffs" value={formData.tradeoffs} onChange={(e) => setFormData({ ...formData, tradeoffs: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24 font-mono text-sm" />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="improvement_summary" className="block text-sm font-medium text-gray-700 mb-2">Improvement Summary *</label>
-                            <textarea id="improvement_summary" value={formData.improvement_summary} onChange={(e) => setFormData({ ...formData, improvement_summary: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm" required />
+                            <label htmlFor="improvement_summary" className="block text-sm font-medium text-foreground mb-2">Improvement Summary *</label>
+                            <textarea id="improvement_summary" value={formData.improvement_summary} onChange={(e) => setFormData({ ...formData, improvement_summary: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24 font-mono text-sm" required />
                         </div>
                         {prompt.parent_prompt_id && (
                             <div>
-                                <label htmlFor="fix_summary" className="block text-sm font-medium text-gray-700 mb-2">Fix Summary * (Required for forks)</label>
-                                <textarea id="fix_summary" value={formData.fix_summary} onChange={(e) => setFormData({ ...formData, fix_summary: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm" required />
+                                <label htmlFor="fix_summary" className="block text-sm font-medium text-foreground mb-2">Fix Summary * (Required for forks)</label>
+                                <textarea id="fix_summary" value={formData.fix_summary} onChange={(e) => setFormData({ ...formData, fix_summary: e.target.value })} className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-24 font-mono text-sm" required />
                             </div>
                         )}
                     </div>
 
                     <div className="flex justify-end">
-                        <button type="submit" disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                        <button type="submit" disabled={saving} className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50">
                             {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>

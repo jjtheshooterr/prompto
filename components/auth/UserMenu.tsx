@@ -31,59 +31,59 @@ export default function UserMenu({ user }: UserMenuProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
+        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
       >
-        <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium shadow-sm">
           {displayName.charAt(0).toUpperCase()}
         </div>
-        <span className="hidden md:block">{displayName}</span>
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span className="hidden md:block font-medium">{displayName}</span>
+        <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+        <div className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg py-1 z-50 border border-border animate-in fade-in slide-in-from-top-2 duration-200">
           <Link
             href="/dashboard"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => setIsOpen(false)}
           >
             Dashboard
           </Link>
           <Link
             href="/workspace"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => setIsOpen(false)}
           >
             Workspace
           </Link>
           <Link
             href="/settings"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => setIsOpen(false)}
           >
             Settings
           </Link>
-          <hr className="my-1" />
+          <div className="h-px bg-border my-1" />
           <Link
             href="/problems/new"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => setIsOpen(false)}
           >
             Create Problem
           </Link>
           <Link
             href="/prompts/new"
-            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block px-4 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             onClick={() => setIsOpen(false)}
           >
             Create Prompt
           </Link>
-          <hr className="my-1" />
+          <div className="h-px bg-border my-1" />
           <button
             onClick={handleSignOut}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
           >
             Sign out
           </button>

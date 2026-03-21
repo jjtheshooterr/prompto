@@ -180,10 +180,10 @@ export default function PromptDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="space-y-3 w-full max-w-4xl px-6">
                     {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+                        <div key={i} className="h-24 bg-muted rounded-xl animate-pulse" />
                     ))}
                 </div>
             </div>
@@ -192,8 +192,8 @@ export default function PromptDetailPage() {
 
     if (notFound || !prompt) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
-                <p className="text-slate-500">Prompt not found.</p>
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <p className="text-muted-foreground">Prompt not found.</p>
             </div>
         )
     }
@@ -219,42 +219,42 @@ export default function PromptDetailPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-background">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-slate-400 mb-5">
-                    <Link href="/problems" className="hover:text-slate-600 transition-colors">Problems</Link>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-5">
+                    <Link href="/problems" className="hover:text-foreground transition-colors">Problems</Link>
                     {prompt.problems && (
                         <>
                             <span>/</span>
-                            <Link href={problemUrl(prompt.problems)} className="hover:text-slate-600 transition-colors">
+                            <Link href={problemUrl(prompt.problems)} className="hover:text-foreground transition-colors">
                                 {prompt.problems.title}
                             </Link>
                         </>
                     )}
                     <span>/</span>
-                    <span className="text-slate-600 font-medium truncate max-w-xs">{prompt.title}</span>
+                    <span className="text-foreground font-medium truncate max-w-xs">{prompt.title}</span>
                 </div>
 
                 {/* Page Header */}
                 <div className="flex items-start justify-between gap-4 mb-8">
                     <div className="min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
-                            <h1 className="text-2xl font-bold text-slate-900">{prompt.title}</h1>
+                            <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
                             {prompt.model && (
-                                <span className="px-2 py-0.5 text-xs font-semibold rounded border border-slate-200 text-slate-500 bg-slate-50">
+                                <span className="px-2 py-0.5 text-xs font-semibold rounded border border-border text-muted-foreground bg-muted">
                                     {prompt.model}
                                 </span>
                             )}
-                            <TokenCostBadge 
-                                systemPrompt={prompt.system_prompt} 
-                                userPromptTemplate={prompt.user_prompt_template} 
+                            <TokenCostBadge
+                                systemPrompt={prompt.system_prompt}
+                                userPromptTemplate={prompt.user_prompt_template}
                                 exampleOutput={prompt.example_output}
-                                model={prompt.model} 
+                                model={prompt.model}
                             />
                             {prompt.depth > 0 && (
-                                <span className="px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 text-blue-700 border border-blue-200">
+                                <span className="px-2 py-0.5 text-xs font-semibold rounded bg-primary/10 text-primary border border-border">
                                     v{prompt.depth + 1}
                                 </span>
                             )}
@@ -270,22 +270,22 @@ export default function PromptDetailPage() {
                                     {prompt.author.avatar_url ? (
                                         <img src={prompt.author.avatar_url} alt="author" className="w-5 h-5 rounded-full object-cover" />
                                     ) : (
-                                        <div className="w-5 h-5 bg-blue-100 text-blue-700 font-bold flex items-center justify-center rounded-full text-[10px]">
+                                        <div className="w-5 h-5 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full text-[10px]">
                                             {(prompt.author.display_name || prompt.author.username || 'U')[0].toUpperCase()}
                                         </div>
                                     )}
-                                    <span className="text-slate-500">by</span>
+                                    <span className="text-muted-foreground">by</span>
                                     {prompt.author.username ? (
-                                        <Link href={`/u/${prompt.author.username}`} className="font-medium text-slate-700 hover:text-blue-600 transition-colors">
+                                        <Link href={`/u/${prompt.author.username}`} className="font-medium text-foreground hover:text-primary transition-colors">
                                             {prompt.author.display_name || prompt.author.username}
                                         </Link>
                                     ) : (
-                                        <span className="font-medium text-slate-700">{prompt.author.display_name}</span>
+                                        <span className="font-medium text-foreground">{prompt.author.display_name}</span>
                                     )}
                                 </div>
                             )}
-                            {prompt.author && <span className="text-slate-300">•</span>}
-                            <p className="text-sm text-slate-400">
+                            {prompt.author && <span className="text-muted-foreground">•</span>}
+                            <p className="text-sm text-muted-foreground">
                                 Created {new Date(prompt.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
                         </div>
@@ -293,31 +293,31 @@ export default function PromptDetailPage() {
 
                     <div className="flex items-center gap-2 flex-shrink-0">
                         {user && (
-                            <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
+                            <div className="flex items-center gap-1 border border-border rounded-lg overflow-hidden">
                                 <button
                                     onClick={() => handleVote(1)}
-                                    className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === 1 ? 'bg-green-600 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
+                                    className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === 1 ? 'bg-green-600 text-white' : 'hover:bg-muted text-muted-foreground'}`}
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
                                     {stats.upvotes}
                                 </button>
-                                <div className="w-px h-6 bg-slate-200" />
+                                <div className="w-px h-6 bg-border" />
                                 <button
                                     onClick={() => handleVote(-1)}
-                                    className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === -1 ? 'bg-red-600 text-white' : 'hover:bg-slate-50 text-slate-600'}`}
+                                    className={`px-3 py-1.5 text-sm font-medium transition-colors flex items-center gap-1 ${userVote === -1 ? 'bg-red-600 text-white' : 'hover:bg-muted text-muted-foreground'}`}
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                     {stats.downvotes}
                                 </button>
                             </div>
                         )}
-                        <button onClick={handleCopy} className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600">
+                        <button onClick={handleCopy} className="px-3 py-1.5 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground">
                             {copied ? '✓ Copied' : 'Copy'}
                         </button>
-                        <button onClick={handleAddToCompare} className="px-3 py-1.5 text-sm font-medium border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors text-slate-600">
+                        <button onClick={handleAddToCompare} className="px-3 py-1.5 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors text-muted-foreground">
                             Compare
                         </button>
-                        <button onClick={() => setShowReportModal(true)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-slate-50">
+                        <button onClick={() => setShowReportModal(true)} className="p-1.5 text-muted-foreground hover:text-red-500 transition-colors rounded-lg hover:bg-muted">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                         </button>
                     </div>
@@ -325,16 +325,16 @@ export default function PromptDetailPage() {
 
                 {/* Metric Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    <div className="border border-slate-200 rounded-xl p-5 bg-white relative group">
+                    <div className="border border-border rounded-xl p-5 bg-card relative group">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Quality Score</span>
-                            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quality Score</span>
+                            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         </div>
-                        <div className="text-4xl font-bold text-slate-900">{qualityScore}<span className="text-lg font-normal text-slate-400">/100</span></div>
-                        <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${qualityScore}%` }} />
+                        <div className="text-4xl font-bold text-foreground">{qualityScore}<span className="text-lg font-normal text-muted-foreground">/100</span></div>
+                        <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full" style={{ width: `${qualityScore}%` }} />
                         </div>
-                        <p className="text-xs text-slate-400 mt-2 hover:text-blue-600 transition-colors cursor-help">Hover for breakdown</p>
+                        <p className="text-xs text-muted-foreground mt-2 hover:text-primary transition-colors cursor-help">Hover for breakdown</p>
                         
                         {/* Tooltip Breakdown */}
                         <div className="absolute top-[80%] left-0 mt-2 w-64 bg-slate-900 border border-slate-800 text-white p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-sm">
@@ -353,36 +353,36 @@ export default function PromptDetailPage() {
                         </div>
                     </div>
 
-                    <div className="border border-slate-200 rounded-xl p-5 bg-white">
+                    <div className="border border-border rounded-xl p-5 bg-card">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Success Rate</span>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Success Rate</span>
                             <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
-                        <div className="text-4xl font-bold text-slate-900">{successRate !== null ? `${successRate}%` : '—'}</div>
+                        <div className="text-4xl font-bold text-foreground">{successRate !== null ? `${successRate}%` : '—'}</div>
                         {successRate !== null && (
-                            <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="mt-3 h-1.5 bg-muted rounded-full overflow-hidden">
                                 <div className="h-full bg-green-500 rounded-full" style={{ width: `${successRate}%` }} />
                             </div>
                         )}
-                        <p className="text-xs text-slate-400 mt-2">{totalReviews > 0 ? `${totalReviews} instance${totalReviews !== 1 ? 's' : ''}` : 'No tests yet'}</p>
+                        <p className="text-xs text-muted-foreground mt-2">{totalReviews > 0 ? `${totalReviews} instance${totalReviews !== 1 ? 's' : ''}` : 'No tests yet'}</p>
                     </div>
 
-                    <div className="border border-slate-200 rounded-xl p-5 bg-white">
+                    <div className="border border-border rounded-xl p-5 bg-card">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Pass / Fail</span>
-                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pass / Fail</span>
+                            <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                         </div>
                         <div className="flex items-end gap-4 mb-3">
                             <div><span className="text-3xl font-bold text-green-600">{stats.works_count || 0}</span><span className="text-xs text-green-600 ml-1 font-medium">Works</span></div>
                             <div><span className="text-3xl font-bold text-red-500">{stats.fails_count || 0}</span><span className="text-xs text-red-500 ml-1 font-medium">Fail</span></div>
                         </div>
                         {totalReviews > 0 && (
-                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                            <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                                 <div className="h-full bg-green-500" style={{ width: `${(stats.works_count / totalReviews) * 100}%` }} />
                                 <div className="h-full bg-red-400" style={{ width: `${(stats.fails_count / totalReviews) * 100}%` }} />
                             </div>
                         )}
-                        <p className="text-xs text-slate-400 mt-2">{stats.view_count || 0} views · {stats.fork_count || 0} forks</p>
+                        <p className="text-xs text-muted-foreground mt-2">{stats.view_count || 0} views · {stats.fork_count || 0} forks</p>
                     </div>
                 </div>
 
@@ -391,11 +391,11 @@ export default function PromptDetailPage() {
                     <div className="lg:col-span-2 space-y-6">
 
                         {/* Tabs */}
-                        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
-                            <div className="flex border-b border-slate-200 bg-slate-50">
+                        <div className="border border-border rounded-xl overflow-hidden bg-card">
+                            <div className="flex border-b border-border bg-muted">
                                 {tabs.map((tab) => (
                                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                                        className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600 bg-white -mb-px' : 'text-slate-500 hover:text-slate-700'}`}>
+                                        className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-primary border-b-2 border-primary bg-card -mb-px' : 'text-muted-foreground hover:text-foreground'}`}>
                                         {tab.label}
                                     </button>
                                 ))}
@@ -405,10 +405,10 @@ export default function PromptDetailPage() {
                                     <div>
                                         {prompt.system_prompt ? (
                                             <div className="relative group">
-                                                <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-slate-50 rounded-lg p-4 leading-relaxed border border-slate-100 max-h-[480px] overflow-y-auto">{prompt.system_prompt}</pre>
-                                                <button onClick={handleCopy} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50">{copied ? '✓' : 'Copy'}</button>
+                                                <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{prompt.system_prompt}</pre>
+                                                <button onClick={handleCopy} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-card border border-border rounded text-muted-foreground hover:bg-muted">{copied ? '✓' : 'Copy'}</button>
                                             </div>
-                                        ) : <p className="text-slate-400 italic text-sm">No system prompt provided.</p>}
+                                        ) : <p className="text-muted-foreground italic text-sm">No system prompt provided.</p>}
                                         {(prompt.usage_context || prompt.tradeoffs) && (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                                                 {prompt.usage_context && (
@@ -430,8 +430,8 @@ export default function PromptDetailPage() {
                                 {activeTab === 'template' && (
                                     <div>
                                         {prompt.user_prompt_template
-                                            ? <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-slate-50 rounded-lg p-4 leading-relaxed border border-slate-100 max-h-[480px] overflow-y-auto">{prompt.user_prompt_template}</pre>
-                                            : <p className="text-slate-400 italic text-sm">No user template provided.</p>}
+                                            ? <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{prompt.user_prompt_template}</pre>
+                                            : <p className="text-muted-foreground italic text-sm">No user template provided.</p>}
                                         {prompt.notes && (
                                             <div className="mt-4 bg-amber-50 border border-amber-100 rounded-lg p-4">
                                                 <p className="text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">Notes</p>
@@ -445,19 +445,19 @@ export default function PromptDetailPage() {
                                         {(prompt.example_input || prompt.example_output) ? (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-slate-400 inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Input</span></div>
-                                                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 min-h-[120px]">
-                                                        <pre className="whitespace-pre-wrap font-mono text-xs text-slate-700">{typeof prompt.example_input === 'string' ? prompt.example_input : JSON.stringify(prompt.example_input, null, 2)}</pre>
+                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-muted-foreground inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Input</span></div>
+                                                    <div className="bg-muted border border-border rounded-lg p-4 min-h-[120px]">
+                                                        <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">{typeof prompt.example_input === 'string' ? prompt.example_input : JSON.stringify(prompt.example_input, null, 2)}</pre>
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Output</span></div>
+                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Output</span></div>
                                                     <div className="bg-green-50 border border-green-200 rounded-lg p-4 min-h-[120px]">
                                                         <pre className="whitespace-pre-wrap font-mono text-xs text-green-900">{typeof prompt.example_output === 'string' ? prompt.example_output : JSON.stringify(prompt.example_output, null, 2)}</pre>
                                                     </div>
                                                 </div>
                                             </div>
-                                        ) : <p className="text-slate-400 italic text-sm">No execution example provided.</p>}
+                                        ) : <p className="text-muted-foreground italic text-sm">No execution example provided.</p>}
                                     </div>
                                 )}
                                 {activeTab === 'lineage' && (
@@ -475,13 +475,13 @@ export default function PromptDetailPage() {
                         </div>
 
                         {/* Reviews */}
-                        <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
-                            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-                                <h3 className="font-semibold text-slate-900">Feedback</h3>
-                                <span className="text-xs text-slate-400">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+                        <div className="border border-border rounded-xl overflow-hidden bg-card">
+                            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                                <h3 className="font-semibold text-foreground">Feedback</h3>
+                                <span className="text-xs text-muted-foreground">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
                             </div>
                             {reviews.length > 0 && (
-                                <div className="divide-y divide-slate-100">
+                                <div className="divide-y divide-border">
                                     {reviews.map((review) => (
                                         <div key={review.id} className="px-5 py-4">
                                             <div className="flex items-center gap-2 mb-1.5">
@@ -492,16 +492,16 @@ export default function PromptDetailPage() {
                                                             ? <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg> Failed</>
                                                             : <><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg> Note</>}
                                                 </span>
-                                                <span className="text-xs text-slate-400">{new Date(review.created_at).toLocaleDateString()}</span>
+                                                <span className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</span>
                                             </div>
                                             {(review.worked_reason || review.failure_reason || review.comment) && (
-                                                <p className="text-sm text-slate-600 leading-relaxed">{review.worked_reason || review.failure_reason || review.comment}</p>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">{review.worked_reason || review.failure_reason || review.comment}</p>
                                             )}
                                         </div>
                                     ))}
                                 </div>
                             )}
-                            <div className="px-5 py-4 bg-slate-50 border-t border-slate-100">
+                            <div className="px-5 py-4 bg-muted border-t border-border">
                                 <PromptReviewForm promptId={promptId} onSuccess={() => { toast.success('Review added!'); loadData() }} />
                             </div>
                         </div>
@@ -509,25 +509,25 @@ export default function PromptDetailPage() {
 
                     {/* Sidebar */}
                     <div className="space-y-5">
-                        <div className="border border-slate-200 rounded-xl p-5 bg-white">
-                            <h3 className="font-semibold text-slate-900 mb-1">Run or Save</h3>
-                            <p className="text-sm text-slate-400 mb-4">Fork this prompt to edit and test it in your own workspace.</p>
+                        <div className="border border-border rounded-xl p-5 bg-card">
+                            <h3 className="font-semibold text-foreground mb-1">Run or Save</h3>
+                            <p className="text-sm text-muted-foreground mb-4">Fork this prompt to edit and test it in your own workspace.</p>
                             {user ? (
-                                <button onClick={() => setShowForkModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors">
+                                <button onClick={() => setShowForkModal(true)} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm py-2.5 rounded-lg transition-colors">
                                     Fork &amp; Edit
                                 </button>
                             ) : (
-                                <Link href="/login" className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm py-2.5 rounded-lg transition-colors">
+                                <Link href="/login" className="block w-full text-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm py-2.5 rounded-lg transition-colors">
                                     Sign in to Fork
                                 </Link>
                             )}
-                            <button onClick={handleCopy} className="w-full mt-2 border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm py-2.5 rounded-lg transition-colors">
+                            <button onClick={handleCopy} className="w-full mt-2 border border-border hover:bg-muted text-foreground font-medium text-sm py-2.5 rounded-lg transition-colors">
                                 {copied ? '✓ Copied!' : 'Copy Prompt Text'}
                             </button>
                         </div>
 
-                        <div className="border border-slate-200 rounded-xl p-5 bg-white">
-                            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Statistics</h3>
+                        <div className="border border-border rounded-xl p-5 bg-card">
+                            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Statistics</h3>
                             <div className="space-y-3">
                                 {[
                                     { label: 'Views', value: stats.view_count || 0, icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg> },
@@ -536,34 +536,34 @@ export default function PromptDetailPage() {
                                     { label: 'Score', value: stats.quality_score || 0, icon: <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg> },
                                 ].map(({ label, value, icon }) => (
                                     <div key={label} className="flex items-center justify-between">
-                                        <span className="text-sm text-slate-500 flex items-center gap-1.5">{icon} {label}</span>
-                                        <span className="text-sm font-semibold text-slate-900">{value}</span>
+                                        <span className="text-sm text-muted-foreground flex items-center gap-1.5">{icon} {label}</span>
+                                        <span className="text-sm font-semibold text-foreground">{value}</span>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         {(prompt.model || prompt.params) && (
-                            <div className="border border-slate-200 rounded-xl p-5 bg-white">
-                                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Model</h3>
+                            <div className="border border-border rounded-xl p-5 bg-card">
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Model</h3>
                                 {prompt.model && (
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-sm text-slate-500">Model</span>
-                                        <span className="text-sm font-semibold text-slate-900">{prompt.model}</span>
+                                        <span className="text-sm text-muted-foreground">Model</span>
+                                        <span className="text-sm font-semibold text-foreground">{prompt.model}</span>
                                     </div>
                                 )}
                                 {prompt.params && Object.keys(prompt.params).length > 0 && (
-                                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                        <pre className="text-xs text-slate-600 font-mono">{JSON.stringify(prompt.params, null, 2)}</pre>
+                                    <div className="bg-muted rounded-lg p-3 border border-border">
+                                        <pre className="text-xs text-muted-foreground font-mono">{JSON.stringify(prompt.params, null, 2)}</pre>
                                     </div>
                                 )}
                             </div>
                         )}
 
-                        <div className="border border-slate-200 rounded-xl p-5 bg-white">
-                            <h3 className="font-semibold text-slate-900 mb-1 text-sm">Compare Prompts</h3>
-                            <p className="text-xs text-slate-400 mb-3">Add to comparison list to evaluate side-by-side.</p>
-                            <button onClick={handleAddToCompare} className="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-sm py-2 rounded-lg transition-colors">
+                        <div className="border border-border rounded-xl p-5 bg-card">
+                            <h3 className="font-semibold text-foreground mb-1 text-sm">Compare Prompts</h3>
+                            <p className="text-xs text-muted-foreground mb-3">Add to comparison list to evaluate side-by-side.</p>
+                            <button onClick={handleAddToCompare} className="w-full border border-border hover:bg-muted text-foreground font-medium text-sm py-2 rounded-lg transition-colors">
                                 + Add to Compare
                             </button>
                         </div>

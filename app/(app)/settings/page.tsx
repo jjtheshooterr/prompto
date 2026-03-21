@@ -256,14 +256,14 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">Profile Settings</h1>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+      <div className="bg-card rounded-lg border border-border p-6 space-y-6">
         {/* Avatar Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Profile Picture
           </label>
           <div className="flex items-center gap-4">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden bg-muted border-2 border-border">
               {avatarUrl ? (
                 <Image
                   src={avatarUrl}
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                   <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
               >
                 {uploading ? 'Uploading...' : 'Upload Photo'}
               </button>
@@ -305,7 +305,7 @@ export default function SettingsPage() {
                   Remove Photo
                 </button>
               )}
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 JPG, PNG, GIF or WebP. Max 5MB.
               </p>
             </div>
@@ -314,21 +314,21 @@ export default function SettingsPage() {
 
         {/* Email (read-only) */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Email
           </label>
           <input
             type="email"
             value={user?.email || ''}
             disabled
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+            className="w-full px-3 py-2 border border-border rounded-lg bg-muted text-muted-foreground cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+          <p className="mt-1 text-xs text-muted-foreground">Email cannot be changed</p>
         </div>
 
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Display Name
           </label>
           <input
@@ -336,30 +336,30 @@ export default function SettingsPage() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             This is how your name will appear on your profile and posts
           </p>
         </div>
 
         {/* Username */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Username
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">@</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
             <input
               type="text"
               value={username}
               onChange={handleUsernameChange}
               placeholder="username"
               pattern="[a-z0-9_]{3,20}"
-              className="w-full pl-8 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-8 pr-10 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             {checkingUsername && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">⏳</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">⏳</span>
             )}
             {!checkingUsername && usernameAvailable === true && username && (
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">✓</span>
@@ -368,7 +368,7 @@ export default function SettingsPage() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-600">✗</span>
             )}
           </div>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             3-20 characters • lowercase letters, numbers, and underscores only
           </p>
           {usernameAvailable === true && username && username !== originalUsername && (
@@ -382,7 +382,7 @@ export default function SettingsPage() {
             </p>
           )}
           {username && username === originalUsername && (
-            <p className="mt-1 text-xs text-blue-600">
+            <p className="mt-1 text-xs text-primary">
               Current username
             </p>
           )}
@@ -390,61 +390,61 @@ export default function SettingsPage() {
 
         {/* Headline */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Headline</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Headline</label>
           <input
             type="text"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             placeholder="e.g. Senior Prompt Engineer"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         {/* Bio */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             placeholder="Tell us about yourself..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-y"
           />
         </div>
 
         {/* Location */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Location</label>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. San Francisco, CA"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         {/* Website */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Website</label>
           <input
             type="url"
             value={websiteUrl}
             onChange={(e) => setWebsiteUrl(e.target.value)}
             placeholder="e.g. https://yourdomain.com"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
         {/* Current Profile URL */}
         {profile?.username && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-900 mb-1">Your Profile URL</p>
+          <div className="bg-primary/10 border border-border rounded-lg p-4">
+            <p className="text-sm font-medium text-foreground mb-1">Your Profile URL</p>
             <a
               href={`/u/${profile.username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-primary hover:underline"
             >
               prompto.com/u/{profile.username}
             </a>
@@ -456,7 +456,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={saving || (!!username && username !== originalUsername && usernameAvailable !== true)}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
