@@ -118,6 +118,34 @@ export default async function AdminReportsPage({ searchParams }: Props) {
         </p>
       </div>
 
+      {/* Main Admin Navigation */}
+      <div className="mb-6 flex gap-2 border-b border-border pb-4 overflow-x-auto">
+        <Link
+          href="/admin/dashboard"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          System Health
+        </Link>
+        <Link
+          href="/admin/reports"
+          className="px-4 py-2 rounded-lg transition-colors bg-primary text-primary-foreground whitespace-nowrap"
+        >
+          Content Reports
+        </Link>
+        <Link
+          href="/admin/users"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          User Trust & Safety
+        </Link>
+        <Link
+          href="/admin/logs"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          Audit Ledger
+        </Link>
+      </div>
+
       {/* Filter tabs — URL-based, no client state */}
       <div className="mb-6 flex gap-2">
         {[
@@ -155,7 +183,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                         ? 'bg-yellow-100 text-yellow-800'
                         : report.status === 'resolved'
                           ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                          : 'bg-muted text-foreground'
                         }`}
                     >
                       {report.status}

@@ -11,6 +11,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
 import { TokenCostBadge } from '@/components/prompts/TokenCostBadge'
+import { AdminFeatureToggle } from '@/components/admin/AdminFeatureToggle'
 
 type Tab = 'system' | 'template' | 'example' | 'lineage'
 
@@ -22,6 +23,7 @@ export default function PromptDetailClient() {
     const [prompt, setPrompt] = useState<any>(null)
     const [userVote, setUserVote] = useState<number | null>(null)
     const [user, setUser] = useState<any>(null)
+    const [isAdmin, setIsAdmin] = useState(false)
     const [loading, setLoading] = useState(true)
     const [notFound, setNotFound] = useState(false)
     const [showForkModal, setShowForkModal] = useState(false)
@@ -38,6 +40,11 @@ export default function PromptDetailClient() {
             const supabase = createClient()
             const { data: { user: currentUser } } = await supabase.auth.getUser()
             setUser(currentUser)
+
+            if (currentUser) {
+                const { data: profile } = await supabase.from('profiles').select('role').eq('id', currentUser.id).single()
+                setIsAdmin(profile?.role === 'admin')
+            }
 
             let promptData = null
 
@@ -242,6 +249,13 @@ export default function PromptDetailClient() {
                     <div className="min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
                             <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
+                            {isAdmin && (
+                                <AdminFeatureToggle 
+                                    contentType="prompt" 
+                                    contentId={prompt.id} 
+                                    initialIsFeatured={prompt.is_featured || false} 
+                                />
+                            )}
                             {prompt.model && (
                                 <span className="px-2 py-0.5 text-xs font-semibold rounded border border-border text-muted-foreground bg-muted">
                                     {prompt.model}

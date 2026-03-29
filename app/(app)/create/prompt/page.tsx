@@ -32,8 +32,13 @@ function CreatePromptContent() {
     checkAuth()
   }, [router])
 
+  useEffect(() => {
+    if (!problemId) {
+      router.push('/problems')
+    }
+  }, [problemId, router])
+
   if (!problemId) {
-    router.push('/problems')
     return null
   }
 

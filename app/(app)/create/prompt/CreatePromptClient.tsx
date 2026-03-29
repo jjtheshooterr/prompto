@@ -215,7 +215,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Create New Prompt</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Add your prompt solution to help solve this problem.
         </p>
       </div>
@@ -224,7 +224,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         <input type="hidden" name="problem_id" value={problemId} />
 
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="title" className="block text-sm font-medium text-foreground mb-2">
             Prompt Title *
           </label>
           <input
@@ -232,20 +232,20 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             id="title"
             name="title"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
             placeholder="e.g., SQL Query Generator v2.1"
           />
         </div>
 
         <div>
-          <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="model" className="block text-sm font-medium text-foreground mb-2">
             AI Model *
           </label>
           <select
             id="model"
             name="model"
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
           >
             <option value="">Select a model</option>
             <option value="gpt-5.2">GPT-5.2</option>
@@ -266,7 +266,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
         </div>
 
         <div>
-          <label htmlFor="system_prompt" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="system_prompt" className="block text-sm font-medium text-foreground mb-2">
             System Prompt *
           </label>
           <textarea
@@ -274,16 +274,16 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             name="system_prompt"
             required
             rows={6}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
             placeholder="You are an expert SQL developer. Your task is to convert natural language questions into accurate SQL queries..."
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             The system message that sets the AI&apos;s role and behavior.
           </p>
         </div>
 
         <div>
-          <label htmlFor="user_prompt_template" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="user_prompt_template" className="block text-sm font-medium text-foreground mb-2">
             User Prompt Template *
           </label>
           <textarea
@@ -291,37 +291,37 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
             name="user_prompt_template"
             required
             rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+            className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
             placeholder="Convert this question to SQL: {question}&#10;&#10;Database schema: {schema}&#10;&#10;SQL Query:"
           />
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Template for user input. Use {'{variable}'} for placeholders.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="example_input" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="example_input" className="block text-sm font-medium text-foreground mb-2">
               Example Input
             </label>
             <textarea
               id="example_input"
               name="example_input"
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
               placeholder="Show me all customers who made purchases in the last 30 days"
             />
           </div>
 
           <div>
-            <label htmlFor="example_output" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="example_output" className="block text-sm font-medium text-foreground mb-2">
               Example Output
             </label>
             <textarea
               id="example_output"
               name="example_output"
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
               placeholder="SELECT DISTINCT c.* FROM customers c JOIN orders o ON c.id = o.customer_id WHERE o.created_at >= NOW() - INTERVAL 30 DAY;"
             />
           </div>
@@ -329,66 +329,66 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label htmlFor="usage_context" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="usage_context" className="block text-sm font-medium text-foreground mb-2">
               Usage Context
             </label>
             <textarea
               id="usage_context"
               name="usage_context"
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary font-mono text-sm"
               placeholder="e.g. Best used in background asynchronous jobs where latency is not an issue."
             />
           </div>
 
           <div>
-            <label htmlFor="tradeoffs" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="tradeoffs" className="block text-sm font-medium text-foreground mb-2">
               Tradeoffs
             </label>
             <textarea
               id="tradeoffs"
               name="tradeoffs"
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary font-mono text-sm"
               placeholder="e.g. High accuracy but uses complex regex matching that is slower."
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="params" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="params" className="block text-sm font-medium text-foreground mb-2">
             Model Parameters (JSON)
           </label>
           <textarea
             id="params"
             name="params"
             rows={3}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm ${paramsError ? 'border-red-300' : 'border-gray-300'
+            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm ${paramsError ? 'border-destructive' : 'border-border'
               }`}
             placeholder='{"temperature": 0.1, "max_tokens": 500, "top_p": 1}'
             onChange={(e) => validateParams(e.target.value)}
           />
           {paramsError && (
-            <p className="text-sm text-red-600 mt-1">{paramsError}</p>
+            <p className="text-sm text-destructive mt-1">{paramsError}</p>
           )}
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Optional model parameters as valid JSON. Leave empty for defaults. Example: {`{"temperature": 0.1}`}
           </p>
         </div>
 
 
 
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 flex items-center justify-between">
+        <div className="bg-muted border border-border rounded-lg p-5 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Live Structure Score Preview</h3>
-            <p className="text-xs text-gray-600 mt-1">
+            <h3 className="text-sm font-semibold text-foreground">Live Structure Score Preview</h3>
+            <p className="text-xs text-muted-foreground mt-1">
               Add more detail to your templates, usage context, and examples to boost your prompt&apos;s initial ranking.
               <br />
               {/* Removed AI note per user request */}
             </p>
           </div>
-          <div className="text-3xl font-bold text-gray-900 pl-4 border-l border-gray-200">
-            {structureScore} <span className="text-lg text-gray-500 font-normal">/ 50</span>
+          <div className="text-3xl font-bold text-foreground pl-4 border-l border-border">
+            {structureScore} <span className="text-lg text-muted-foreground font-normal">/ 50</span>
           </div>
         </div>
 
@@ -396,7 +396,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           <button
             type="submit"
             disabled={submitting || !!paramsError}
-            className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Creating...' : 'Create Prompt'}
           </button>
@@ -404,7 +404,7 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors"
           >
             Cancel
           </button>

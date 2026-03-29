@@ -21,14 +21,14 @@ async function getPromptForSeo(slugParam: string) {
   if (isFullUuid) {
     const { data } = await supabase
       .from('prompts')
-      .select('id, title, slug, system_prompt, model, created_at, updated_at, created_by, problem_id, parent_prompt_id, author:profiles!prompts_created_by_profile_fkey(id, username, display_name)')
+      .select('id, title, slug, system_prompt, model, created_at, updated_at, created_by, problem_id, parent_prompt_id, is_featured, author:profiles!prompts_created_by_profile_fkey(id, username, display_name)')
       .eq('id', slugParam)
       .single()
     promptData = data
   } else {
     const { data } = await supabase
       .from('prompts')
-      .select('id, title, slug, system_prompt, model, created_at, updated_at, created_by, problem_id, parent_prompt_id, author:profiles!prompts_created_by_profile_fkey(id, username, display_name)')
+      .select('id, title, slug, system_prompt, model, created_at, updated_at, created_by, problem_id, parent_prompt_id, is_featured, author:profiles!prompts_created_by_profile_fkey(id, username, display_name)')
       .eq('slug', dbSlug)
     if (data && data.length > 0) {
       promptData = shortId
@@ -88,6 +88,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? `${prompt.system_prompt.slice(0, 140).trim()}... By ${authorName}. ${upvotes} upvotes on Promptvexity.`
     : `AI prompt by ${authorName} for ${prompt.problem?.title || 'prompt engineering'}. ${upvotes} upvotes on Promptvexity.`
 
+  const ogImageUrl = `${BASE_URL}/api/og/prompt?title=${encodeURIComponent(prompt.title)}&author=${encodeURIComponent(authorName)}&score=${encodeURIComponent(prompt.stats?.quality_score || 0)}`
+
   return {
     title,
     description,
@@ -97,13 +99,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url: `${BASE_URL}${canonicalPath}`,
       type: 'article',
-      images: [{ url: `${BASE_URL}/api/og?type=prompt&slug=${slugParam}`, width: 1200, height: 630, alt: prompt.title }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: prompt.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [`${BASE_URL}/api/og?type=prompt&slug=${slugParam}`],
+      images: [ogImageUrl],
     },
   }
 }

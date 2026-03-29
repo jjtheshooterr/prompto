@@ -301,64 +301,63 @@ export default function GuidePage() {
               </div>
             </div>
 
-            {/* Contributor - Left accent bar */}
+            {/* Contributor */}
             <div
               onMouseEnter={() => setHoveredTier('Contributor')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="bg-white border border-red-100 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-red-200 hover:shadow-sm relative overflow-hidden"
+              className="bg-card border border-red-200/60 dark:border-red-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-red-300 dark:hover:border-red-500/40 hover:shadow-sm relative overflow-hidden"
             >
-              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-red-300"></div>
+              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-red-300 dark:bg-red-500/60"></div>
               <div className="shrink-0 transition-transform duration-300 ml-2" style={{ transform: hoveredTier === 'Contributor' ? 'scale(1.1)' : 'scale(1)' }}>
                 <TierBadge tier="Contributor" size="xl" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-red-600">Contributor</h3>
-                  <span className="text-xs font-semibold bg-red-50 text-red-500 px-2.5 py-0.5 rounded-full">500+ pts</span>
+                  <h3 className="text-lg font-bold text-red-600 dark:text-red-400">Contributor</h3>
+                  <span className="text-xs font-semibold bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 px-2.5 py-0.5 rounded-full">500+ pts</span>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">Consistent participation. You understand the fundamentals of structured prompting.</p>
               </div>
             </div>
 
-            {/* Expert - Gradient accent + shadow */}
+            {/* Expert */}
             <div
               onMouseEnter={() => setHoveredTier('Expert')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="bg-white border border-purple-100 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-purple-200 hover:shadow-md relative overflow-hidden"
+              className="bg-card border border-purple-200/60 dark:border-purple-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-purple-300 dark:hover:border-purple-500/40 hover:shadow-md relative overflow-hidden"
             >
-              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full" style={{ background: 'linear-gradient(to bottom, #c084fc, #8b5cf6)' }}></div>
-              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-purple-100/40 blur-[60px] pointer-events-none"></div>
+              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-gradient-to-b from-purple-400 to-violet-500"></div>
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[60px] pointer-events-none"></div>
               <div className="relative shrink-0 transition-transform duration-300 ml-2" style={{ transform: hoveredTier === 'Expert' ? 'scale(1.12)' : 'scale(1)' }}>
                 <TierBadge tier="Expert" size="xl" />
               </div>
               <div className="relative flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-purple-600">Expert</h3>
-                  <span className="text-xs font-semibold bg-purple-50 text-purple-600 px-2.5 py-0.5 rounded-full">2,000+ pts</span>
+                  <h3 className="text-lg font-bold text-purple-600 dark:text-purple-400">Expert</h3>
+                  <span className="text-xs font-semibold bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-0.5 rounded-full">2,000+ pts</span>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">Your prompts demonstrate technical depth, clear structure, and reliable outputs.</p>
               </div>
             </div>
 
-            {/* Master - Stronger gradient, elevation, soft glow */}
+            {/* Master */}
             <div
               onMouseEnter={() => setHoveredTier('Master')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="border border-sky-200 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-500 hover:border-sky-300 hover:shadow-lg relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)' }}
+              className="bg-card border border-sky-200/60 dark:border-sky-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-500 hover:border-sky-300 dark:hover:border-sky-500/40 hover:shadow-lg relative overflow-hidden"
             >
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 rounded-full" style={{ background: 'linear-gradient(to bottom, #7dd3fc, #0284c7)' }}></div>
-              <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-sky-200/30 blur-[60px] pointer-events-none"></div>
-              <div className="absolute bottom-0 left-20 w-32 h-32 rounded-full bg-blue-100/30 blur-[40px] pointer-events-none"></div>
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 rounded-full bg-gradient-to-b from-sky-400 to-blue-600"></div>
+              <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-sky-500/5 dark:bg-sky-500/10 blur-[60px] pointer-events-none"></div>
+              <div className="absolute bottom-0 left-20 w-32 h-32 rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[40px] pointer-events-none"></div>
               <div className="relative shrink-0 transition-transform duration-500 ml-2" style={{ transform: hoveredTier === 'Master' ? 'scale(1.15)' : 'scale(1)' }}>
                 <TierBadge tier="Master" size="xl" />
               </div>
               <div className="relative flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-sky-700">Master</h3>
-                  <span className="text-xs font-semibold bg-sky-100 text-sky-600 px-2.5 py-0.5 rounded-full border border-sky-200">5,000+ pts</span>
+                  <h3 className="text-lg font-bold text-sky-600 dark:text-sky-400">Master</h3>
+                  <span className="text-xs font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-500/20">5,000+ pts</span>
                 </div>
-                <p className="text-slate-600 text-sm leading-relaxed">Elite-tier prompt engineering. Your work is studied by other users on the platform.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">Elite-tier prompt engineering. Your work is studied by other users on the platform.</p>
               </div>
             </div>
 
@@ -390,23 +389,22 @@ export default function GuidePage() {
               </div>
 
               <div
-                className="relative rounded-[14px] p-6 md:p-8 flex items-center gap-6 md:gap-10 overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #fde68a40 100%)' }}
+                className="relative rounded-[14px] p-6 md:p-8 flex items-center gap-6 md:gap-10 overflow-hidden bg-amber-50 dark:bg-amber-950/60"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber-200/30 blur-[60px] pointer-events-none"></div>
-                <div className="absolute bottom-0 left-20 w-40 h-40 rounded-full bg-orange-200/20 blur-[50px] pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber-200/30 dark:bg-amber-400/10 blur-[60px] pointer-events-none"></div>
+                <div className="absolute bottom-0 left-20 w-40 h-40 rounded-full bg-orange-200/20 dark:bg-orange-400/10 blur-[50px] pointer-events-none"></div>
 
                 <div className="relative shrink-0 transition-transform duration-500" style={{ transform: hoveredTier === 'Grandmaster' ? 'scale(1.18)' : 'scale(1)' }}>
                   <TierBadge tier="Grandmaster" size="xl" />
                 </div>
                 <div className="relative flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-3 mb-1">
-                    <h3 className="text-xl font-extrabold text-amber-700">Grandmaster</h3>
-                    <span className="text-xs font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full border border-amber-300 shadow-sm">
+                    <h3 className="text-xl font-extrabold text-amber-700 dark:text-amber-400">Grandmaster</h3>
+                    <span className="text-xs font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-500/30 shadow-sm">
                       Top 1%
                     </span>
                   </div>
-                  <p className="text-amber-800/70 text-sm leading-relaxed font-medium">The highest distinction. Reserved for the top percentile of prompt engineers globally.</p>
+                  <p className="text-amber-800/70 dark:text-amber-300/70 text-sm leading-relaxed font-medium">The highest distinction. Reserved for the top percentile of prompt engineers globally.</p>
                 </div>
               </div>
             </div>

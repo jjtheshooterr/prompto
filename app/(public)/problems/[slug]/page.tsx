@@ -7,6 +7,8 @@ import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
 import { ProblemPromptsList } from '@/components/problems/ProblemPromptsList'
 import { JsonLd } from '@/components/seo/JsonLd'
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
+import { AdminFeatureToggle } from '@/components/admin/AdminFeatureToggle'
 
 export const revalidate = 300
 
@@ -35,6 +37,8 @@ export async function generateMetadata({ params }: ProblemDetailPageProps): Prom
     ? `${promptCount} community-tested AI prompt${promptCount !== 1 ? 's' : ''} for ${problem.title}. Compare approaches, see votes, and fork the best solutions.`
     : `${problem.title} — submit the first AI prompt solution. Community-driven prompt engineering on Promptvexity.`
 
+  const ogImageUrl = `${BASE_URL}/api/og/problem?title=${encodeURIComponent(problem.title)}&category=${encodeURIComponent(problem.category?.name || 'Technology')}&complexity=${encodeURIComponent(problem.difficulty_level || 'Intermediate')}`
+
   return {
     title,
     description,
@@ -44,13 +48,13 @@ export async function generateMetadata({ params }: ProblemDetailPageProps): Prom
       description,
       url: `${BASE_URL}${canonicalPath}`,
       type: 'article',
-      images: [{ url: `${BASE_URL}/api/og?type=problem&slug=${slugParam}`, width: 1200, height: 630, alt: problem.title }],
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: problem.title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [`${BASE_URL}/api/og?type=problem&slug=${slugParam}`],
+      images: [ogImageUrl],
     },
   }
 }
@@ -71,6 +75,15 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
   }
 
   const prompts = await listPromptsByProblem(problem.id, sort)
+
+  // Auth check for Admin tools
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  let isAdmin = false
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    isAdmin = profile?.role === 'admin'
+  }
 
   // ─── Compute page-level metrics ─────────────────────────────────────────────
   const totalPrompts = prompts.length
@@ -163,11 +176,21 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
           <span className="text-foreground font-medium truncate">{problem.title}</span>
         </div>
 
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <div className="bg-gradient-to-br from-primary/5 via-card to-card border border-border rounded-2xl p-8 shadow-sm">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-grow min-w-0">
-
+        {/* ── Problem Header ────────────────────────────────────────────── */}
+        <div className="bg-card border border-border rounded-xl p-5 sm:p-8 shadow-sm relative">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{problem.title}</h1>
+                {isAdmin && (
+                  <AdminFeatureToggle 
+                    contentType="problem" 
+                    contentId={problem.id} 
+                    initialIsFeatured={problem.is_featured || false} 
+                  />
+                )}
+              </div>
+              
               {/* Tag row */}
               <div className="flex items-center gap-2 mb-3 flex-wrap">
                 {problem.industry && (

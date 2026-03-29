@@ -13,6 +13,12 @@ export async function POST(req: Request) {
 
     const supabase = await createClient()
 
+    // 0. Emergency Lockdown Check (Circuit Breaker)
+    const { data: settings } = await supabase.from('platform_settings').select('is_emergency_lockdown').eq('id', 1).single()
+    if (settings?.is_emergency_lockdown) {
+      return NextResponse.json({ error: 'System is currently under emergency lockdown. AI evaluation is temporarily suspended.' }, { status: 503 })
+    }
+
     // 1. Authenticate user to ensure only logged-in users trigger this
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
