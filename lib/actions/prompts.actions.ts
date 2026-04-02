@@ -47,12 +47,17 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
 
   if (!prompts || prompts.length === 0) return []
 
-  // Fetch authors mapping
+  // Fetch authors mapping — include shadowban status for filtering
   const authorIds = Array.from(new Set(prompts.map(p => p.created_by).filter(Boolean)));
   const { data: authorsData } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url')
+    .select('id, username, display_name, avatar_url, is_shadowbanned')
     .in('id', authorIds);
+
+  // Build set of shadowbanned user IDs to exclude
+  const shadowbannedIds = new Set(
+    (authorsData || []).filter((a: any) => a.is_shadowbanned === true).map((a: any) => a.id)
+  );
 
   const authorMap = (authorsData || []).reduce((acc: any, author: any) => {
     acc[author.id] = author;
@@ -65,7 +70,10 @@ export async function listPromptsByProblem(problemId: string, sort: PromptSort =
     works_count: 0, fails_count: 0, reviews_count: 0,
   }
 
-  let promptsWithStats = prompts.map((prompt: any) => {
+  // Filter out prompts from shadowbanned/banned users
+  const visiblePrompts = prompts.filter((p: any) => !shadowbannedIds.has(p.created_by));
+
+  let promptsWithStats = visiblePrompts.map((prompt: any) => {
     const statsData = prompt.prompt_stats ? (Array.isArray(prompt.prompt_stats) ? prompt.prompt_stats[0] : prompt.prompt_stats) : null;
     const authorData = prompt.created_by ? authorMap[prompt.created_by] : null;
 
@@ -790,22 +798,30 @@ export async function searchPrompts(searchQuery: string, limit: number = 20) {
 
   if (!data || data.length === 0) return [];
 
-  // Fetch author mapping
+  // Fetch author mapping — include shadowban status for filtering
   const authorIds = Array.from(new Set(data.map((p: any) => p.created_by).filter(Boolean)));
   const { data: authorsData } = await supabase
     .from('profiles')
-    .select('id, username, display_name, avatar_url')
+    .select('id, username, display_name, avatar_url, is_shadowbanned')
     .in('id', authorIds);
+
+  // Build set of shadowbanned user IDs to exclude from search results
+  const shadowbannedIds = new Set(
+    (authorsData || []).filter((a: any) => a.is_shadowbanned === true).map((a: any) => a.id)
+  );
 
   const authorMap = (authorsData || []).reduce((acc: any, author: any) => {
     acc[author.id] = author;
     return acc;
   }, {});
 
-  return data.map((prompt: any) => ({
-    ...prompt,
-    author: prompt.created_by ? authorMap[prompt.created_by] : null
-  }));
+  // Filter out prompts from shadowbanned/banned users
+  return data
+    .filter((prompt: any) => !shadowbannedIds.has(prompt.created_by))
+    .map((prompt: any) => ({
+      ...prompt,
+      author: prompt.created_by ? authorMap[prompt.created_by] : null
+    }));
 }
 
 export async function getPromptChildren(promptId: string) {

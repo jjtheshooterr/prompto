@@ -35,7 +35,7 @@ export default function TopRatedPrompts() {
       try {
         const supabase = createClient()
 
-        // Simplified query - get prompts first
+        // Get public prompts
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
           .select('id, slug, title, system_prompt, user_prompt_template, model, created_at, created_by, problem_id, best_for')
@@ -44,9 +44,7 @@ export default function TopRatedPrompts() {
           .eq('is_deleted', false)
           .eq('visibility', 'public')
           .order('created_at', { ascending: false })
-          .limit(10)
-
-        console.log('Prompts query result:', { data: promptsData?.length, error: promptsError })
+          .limit(20) // Fetch extra to account for shadowban filtering
 
         if (promptsError) {
           console.error('Error fetching prompts:', promptsError)
@@ -54,35 +52,39 @@ export default function TopRatedPrompts() {
         }
 
         if (promptsData && promptsData.length > 0) {
-          console.log('Fetched prompts data:', promptsData.length, 'prompts')
+          // Fetch profiles for creators — include shadowban status for filtering
+          const creatorIds = [...new Set(promptsData.map(p => p.created_by).filter(Boolean))]
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username, is_shadowbanned')
+            .in('id', creatorIds)
+
+          // Build a set of shadowbanned user IDs to exclude
+          const shadowbannedIds = new Set(
+            (profilesData || [])
+              .filter(p => p.is_shadowbanned === true)
+              .map(p => p.id)
+          )
+
+          // Filter out prompts from shadowbanned/banned users
+          const visiblePrompts = promptsData.filter(p => !shadowbannedIds.has(p.created_by))
 
           // Get problems separately
-          const problemIds = [...new Set(promptsData.map(p => p.problem_id).filter(Boolean))]
+          const problemIds = [...new Set(visiblePrompts.map(p => p.problem_id).filter(Boolean))]
           const { data: problemsData } = await supabase
             .from('problems')
             .select('id, title, slug')
             .in('id', problemIds)
 
-          // Fetch stats separately for all prompts
-          const promptIds = promptsData.map(p => p.id)
+          // Fetch stats separately for visible prompts
+          const promptIds = visiblePrompts.map(p => p.id)
           const { data: statsData } = await supabase
             .from('prompt_stats')
             .select('*')
             .in('prompt_id', promptIds)
 
-          console.log('Fetched stats data:', statsData?.length || 0, 'stats records')
-
-          // Fetch profiles for creators
-          const creatorIds = [...new Set(promptsData.map(p => p.created_by).filter(Boolean))]
-          const { data: profilesData } = await supabase
-            .from('profiles')
-            .select('id, username')
-            .in('id', creatorIds)
-
-          console.log('Fetched profiles data:', profilesData?.length || 0, 'profiles')
-
           // Attach stats, profiles, and problems to prompts
-          const promptsWithStats = promptsData.map(prompt => {
+          const promptsWithStats = visiblePrompts.map(prompt => {
             const stats = statsData?.find(s => s.prompt_id === prompt.id)
             const profile = profilesData?.find(p => p.id === prompt.created_by)
             const problem = problemsData?.find(p => p.id === prompt.problem_id)
