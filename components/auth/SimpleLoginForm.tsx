@@ -3,10 +3,13 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { verifyTurnstileToken } from '@/lib/actions/turnstile.actions'
 
 export default function SimpleLoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,6 +27,19 @@ export default function SimpleLoginForm() {
     const password = formData.get('password') as string
 
     console.log('Attempting login for:', email)
+
+    if (!turnstileToken) {
+      setError('Please complete the security challenge')
+      setLoading(false)
+      return
+    }
+
+    const verification = await verifyTurnstileToken(turnstileToken)
+    if (!verification.success) {
+      setError(verification.error || 'Verification failed')
+      setLoading(false)
+      return
+    }
 
     const supabase = createClient()
 
@@ -109,6 +125,14 @@ export default function SimpleLoginForm() {
                 placeholder="Enter your password"
               />
             </div>
+          </div>
+
+          <div className="flex justify-center py-2">
+            <Turnstile
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onError={() => setError('Verification challenge failed to load.')}
+            />
           </div>
 
           <div>

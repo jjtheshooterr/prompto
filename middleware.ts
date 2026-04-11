@@ -1,14 +1,92 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
+
+// Global rate limiter setup. We fail open gracefully if Upstash credentials are missing.
+let rateLimiter: Ratelimit | null = null
+
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+
+    // General global rate limit: 100 requests per 10 seconds per IP
+    rateLimiter = new Ratelimit({
+      redis: redis,
+      limiter: Ratelimit.slidingWindow(100, '10 s'),
+      analytics: true,
+    })
+  } catch (err) {
+    console.error('Failed to initialize Upstash ratelimiter:', err)
+  }
+}
+
+// Special rate limit for authentication routes to prevent credential stuffing: 5 req per 60s
+let authRateLimiter: Ratelimit | null = null
+
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+
+    authRateLimiter = new Ratelimit({
+      redis: redis,
+      limiter: Ratelimit.slidingWindow(5, '60 s'),
+      analytics: true,
+    })
+  } catch (err) {
+    console.error('Failed to initialize auth ratelimiter:', err)
+  }
+}
 
 // UX gate only — not a security boundary.
 // Real enforcement happens at the DB level via RLS and server actions.
 // For /admin routes, the reports page additionally verifies profiles.role = 'admin'
 // server-side before rendering anything.
 const PROTECTED = ['/dashboard', '/create', '/settings', '/workspace', '/admin']
+const AUTH_ROUTES = ['/login', '/signup', '/api/auth']
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // --- RATE LIMITING ---
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || '127.0.0.1'
+  
+  // Apply strict rate limiting for authentication routes
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route))
+  if (isAuthRoute && authRateLimiter) {
+    const { success, limit, reset, remaining } = await authRateLimiter.limit(ip)
+    if (!success) {
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+        },
+      })
+    }
+  } 
+  // Apply general rate limit for other routes
+  else if (rateLimiter) {
+    const { success, limit, reset, remaining } = await rateLimiter.limit(ip)
+    if (!success) {
+      return new NextResponse('Too Many Requests', {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': limit.toString(),
+          'X-RateLimit-Remaining': remaining.toString(),
+          'X-RateLimit-Reset': reset.toString(),
+        },
+      })
+    }
+  }
+
+  // --- ROUTE PROTECTION ---
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p))
   if (!isProtected) return NextResponse.next()
 
@@ -29,10 +107,12 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/create/:path*',
-    '/settings/:path*',
-    '/workspace/:path*',
-    '/admin/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

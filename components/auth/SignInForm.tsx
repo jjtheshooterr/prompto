@@ -3,11 +3,14 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { verifyTurnstileToken } from '@/lib/actions/turnstile.actions'
 
 export default function SignInForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,6 +25,19 @@ export default function SignInForm() {
 
     if (!email || !password) {
       setError('Please enter both email and password')
+      setLoading(false)
+      return
+    }
+
+    if (!turnstileToken) {
+      setError('Please complete the security challenge')
+      setLoading(false)
+      return
+    }
+
+    const verification = await verifyTurnstileToken(turnstileToken)
+    if (!verification.success) {
+      setError(verification.error || 'Verification failed')
       setLoading(false)
       return
     }
@@ -109,6 +125,14 @@ export default function SignInForm() {
           autoComplete="current-password"
           className="mt-1 block w-full px-3 py-2 bg-background border border-border text-foreground placeholder:text-muted-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
           placeholder="Enter your password"
+        />
+      </div>
+
+      <div className="flex justify-center py-2">
+        <Turnstile
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+          onSuccess={(token) => setTurnstileToken(token)}
+          onError={() => setError('Verification challenge failed to load.')}
         />
       </div>
 

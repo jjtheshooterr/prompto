@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Turnstile } from '@marsidev/react-turnstile'
+import { verifyTurnstileToken } from '@/lib/actions/turnstile.actions'
 
 export default function SignUpForm() {
   const [loading, setLoading] = useState(false)
@@ -10,6 +12,7 @@ export default function SignUpForm() {
   const [username, setUsername] = useState('')
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
   const [checkingUsername, setCheckingUsername] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
   const router = useRouter()
 
   const checkUsername = async (value: string) => {
@@ -51,6 +54,19 @@ export default function SignUpForm() {
     const displayName = formData.get('display_name') as string
 
     console.log('Attempting signup for:', email)
+
+    if (!turnstileToken) {
+      setError('Please complete the security challenge')
+      setLoading(false)
+      return
+    }
+
+    const verification = await verifyTurnstileToken(turnstileToken)
+    if (!verification.success) {
+      setError(verification.error || 'Verification failed')
+      setLoading(false)
+      return
+    }
 
     const supabase = createClient()
     
@@ -190,6 +206,14 @@ export default function SignUpForm() {
           required
           className="mt-1 appearance-none relative block w-full px-3 py-2 bg-transparent border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:z-10 sm:text-sm transition-all"
           placeholder="Create a password"
+        />
+      </div>
+
+      <div className="flex justify-center py-2">
+        <Turnstile
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+          onSuccess={(token) => setTurnstileToken(token)}
+          onError={() => setError('Verification challenge failed to load.')}
         />
       </div>
 
