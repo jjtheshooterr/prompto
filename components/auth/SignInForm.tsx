@@ -129,11 +129,17 @@ export default function SignInForm() {
       </div>
 
       <div className="flex justify-center py-2">
-        <Turnstile
-          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
-          onSuccess={(token) => setTurnstileToken(token)}
-          onError={() => setError('Verification challenge failed to load.')}
-        />
+        {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? (
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => setError('Verification challenge failed to load.')}
+          />
+        ) : (
+          <div className="text-sm text-destructive border border-destructive/20 bg-destructive/10 p-3 rounded">
+            Security configuration missing. Cannot load CAPTCHA.
+          </div>
+        )}
       </div>
 
       <button
