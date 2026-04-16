@@ -105,7 +105,7 @@ function AnimatedScore({ target, label, suffix, color, delay, dynamicColor }: { 
       >
         {count}{suffix}
       </div>
-      <div className="text-sm text-slate-400 font-medium mt-2 tracking-wide uppercase">{label}</div>
+      <div className="text-sm text-muted-foreground font-medium mt-2 tracking-wide uppercase">{label}</div>
     </div>
   );
 }
@@ -114,20 +114,20 @@ export default function GuidePage() {
   const [hoveredTier, setHoveredTier] = useState<string | null>(null);
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-background min-h-screen">
 
       {/* ====== HERO ====== */}
-      <section className="relative overflow-hidden bg-slate-50 border-b border-slate-200">
+      <section className="relative overflow-hidden bg-muted border-b border-border">
         <div className="max-w-5xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium mb-8 shadow-sm">
-              <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-card border border-border text-muted-foreground text-sm font-medium mb-8 shadow-sm">
+              <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
               Platform Guide
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground tracking-tight leading-[1.15]">
               How Promptvexity Works
             </h1>
-            <p className="mt-6 text-lg md:text-xl text-slate-500 leading-relaxed max-w-2xl">
+            <p className="mt-6 text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl">
               A competitive platform for prompt engineers. Solve real problems, get scored, earn ranks, and climb the global leaderboard.
             </p>
           </div>
@@ -135,22 +135,21 @@ export default function GuidePage() {
       </section>
 
 
-      {/* ====== CORE LOOP ====== */}
-      <section className="border-b border-slate-100">
+      <section className="border-b border-border">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-center gap-4 mb-10">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">1</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">The Core Loop</h2>
+            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">1</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">The Core Loop</h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-px bg-slate-200 rounded-2xl overflow-hidden border border-slate-200">
+          <div className="grid md:grid-cols-3 gap-px bg-border rounded-2xl overflow-hidden border border-border">
             {[
               {
                 step: '01',
                 title: 'Pick a Problem',
                 desc: 'Browse the problem library. Each challenge targets a specific real-world use case: code generation, data extraction, creative writing, structured analysis.',
                 icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                 ),
               },
               {
@@ -158,7 +157,7 @@ export default function GuidePage() {
                 title: 'Write Your Prompt',
                 desc: 'Craft something that solves it as effectively as possible. Think about structure, specificity, edge cases, and output formatting.',
                 icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                 ),
               },
               {
@@ -166,19 +165,19 @@ export default function GuidePage() {
                 title: 'Get Ranked',
                 desc: 'Your submission is scored across multiple dimensions. Points accumulate, your rank advances, and you climb the global leaderboard.',
                 icon: (
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 ),
               },
             ].map((item) => (
-              <div key={item.step} className="bg-white p-8 md:p-10 group">
+              <div key={item.step} className="bg-card p-8 md:p-10 group">
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-blue-50 group-hover:border-blue-200 transition-colors">
+                  <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/20 transition-colors">
                     {item.icon}
                   </div>
-                  <span className="text-xs font-bold text-slate-300 tracking-widest uppercase">Step {item.step}</span>
+                  <span className="text-xs font-bold text-muted-foreground/50 tracking-widest uppercase">Step {item.step}</span>
                 </div>
-                <h3 className="font-bold text-slate-900 text-lg mb-3">{item.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="font-bold text-foreground text-lg mb-3">{item.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -187,18 +186,18 @@ export default function GuidePage() {
 
 
       {/* ====== SCORING SYSTEM ====== */}
-      <section className="border-b border-slate-100 bg-slate-50">
+      <section className="border-b border-border bg-muted">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">2</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">The Scoring System</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">The Scoring System</h2>
           </div>
-          <p className="text-slate-500 mb-12 max-w-2xl">
-            Every prompt receives a <strong className="text-slate-700">Quality Score</strong> out of 100, composed of three independent layers designed to capture different angles of prompt quality.
+          <p className="text-muted-foreground mb-12 max-w-2xl">
+            Every prompt receives a <strong className="text-foreground">Quality Score</strong> out of 100, composed of three independent layers designed to capture different angles of prompt quality.
           </p>
 
           {/* Counter row */}
-          <div className="grid grid-cols-3 gap-6 text-center mb-14 py-8 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <div className="grid grid-cols-3 gap-6 text-center mb-14 py-8 bg-card rounded-2xl border border-border shadow-sm">
             <AnimatedScore target={70} label="Structure" color="text-blue-600" delay={200} />
             <AnimatedScore target={30} label="AI Evaluation" color="text-purple-600" delay={600} />
             <AnimatedScore target={100} label="Total Score" delay={1000} suffix="/100" dynamicColor />
@@ -207,18 +206,18 @@ export default function GuidePage() {
           {/* Three pillars */}
           <div className="grid md:grid-cols-3 gap-5">
             {/* Structure */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200">
+            <div className="bg-card rounded-2xl border border-border p-7 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-500/30 transition-all duration-200">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center font-bold text-blue-600 text-sm">70</div>
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center font-bold text-blue-600 dark:text-blue-400 text-sm">70</div>
                 <div>
-                  <div className="font-bold text-slate-900">Structure</div>
-                  <div className="text-xs text-slate-400">Max 70 points</div>
+                  <div className="font-bold text-foreground">Structure</div>
+                  <div className="text-xs text-muted-foreground">Max 70 points</div>
                 </div>
               </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">
-                Calculated instantly on submit. A deterministic check of your prompt's architecture.
+              <p className="text-muted-foreground text-sm leading-relaxed mb-5">
+                Calculated instantly on submit. A deterministic check of your prompt&apos;s architecture.
               </p>
-              <ul className="text-sm text-slate-500 space-y-2.5">
+              <ul className="text-sm text-muted-foreground space-y-2.5">
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>Defines a role or persona</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>Explicit output constraints</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>Includes examples or edge cases</li>
@@ -228,18 +227,18 @@ export default function GuidePage() {
             </div>
 
             {/* AI */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm hover:shadow-md hover:border-purple-200 transition-all duration-200">
+            <div className="bg-card rounded-2xl border border-border p-7 shadow-sm hover:shadow-md hover:border-purple-200 dark:hover:border-purple-500/30 transition-all duration-200">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center font-bold text-purple-600 text-sm">30</div>
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center font-bold text-purple-600 dark:text-purple-400 text-sm">30</div>
                 <div>
-                  <div className="font-bold text-slate-900">AI Evaluation</div>
-                  <div className="text-xs text-slate-400">Max 30 points</div>
+                  <div className="font-bold text-foreground">AI Evaluation</div>
+                  <div className="text-xs text-muted-foreground">Max 30 points</div>
                 </div>
               </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">
+              <p className="text-muted-foreground text-sm leading-relaxed mb-5">
                 After submission, a specialized model reads your prompt holistically and grades it in the background.
               </p>
-              <ul className="text-sm text-slate-500 space-y-2.5">
+              <ul className="text-sm text-muted-foreground space-y-2.5">
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0"></span>Clarity of intent and instruction</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0"></span>Contextual grounding</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-1.5 shrink-0"></span>Specification precision</li>
@@ -248,20 +247,20 @@ export default function GuidePage() {
             </div>
 
             {/* Community */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-7 shadow-sm hover:shadow-md hover:border-amber-200 transition-all duration-200">
+            <div className="bg-card rounded-2xl border border-border p-7 shadow-sm hover:shadow-md hover:border-amber-200 dark:hover:border-amber-500/30 transition-all duration-200">
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center font-bold text-amber-600 text-sm">+</div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center font-bold text-amber-600 dark:text-amber-400 text-sm">+</div>
                 <div>
-                  <div className="font-bold text-slate-900">Community Signal</div>
-                  <div className="text-xs text-slate-400">Dynamic modifier</div>
+                  <div className="font-bold text-foreground">Community Signal</div>
+                  <div className="text-xs text-muted-foreground">Dynamic modifier</div>
                 </div>
               </div>
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">
+              <p className="text-muted-foreground text-sm leading-relaxed mb-5">
                 Uses a Wilson Score confidence interval to filter real consensus from noise. Same math used by Reddit and HN.
               </p>
-              <ul className="text-sm text-slate-500 space-y-2.5">
+              <ul className="text-sm text-muted-foreground space-y-2.5">
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Upvote/downvote ratio</li>
-                <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>"Works" vs "Fails" confirmations</li>
+                <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>&quot;Works&quot; vs &quot;Fails&quot; confirmations</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Statistical confidence weighting</li>
                 <li className="flex gap-2.5 items-start"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0"></span>Resistant to vote manipulation</li>
               </ul>
@@ -272,13 +271,13 @@ export default function GuidePage() {
 
 
       {/* ====== RANKING TIERS ====== */}
-      <section className="border-b border-slate-100">
+      <section className="border-b border-border">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-9 h-9 rounded-lg bg-purple-600 flex items-center justify-center text-white font-bold text-sm">3</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">Ranking Tiers</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Ranking Tiers</h2>
           </div>
-          <p className="text-slate-500 mb-10 max-w-2xl">
+          <p className="text-muted-foreground mb-10 max-w-2xl">
             Your accumulated points determine your global tier. Each tier earns a distinct badge displayed on your profile and beside every prompt you publish.
           </p>
 
@@ -288,7 +287,7 @@ export default function GuidePage() {
             <div
               onMouseEnter={() => setHoveredTier('Novice')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-slate-300"
+              className="bg-card border border-border rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-muted-foreground/30"
             >
               <div className="shrink-0 transition-transform duration-300" style={{ transform: hoveredTier === 'Novice' ? 'scale(1.1)' : 'scale(1)' }}>
                 <TierBadge tier="Novice" size="xl" />
@@ -298,68 +297,67 @@ export default function GuidePage() {
                   <h3 className="text-lg font-bold text-slate-600">Novice</h3>
                   <span className="text-xs font-semibold bg-slate-100 text-slate-500 px-2.5 py-0.5 rounded-full">0+ pts</span>
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed">Just getting started. Submit your first prompt and begin climbing.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">Just getting started. Submit your first prompt and begin climbing.</p>
               </div>
             </div>
 
-            {/* Contributor - Left accent bar */}
+            {/* Contributor */}
             <div
               onMouseEnter={() => setHoveredTier('Contributor')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="bg-white border border-red-100 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-red-200 hover:shadow-sm relative overflow-hidden"
+              className="bg-card border border-red-200/60 dark:border-red-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-red-300 dark:hover:border-red-500/40 hover:shadow-sm relative overflow-hidden"
             >
-              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-red-300"></div>
+              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-red-300 dark:bg-red-500/60"></div>
               <div className="shrink-0 transition-transform duration-300 ml-2" style={{ transform: hoveredTier === 'Contributor' ? 'scale(1.1)' : 'scale(1)' }}>
                 <TierBadge tier="Contributor" size="xl" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-red-600">Contributor</h3>
-                  <span className="text-xs font-semibold bg-red-50 text-red-500 px-2.5 py-0.5 rounded-full">500+ pts</span>
+                  <h3 className="text-lg font-bold text-red-600 dark:text-red-400">Contributor</h3>
+                  <span className="text-xs font-semibold bg-red-50 dark:bg-red-500/10 text-red-500 dark:text-red-400 px-2.5 py-0.5 rounded-full">500+ pts</span>
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed">Consistent participation. You understand the fundamentals of structured prompting.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">Consistent participation. You understand the fundamentals of structured prompting.</p>
               </div>
             </div>
 
-            {/* Expert - Gradient accent + shadow */}
+            {/* Expert */}
             <div
               onMouseEnter={() => setHoveredTier('Expert')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="bg-white border border-purple-100 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-purple-200 hover:shadow-md relative overflow-hidden"
+              className="bg-card border border-purple-200/60 dark:border-purple-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-300 hover:border-purple-300 dark:hover:border-purple-500/40 hover:shadow-md relative overflow-hidden"
             >
-              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full" style={{ background: 'linear-gradient(to bottom, #c084fc, #8b5cf6)' }}></div>
-              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-purple-100/40 blur-[60px] pointer-events-none"></div>
+              <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full bg-gradient-to-b from-purple-400 to-violet-500"></div>
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-purple-500/5 dark:bg-purple-500/10 blur-[60px] pointer-events-none"></div>
               <div className="relative shrink-0 transition-transform duration-300 ml-2" style={{ transform: hoveredTier === 'Expert' ? 'scale(1.12)' : 'scale(1)' }}>
                 <TierBadge tier="Expert" size="xl" />
               </div>
               <div className="relative flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-purple-600">Expert</h3>
-                  <span className="text-xs font-semibold bg-purple-50 text-purple-600 px-2.5 py-0.5 rounded-full">2,000+ pts</span>
+                  <h3 className="text-lg font-bold text-purple-600 dark:text-purple-400">Expert</h3>
+                  <span className="text-xs font-semibold bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 px-2.5 py-0.5 rounded-full">2,000+ pts</span>
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed">Your prompts demonstrate technical depth, clear structure, and reliable outputs.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">Your prompts demonstrate technical depth, clear structure, and reliable outputs.</p>
               </div>
             </div>
 
-            {/* Master - Stronger gradient, elevation, soft glow */}
+            {/* Master */}
             <div
               onMouseEnter={() => setHoveredTier('Master')}
               onMouseLeave={() => setHoveredTier(null)}
-              className="border border-sky-200 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-500 hover:border-sky-300 hover:shadow-lg relative overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f9ff 60%, #e0f2fe 100%)' }}
+              className="bg-card border border-sky-200/60 dark:border-sky-500/20 rounded-2xl p-5 md:p-7 flex items-center gap-6 md:gap-10 transition-all duration-500 hover:border-sky-300 dark:hover:border-sky-500/40 hover:shadow-lg relative overflow-hidden"
             >
-              <div className="absolute left-0 top-2 bottom-2 w-1.5 rounded-full" style={{ background: 'linear-gradient(to bottom, #7dd3fc, #0284c7)' }}></div>
-              <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-sky-200/30 blur-[60px] pointer-events-none"></div>
-              <div className="absolute bottom-0 left-20 w-32 h-32 rounded-full bg-blue-100/30 blur-[40px] pointer-events-none"></div>
+              <div className="absolute left-0 top-2 bottom-2 w-1.5 rounded-full bg-gradient-to-b from-sky-400 to-blue-600"></div>
+              <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-sky-500/5 dark:bg-sky-500/10 blur-[60px] pointer-events-none"></div>
+              <div className="absolute bottom-0 left-20 w-32 h-32 rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[40px] pointer-events-none"></div>
               <div className="relative shrink-0 transition-transform duration-500 ml-2" style={{ transform: hoveredTier === 'Master' ? 'scale(1.15)' : 'scale(1)' }}>
                 <TierBadge tier="Master" size="xl" />
               </div>
               <div className="relative flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3 mb-1">
-                  <h3 className="text-lg font-bold text-sky-700">Master</h3>
-                  <span className="text-xs font-semibold bg-sky-100 text-sky-600 px-2.5 py-0.5 rounded-full border border-sky-200">5,000+ pts</span>
+                  <h3 className="text-lg font-bold text-sky-600 dark:text-sky-400">Master</h3>
+                  <span className="text-xs font-semibold bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 px-2.5 py-0.5 rounded-full border border-sky-200 dark:border-sky-500/20">5,000+ pts</span>
                 </div>
-                <p className="text-slate-600 text-sm leading-relaxed">Elite-tier prompt engineering. Your work is studied by other users on the platform.</p>
+                <p className="text-muted-foreground text-sm leading-relaxed">Elite-tier prompt engineering. Your work is studied by other users on the platform.</p>
               </div>
             </div>
 
@@ -391,23 +389,22 @@ export default function GuidePage() {
               </div>
 
               <div
-                className="relative rounded-[14px] p-6 md:p-8 flex items-center gap-6 md:gap-10 overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 30%, #fde68a40 100%)' }}
+                className="relative rounded-[14px] p-6 md:p-8 flex items-center gap-6 md:gap-10 overflow-hidden bg-amber-50 dark:bg-amber-950/60"
               >
-                <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber-200/30 blur-[60px] pointer-events-none"></div>
-                <div className="absolute bottom-0 left-20 w-40 h-40 rounded-full bg-orange-200/20 blur-[50px] pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-amber-200/30 dark:bg-amber-400/10 blur-[60px] pointer-events-none"></div>
+                <div className="absolute bottom-0 left-20 w-40 h-40 rounded-full bg-orange-200/20 dark:bg-orange-400/10 blur-[50px] pointer-events-none"></div>
 
                 <div className="relative shrink-0 transition-transform duration-500" style={{ transform: hoveredTier === 'Grandmaster' ? 'scale(1.18)' : 'scale(1)' }}>
                   <TierBadge tier="Grandmaster" size="xl" />
                 </div>
                 <div className="relative flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-3 mb-1">
-                    <h3 className="text-xl font-extrabold text-amber-700">Grandmaster</h3>
-                    <span className="text-xs font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full border border-amber-300 shadow-sm">
+                    <h3 className="text-xl font-extrabold text-amber-700 dark:text-amber-400">Grandmaster</h3>
+                    <span className="text-xs font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full border border-amber-300 dark:border-amber-500/30 shadow-sm">
                       Top 1%
                     </span>
                   </div>
-                  <p className="text-amber-800/70 text-sm leading-relaxed font-medium">The highest distinction. Reserved for the top percentile of prompt engineers globally.</p>
+                  <p className="text-amber-800/70 dark:text-amber-300/70 text-sm leading-relaxed font-medium">The highest distinction. Reserved for the top percentile of prompt engineers globally.</p>
                 </div>
               </div>
             </div>
@@ -417,25 +414,24 @@ export default function GuidePage() {
       </section>
 
 
-      {/* ====== TIPS ====== */}
-      <section className="border-b border-slate-100 bg-slate-50">
+      <section className="border-b border-border bg-muted">
         <div className="max-w-5xl mx-auto px-6 py-20">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-slate-800 flex items-center justify-center text-white font-bold text-sm">4</div>
-            <h2 className="text-2xl md:text-3xl font-bold text-slate-900">What Makes a Great Prompt</h2>
+            <div className="w-9 h-9 rounded-lg bg-foreground flex items-center justify-center text-background font-bold text-sm">4</div>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">What Makes a Great Prompt</h2>
           </div>
-          <p className="text-slate-500 mb-10 max-w-2xl">
+          <p className="text-muted-foreground mb-10 max-w-2xl">
             The difference between a 40 and a 95 often comes down to a few structural choices.
           </p>
 
           <div className="grid md:grid-cols-2 gap-5">
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-              <h3 className="font-bold text-emerald-600 mb-5 flex items-center gap-2 text-lg">
+            <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
+              <h3 className="font-bold text-emerald-600 dark:text-emerald-400 mb-5 flex items-center gap-2 text-lg">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 Do
               </h3>
-              <ul className="text-sm text-slate-600 space-y-3.5">
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Define a clear persona or role ("You are a senior data analyst...")</li>
+              <ul className="text-sm text-muted-foreground space-y-3.5">
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Define a clear persona or role (&quot;You are a senior data analyst...&quot;)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>State the exact output format (JSON, markdown table, numbered steps)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Include edge cases or boundary conditions</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0"></span>Break complex tasks into numbered sub-tasks</li>
@@ -444,17 +440,17 @@ export default function GuidePage() {
               </ul>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-              <h3 className="font-bold text-red-500 mb-5 flex items-center gap-2 text-lg">
+            <div className="bg-card rounded-2xl border border-border p-8 shadow-sm">
+              <h3 className="font-bold text-red-500 dark:text-red-400 mb-5 flex items-center gap-2 text-lg">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 Avoid
               </h3>
-              <ul className="text-sm text-slate-600 space-y-3.5">
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Vague instructions like "write something good about X"</li>
+              <ul className="text-sm text-muted-foreground space-y-3.5">
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Vague instructions like &quot;write something good about X&quot;</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Missing context about the audience or use case</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Leaving the output format entirely up to the model</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Overly long prompts that bury the actual task</li>
-                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Ignoring negative constraints ("do not include...")</li>
+                <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Ignoring negative constraints (&quot;do not include...&quot;)</li>
                 <li className="flex gap-3 items-start"><span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-1.5 shrink-0"></span>Assuming the model knows your domain-specific jargon</li>
               </ul>
             </div>
@@ -466,16 +462,16 @@ export default function GuidePage() {
       {/* ====== CTA ====== */}
       <section>
         <div className="max-w-3xl mx-auto px-6 py-24 text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-4">Ready to start?</h2>
-          <p className="text-slate-500 text-lg max-w-xl mx-auto mb-10">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight mb-4">Ready to start?</h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-10">
             Browse top-rated submissions to study what works, then pick a problem and write your own.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/leaderboard" className="group px-7 py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-all flex items-center gap-2">
+            <Link href="/leaderboard" className="group px-7 py-3.5 bg-primary text-primary-foreground font-bold rounded-xl shadow-sm hover:bg-primary/90 transition-all flex items-center gap-2">
               View Leaderboard
               <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
-            <Link href="/problems" className="px-7 py-3.5 bg-white text-slate-700 font-semibold rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all shadow-sm">
+            <Link href="/problems" className="px-7 py-3.5 bg-card text-foreground font-semibold rounded-xl border border-border hover:border-muted-foreground/30 hover:bg-muted transition-all shadow-sm">
               Browse Problems
             </Link>
           </div>

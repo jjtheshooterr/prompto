@@ -153,7 +153,7 @@ export default function GlobalSearch() {
         <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {loading ? (
             <svg
-              className="h-4 w-4 animate-spin text-blue-500"
+              className="h-4 w-4 animate-spin text-primary"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -171,7 +171,7 @@ export default function GlobalSearch() {
             </svg>
           ) : (
             <svg
-              className="h-4 w-4 text-gray-400"
+              className="h-4 w-4 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -199,9 +199,9 @@ export default function GlobalSearch() {
           onBlur={() => setFocused(false)}
           className={[
             'w-full py-2 pl-9 pr-8 text-sm transition-all duration-200',
-            'rounded-full bg-slate-100/80 border border-slate-200/50 text-slate-900 placeholder:text-slate-500',
-            'hover:bg-slate-100',
-            'focus:outline-none focus:bg-white focus:border-blue-500/30 focus:ring-4 focus:ring-blue-500/10 focus:shadow-sm',
+            'rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground',
+            'hover:bg-muted',
+            'focus:outline-none focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/10 focus:shadow-sm',
           ]
             .filter(Boolean)
             .join(' ')}
@@ -210,7 +210,7 @@ export default function GlobalSearch() {
         {query && (
           <button
             onClick={clear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground hover:text-foreground"
             aria-label="Clear search"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +222,7 @@ export default function GlobalSearch() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-[28rem] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 max-h-[28rem] overflow-y-auto">
           {results.length > 0 ? (
             <ul className="py-1" role="listbox">
               {results.map((r) => (
@@ -234,7 +234,7 @@ export default function GlobalSearch() {
                         : promptUrl({ id: r.id, slug: r.slug })
                     }
                     onClick={clear}
-                    className="flex flex-col gap-1 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    className="flex flex-col gap-1 px-4 py-3 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
                   >
                     {/* Type badge + title row */}
                     <div className="flex items-center gap-2">
@@ -242,20 +242,20 @@ export default function GlobalSearch() {
                         className={[
                           'shrink-0 px-1.5 py-0.5 text-xs font-medium rounded',
                           r.kind === 'problem'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-emerald-100 text-emerald-700',
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-emerald-500/10 text-emerald-500',
                         ].join(' ')}
                       >
                         {r.kind}
                       </span>
-                      <span className="font-medium text-gray-900 text-sm truncate">
+                      <span className="font-medium text-foreground text-sm truncate">
                         {r.title}
                       </span>
                     </div>
 
                     {/* Problem context for prompt results */}
                     {r.kind === 'prompt' && r.problem_title && (
-                      <p className="text-xs text-gray-500 pl-0.5 truncate">
+                      <p className="text-xs text-muted-foreground pl-0.5 truncate">
                         in {r.problem_title}
                       </p>
                     )}
@@ -266,13 +266,13 @@ export default function GlobalSearch() {
                         {r.tags.slice(0, 4).map((tag) => (
                           <span
                             key={tag}
-                            className="px-1.5 py-0.5 text-xs bg-gray-100 text-gray-600 rounded"
+                            className="px-1.5 py-0.5 text-xs bg-muted text-muted-foreground rounded"
                           >
                             {tag}
                           </span>
                         ))}
                         {r.tags.length > 4 && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-muted-foreground/70">
                             +{r.tags.length - 4}
                           </span>
                         )}
@@ -283,9 +283,9 @@ export default function GlobalSearch() {
               ))}
             </ul>
           ) : query.length >= 2 && !loading ? (
-            <div className="px-4 py-8 text-center text-gray-500">
+            <div className="px-4 py-8 text-center text-muted-foreground">
               <svg
-                className="mx-auto h-8 w-8 text-gray-300 mb-2"
+                className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -298,7 +298,7 @@ export default function GlobalSearch() {
                 />
               </svg>
               <p className="text-sm">No results for &ldquo;{query}&rdquo;</p>
-              <p className="text-xs mt-1 text-gray-400">Try different keywords or browse problems</p>
+              <p className="text-xs mt-1 text-muted-foreground/70">Try different keywords or browse problems</p>
             </div>
           ) : null}
         </div>

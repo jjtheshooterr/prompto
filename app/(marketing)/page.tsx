@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Metadata } from 'next'
 import TopRatedPrompts from '@/components/home/TopRatedPrompts'
 import { createClient } from '@/lib/supabase/server'
+import { JsonLd } from '@/components/seo/JsonLd'
 import {
   Layers,
   Zap,
@@ -74,29 +75,77 @@ export default async function HomePage() {
     .select('*', { count: 'exact', head: true })
     .not('parent_prompt_id', 'is', null)
 
+  const faqData = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is Promptvexity?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Promptvexity is a community-driven platform where users submit real-world problems and contribute AI prompts as solutions. Think of it as Stack Overflow for prompts — you can vote on the best solutions, fork and improve existing prompts, and compare different approaches side by side.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How is Promptvexity different from other prompt libraries?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Unlike prompt marketplaces or galleries, Promptvexity organizes content by real-world problems, not by AI model or aesthetic category. Every prompt is a solution to a specific challenge, with community voting to surface the best approaches. You can also fork prompts to create improved versions and compare solutions side by side.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is Promptvexity free to use?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. Browsing problems, viewing prompts, and voting are completely free. Contributing prompts and forking existing ones requires a free account.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is prompt forking?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Prompt forking lets you take an existing prompt and create your own improved version. The fork maintains a link to the original, creating a version history that shows how prompts evolve through community iteration — similar to how code evolves on GitHub.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'How does voting and scoring work?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Community members can upvote or downvote prompts. Prompts also receive a quality score based on structure analysis, AI evaluation, and community feedback. Users can mark prompts as "worked" or "failed" to build a real-world success rate for each prompt.',
+        },
+      },
+    ],
+  }
+
   return (
-    <div className="bg-slate-50">
+    <div className="bg-background">
+      <JsonLd data={faqData} />
       {/* Hero Section */}
       <section className="py-20 lg:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 pv-animate-in pv-animate-delay-1">
-              <h1 className="text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.1]">
-                Turn Prompt Engineering Into a <span className="text-blue-600">Testable Discipline</span>
+              <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-[1.1]">
+                Turn Prompt Engineering Into a <span className="text-primary">Testable Discipline</span>
               </h1>
-              <p className="text-xl text-slate-600 max-w-lg leading-relaxed font-light">
+              <p className="text-xl text-muted-foreground max-w-lg leading-relaxed font-light">
                 Stop guessing. Start measuring. Move beyond vibes and intuition with a framework built for structured problem solving and iterative prompt refinement.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
                   href="/problems"
-                  className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all inline-flex items-center justify-center"
+                  className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all inline-flex items-center justify-center"
                 >
                   Start Solving Problems
                 </Link>
                 <Link
                   href="/philosophy"
-                  className="bg-white border border-slate-200 text-slate-700 px-8 py-3 rounded-lg font-semibold hover:bg-slate-50 transition-all inline-flex items-center justify-center"
+                  className="bg-card border border-border text-foreground px-8 py-3 rounded-lg font-semibold hover:bg-muted transition-all inline-flex items-center justify-center"
                 >
                   View Methodology
                 </Link>
@@ -105,82 +154,82 @@ export default async function HomePage() {
 
             {/* Hero Graphic: Prompt Preview Card */}
             <div className="relative pv-animate-in pv-animate-delay-2">
-              <div className="bg-white rounded-xl border border-slate-200 shadow-2xl p-6 relative z-10">
+              <div className="bg-card rounded-xl border border-border shadow-2xl p-6 relative z-10">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="font-bold text-lg text-slate-800">Security Reviewer</h3>
-                    <p className="text-sm text-slate-500">v2.4.0 • Updated 2h ago</p>
+                    <h3 className="font-bold text-lg text-foreground">Security Reviewer</h3>
+                    <p className="text-sm text-muted-foreground">v2.4.0 • Updated 2h ago</p>
                   </div>
-                  <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-100">
+                  <div className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-sm font-bold border border-emerald-500/20">
                     Score: 94%
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="bg-slate-50 p-4 rounded-md border border-slate-100">
-                    <p className="text-xs font-mono text-slate-400 mb-2">{`// System Prompt`}</p>
-                    <p className="text-sm text-slate-700 leading-relaxed italic">
+                  <div className="bg-muted p-4 rounded-md border border-border">
+                    <p className="text-xs font-mono text-muted-foreground mb-2">{`// System Prompt`}</p>
+                    <p className="text-sm text-foreground leading-relaxed italic">
                       &quot;Act as a senior security engineer. Analyze the following code snippet for OWASP Top 10 vulnerabilities...&quot;
                     </p>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center p-3 border border-slate-100 rounded-lg">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">Works</p>
-                      <p className="font-semibold text-slate-800">12/12</p>
+                    <div className="text-center p-3 border border-border rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Works</p>
+                      <p className="font-semibold text-foreground">12/12</p>
                     </div>
-                    <div className="text-center p-3 border border-slate-100 rounded-lg">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">Model</p>
-                      <p className="font-semibold text-slate-800">GPT-4</p>
+                    <div className="text-center p-3 border border-border rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Model</p>
+                      <p className="font-semibold text-foreground">GPT-4</p>
                     </div>
-                    <div className="text-center p-3 border border-slate-100 rounded-lg">
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">Latency</p>
-                      <p className="font-semibold text-slate-800">1.2s</p>
+                    <div className="text-center p-3 border border-border rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Latency</p>
+                      <p className="font-semibold text-foreground">1.2s</p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="absolute -top-4 -right-4 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -z-10"></div>
-              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-slate-200 rounded-full blur-2xl opacity-40 -z-10"></div>
+              <div className="absolute -top-4 -right-4 w-64 h-64 bg-primary/20 rounded-full blur-3xl opacity-50 -z-10"></div>
+              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-muted rounded-full blur-2xl opacity-40 -z-10"></div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Philosophy Section */}
-      <section className="py-24 bg-white border-y border-slate-200">
+      <section className="py-24 bg-card border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Prompt Engineering Has No Feedback Loop</h2>
-          <p className="text-slate-600 max-w-2xl mx-auto mb-16 text-lg">
+          <h2 className="text-3xl font-bold text-foreground mb-4">Prompt Engineering Has No Feedback Loop</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto mb-16 text-lg">
             Traditional prompting is a dark room. You tweak a word and hope it works better. We provide the light: a continuous cycle of measurement and refinement.
           </p>
           <div className="grid md:grid-cols-4 gap-8 relative">
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -z-0"></div>
-            <div className="relative z-10 bg-white p-6">
-              <div className="w-12 h-12 bg-slate-900 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-border -z-0"></div>
+            <div className="relative z-10 bg-card p-6">
+              <div className="w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <Target className="w-6 h-6" />
               </div>
-              <h4 className="font-bold">Problem</h4>
-              <p className="text-sm text-slate-500 mt-2">Define the desired outcome precisely.</p>
+              <h4 className="font-bold text-foreground">Problem</h4>
+              <p className="text-sm text-muted-foreground mt-2">Define the desired outcome precisely.</p>
             </div>
-            <div className="relative z-10 bg-white p-6">
-              <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <div className="relative z-10 bg-card p-6">
+              <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <Terminal className="w-6 h-6" />
               </div>
-              <h4 className="font-bold">Prompt</h4>
-              <p className="text-sm text-slate-500 mt-2">Construct the engineering input.</p>
+              <h4 className="font-bold text-foreground">Prompt</h4>
+              <p className="text-sm text-muted-foreground mt-2">Construct the engineering input.</p>
             </div>
-            <div className="relative z-10 bg-white p-6">
-              <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <div className="relative z-10 bg-card p-6">
+              <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <BarChart3 className="w-6 h-6" />
               </div>
-              <h4 className="font-bold">Score</h4>
-              <p className="text-sm text-slate-500 mt-2">Evaluate against objective metrics.</p>
+              <h4 className="font-bold text-foreground">Score</h4>
+              <p className="text-sm text-muted-foreground mt-2">Evaluate against objective metrics.</p>
             </div>
-            <div className="relative z-10 bg-white p-6">
-              <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm">
+            <div className="relative z-10 bg-card p-6">
+              <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <RefreshCw className="w-6 h-6" />
               </div>
-              <h4 className="font-bold">Improve</h4>
-              <p className="text-sm text-slate-500 mt-2">Iterate based on performance data.</p>
+              <h4 className="font-bold text-foreground">Improve</h4>
+              <p className="text-sm text-muted-foreground mt-2">Iterate based on performance data.</p>
             </div>
           </div>
         </div>
@@ -241,82 +290,82 @@ export default async function HomePage() {
       </section>
 
       {/* Workflow Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900">The 3-Step Workflow</h2>
+            <h2 className="text-3xl font-bold text-foreground">The 3-Step Workflow</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted border border-border text-primary mb-6 group-hover:scale-110 transition-transform">
                 <Search className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold mb-3">1. Browse Problems</h3>
-              <p className="text-slate-600">Explore existing problem statements or create your own with clear evaluation metrics.</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">1. Browse Problems</h3>
+              <p className="text-muted-foreground">Explore existing problem statements or create your own with clear evaluation metrics.</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted border border-border text-primary mb-6 group-hover:scale-110 transition-transform">
                 <UploadCloud className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold mb-3">2. Submit Prompt</h3>
-              <p className="text-slate-600">Draft your prompt solution. Attach your system instructions, few-shot examples, and model parameters.</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">2. Submit Prompt</h3>
+              <p className="text-muted-foreground">Draft your prompt solution. Attach your system instructions, few-shot examples, and model parameters.</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted border border-border text-primary mb-6 group-hover:scale-110 transition-transform">
                 <TrendingUp className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-bold mb-3">3. Analyze & Improve</h3>
-              <p className="text-slate-600">Run the evaluation engine to see exactly where your prompt succeeds and where it fails.</p>
+              <h3 className="text-xl font-bold text-foreground mb-3">3. Analyze & Improve</h3>
+              <p className="text-muted-foreground">Run the evaluation engine to see exactly where your prompt succeeds and where it fails.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Capabilities Section */}
-      <section className="py-24 bg-slate-50 border-t border-slate-200">
+      <section className="py-24 bg-background border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-8">Built for Modern AI Operations</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-8">Built for Modern AI Operations</h2>
               <div className="grid sm:grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <History className="w-6 h-6 text-blue-600" />
-                  <h4 className="font-bold text-slate-800">Versioning</h4>
-                  <p className="text-sm text-slate-600">Git-like history for every prompt iteration.</p>
+                  <History className="w-6 h-6 text-primary" />
+                  <h4 className="font-bold text-foreground">Versioning</h4>
+                  <p className="text-sm text-muted-foreground">Git-like history for every prompt iteration.</p>
                 </div>
                 <div className="space-y-3">
-                  <ShieldCheck className="w-6 h-6 text-blue-600" />
-                  <h4 className="font-bold text-slate-800">Evaluation</h4>
-                  <p className="text-sm text-slate-600">Automated scoring against ground-truth datasets.</p>
+                  <ShieldCheck className="w-6 h-6 text-primary" />
+                  <h4 className="font-bold text-foreground">Evaluation</h4>
+                  <p className="text-sm text-muted-foreground">Automated scoring against ground-truth datasets.</p>
                 </div>
                 <div className="space-y-3">
-                  <FlaskConical className="w-6 h-6 text-blue-600" />
-                  <h4 className="font-bold text-slate-800">Problem-Based</h4>
-                  <p className="text-sm text-slate-600">Prompts are scoped to specific business problems.</p>
+                  <FlaskConical className="w-6 h-6 text-primary" />
+                  <h4 className="font-bold text-foreground">Problem-Based</h4>
+                  <p className="text-sm text-muted-foreground">Prompts are scoped to specific business problems.</p>
                 </div>
                 <div className="space-y-3">
-                  <Cpu className="w-6 h-6 text-blue-600" />
-                  <h4 className="font-bold text-slate-800">Model-Agnostic</h4>
-                  <p className="text-sm text-slate-600">Test across GPT-4, Claude 3, Llama 3, and more.</p>
+                  <Cpu className="w-6 h-6 text-primary" />
+                  <h4 className="font-bold text-foreground">Model-Agnostic</h4>
+                  <p className="text-sm text-muted-foreground">Test across GPT-4, Claude 3, Llama 3, and more.</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="bg-card p-8 rounded-2xl border border-border shadow-sm">
               <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3 pb-4 border-b border-border">
                   <div className="w-3 h-3 rounded-full bg-red-400"></div>
                   <div className="w-3 h-3 rounded-full bg-amber-400"></div>
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="text-xs text-slate-400 font-mono ml-auto">diff_viewer.sh</span>
+                  <span className="text-xs text-muted-foreground font-mono ml-auto">diff_viewer.sh</span>
                 </div>
                 <div className="text-sm font-mono space-y-1">
-                  <p className="text-slate-400">--- v1.0.2</p>
-                  <p className="text-slate-400">+++ v1.1.0</p>
-                  <div className="text-red-600 bg-red-50 p-1 px-2 rounded">- Please summarize this text concisely.</div>
-                  <div className="text-green-600 bg-green-50 p-1 px-2 rounded">+ Extract top 3 themes as JSON keys with 10-word values.</div>
-                  <p className="text-slate-400 pt-4">{`// Evaluation Results:`}</p>
-                  <p className="text-slate-800 font-bold">Accuracy: 72% -{'>'} 91%</p>
-                  <p className="text-slate-800 font-bold">Latency: 0.8s -{'>'} 1.1s</p>
+                  <p className="text-muted-foreground">--- v1.0.2</p>
+                  <p className="text-muted-foreground">+++ v1.1.0</p>
+                  <div className="text-red-600 dark:text-red-400 bg-red-500/10 p-1 px-2 rounded">- Please summarize this text concisely.</div>
+                  <div className="text-green-600 dark:text-green-400 bg-green-500/10 p-1 px-2 rounded">+ Extract top 3 themes as JSON keys with 10-word values.</div>
+                  <p className="text-muted-foreground pt-4">{`// Evaluation Results:`}</p>
+                  <p className="text-foreground font-bold">Accuracy: 72% -{'>'} 91%</p>
+                  <p className="text-foreground font-bold">Latency: 0.8s -{'>'} 1.1s</p>
                 </div>
               </div>
             </div>
@@ -325,49 +374,49 @@ export default async function HomePage() {
       </section>
 
       {/* Examples & Stats Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">The numbers speak for themselves</h2>
-            <p className="text-slate-600">Join a growing community of builders shipping AI features faster</p>
+            <h2 className="text-3xl font-bold text-foreground mb-4">The numbers speak for themselves</h2>
+            <p className="text-muted-foreground">Join a growing community of builders shipping AI features faster</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto mb-24">
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-blue-400 mb-2">
                 {promptCount || 0}+
               </div>
-              <div className="text-sm font-semibold text-slate-900 mb-1">Production Prompts</div>
-              <div className="text-xs text-slate-500">Battle-tested in real SaaS</div>
+              <div className="text-sm font-semibold text-foreground mb-1">Production Prompts</div>
+              <div className="text-xs text-muted-foreground">Battle-tested in real SaaS</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-green-600 to-green-400 mb-2">
                 {forkCount || 0}+
               </div>
-              <div className="text-sm font-semibold text-slate-900 mb-1">Improvements Made</div>
-              <div className="text-xs text-slate-500">Community iterations</div>
+              <div className="text-sm font-semibold text-foreground mb-1">Improvements Made</div>
+              <div className="text-xs text-muted-foreground">Community iterations</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-purple-600 to-purple-400 mb-2">
                 50+
               </div>
-              <div className="text-sm font-semibold text-slate-900 mb-1">SaaS Problems</div>
-              <div className="text-xs text-slate-500">Across 5 categories</div>
+              <div className="text-sm font-semibold text-foreground mb-1">SaaS Problems</div>
+              <div className="text-xs text-muted-foreground">Across 5 categories</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-amber-600 to-amber-400 mb-2">
                 {userCount || 0}+
               </div>
-              <div className="text-sm font-semibold text-slate-900 mb-1">Active Builders</div>
-              <div className="text-xs text-slate-500">Indie founders & teams</div>
+              <div className="text-sm font-semibold text-foreground mb-1">Active Builders</div>
+              <div className="text-xs text-muted-foreground">Indie founders & teams</div>
             </div>
           </div>
 
           <div className="flex justify-between items-end mb-12">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900">Top-Rated Prompts</h2>
-              <p className="text-slate-600 mt-2">Ranked by community testing, forks, and votes.</p>
+              <h2 className="text-3xl font-bold text-foreground">Top-Rated Prompts</h2>
+              <p className="text-muted-foreground mt-2">Ranked by community testing, forks, and votes.</p>
             </div>
-            <Link className="text-blue-600 font-semibold flex items-center gap-1 hover:underline" href="/problems">
+            <Link className="text-primary font-semibold flex items-center gap-1 hover:underline" href="/problems">
               Browse Gallery <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -376,7 +425,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section — intentionally always dark */}
       <section className="py-24 bg-slate-900 text-white overflow-hidden relative border-t border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
           <h2 className="text-4xl font-bold mb-6">Start solving problems with better prompts</h2>
@@ -386,7 +435,7 @@ export default async function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/signup"
-              className="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 inline-flex items-center justify-center"
+              className="bg-primary text-primary-foreground px-10 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 inline-flex items-center justify-center"
             >
               Create Free Account
             </Link>

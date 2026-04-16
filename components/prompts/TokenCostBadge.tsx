@@ -23,17 +23,17 @@ export function TokenCostBadge({ systemPrompt, userPromptTemplate, exampleOutput
   const outputRate = modelInfo ? `$${modelInfo.outputCostPerMillion.toFixed(2)}` : "Unknown";
 
   return (
-    <div className="inline-flex items-center whitespace-nowrap text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-md shadow-sm overflow-hidden w-fit">
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border-r border-slate-200 select-none">
-        <span className="text-slate-400">🪙</span>
-        <span className="text-slate-700 font-semibold">{modelName}</span>
+    <div className="inline-flex items-center whitespace-nowrap text-xs font-medium text-muted-foreground bg-muted/50 border border-border rounded-md shadow-sm overflow-hidden w-fit">
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-card border-r border-border select-none">
+        <span className="text-muted-foreground">🪙</span>
+        <span className="text-foreground font-semibold">{modelName}</span>
       </div>
       <div className="flex items-center gap-2 px-2.5 py-1.5">
-        <span title={`Input Rate: ${inputRate}/1M`}>Tokens In: <span className="text-slate-900 font-semibold">{inputTokens.toLocaleString()}</span></span>
-        <span className="text-slate-300 font-light">/</span>
-        <span title={`Output Rate: ${outputRate}/1M`}>Tokens Out: <span className="text-slate-900 font-semibold">{outputTokens.toLocaleString()}</span></span>
-        <span className="text-slate-300 font-light">/</span>
-        <span className="text-emerald-700 font-semibold" title="Total Estimated USD">{formattedTotalCost}</span>
+        <span title={`Input Rate: ${inputRate}/1M`}>Tokens In: <span className="text-foreground font-semibold">{inputTokens.toLocaleString()}</span></span>
+        <span className="text-border font-light">/</span>
+        <span title={`Output Rate: ${outputRate}/1M`}>Tokens Out: <span className="text-foreground font-semibold">{outputTokens.toLocaleString()}</span></span>
+        <span className="text-border font-light">/</span>
+        <span className="text-emerald-600 dark:text-emerald-400 font-semibold" title="Total Estimated USD">{formattedTotalCost}</span>
       </div>
     </div>
   );
@@ -55,13 +55,13 @@ export function CompactTokenBadge({ systemPrompt, userPromptTemplate, exampleOut
   const format = (t: number) => t > 999 ? (t/1000).toFixed(1) + 'k' : t.toString();
 
   return (
-    <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200 whitespace-nowrap">
-      <span className="text-slate-400">🪙</span>
+    <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md border border-border whitespace-nowrap">
+      <span className="text-muted-foreground">🪙</span>
       <span title="Input Tokens">{format(inputTokens)} Tokens In</span>
-      <span className="text-slate-300">/</span>
+      <span className="text-border">/</span>
       <span title="Output Tokens">{format(outputTokens)} Tokens Out</span>
-      <span className="text-slate-300">/</span>
-      <span className="text-green-600 font-medium" title="Cost">{formattedCost}</span>
+      <span className="text-border">/</span>
+      <span className="text-emerald-600 dark:text-emerald-400 font-medium" title="Cost">{formattedCost}</span>
     </div>
   );
 }

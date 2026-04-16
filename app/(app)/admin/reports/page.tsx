@@ -75,10 +75,10 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           You must be an admin to access this page.
         </p>
-        <Link href="/dashboard" className="text-blue-600 hover:underline">
+        <Link href="/dashboard" className="text-primary hover:underline">
           Go to Dashboard
         </Link>
       </div>
@@ -112,10 +112,38 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Content Reports</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Review and moderate reported content. Logged in as{' '}
           <span className="font-medium">{user.email}</span>.
         </p>
+      </div>
+
+      {/* Main Admin Navigation */}
+      <div className="mb-6 flex gap-2 border-b border-border pb-4 overflow-x-auto">
+        <Link
+          href="/admin/dashboard"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          System Health
+        </Link>
+        <Link
+          href="/admin/reports"
+          className="px-4 py-2 rounded-lg transition-colors bg-primary text-primary-foreground whitespace-nowrap"
+        >
+          Content Reports
+        </Link>
+        <Link
+          href="/admin/users"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          User Trust & Safety
+        </Link>
+        <Link
+          href="/admin/logs"
+          className="px-4 py-2 rounded-lg transition-colors bg-muted text-muted-foreground hover:bg-muted/80 whitespace-nowrap"
+        >
+          Audit Ledger
+        </Link>
       </div>
 
       {/* Filter tabs — URL-based, no client state */}
@@ -129,8 +157,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             key={tab.key}
             href={`/admin/reports?filter=${tab.key}`}
             className={`px-4 py-2 rounded-lg transition-colors ${activeFilter === tab.key
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
           >
             {tab.label} ({tab.count})
@@ -142,11 +170,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
       <div className="space-y-4">
         {allReports.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">No reports found.</p>
+            <p className="text-muted-foreground">No reports found.</p>
           </div>
         ) : (
           allReports.map((report) => (
-            <div key={report.id} className="bg-white border rounded-lg p-6">
+            <div key={report.id} className="bg-card border border-border rounded-lg p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -155,7 +183,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                         ? 'bg-yellow-100 text-yellow-800'
                         : report.status === 'resolved'
                           ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
+                          : 'bg-muted text-foreground'
                         }`}
                     >
                       {report.status}
@@ -167,7 +195,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                       {report.reason}
                     </span>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     Reported by {(report as any).reporter?.username || 'Unknown'} on{' '}
                     {new Date(report.created_at).toLocaleDateString()}
                   </div>
@@ -179,7 +207,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                       ? promptUrl({ id: report.content_id, slug: '' })
                       : problemUrl({ id: report.content_id, slug: '' })
                   }
-                  className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                  className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
                   target="_blank"
                 >
                   View Content
@@ -187,9 +215,9 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               </div>
 
               {report.details && (
-                <div className="mb-4 p-3 bg-gray-50 rounded">
-                  <div className="text-sm font-medium text-gray-700 mb-1">Details:</div>
-                  <div className="text-sm text-gray-600">{report.details}</div>
+                <div className="mb-4 p-3 bg-muted rounded">
+                  <div className="text-sm font-medium text-foreground mb-1">Details:</div>
+                  <div className="text-sm text-muted-foreground">{report.details}</div>
                 </div>
               )}
 
@@ -199,7 +227,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                   <form action={dismissReport.bind(null, report.id, user.id)}>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-sm border border-border rounded hover:bg-muted transition-colors"
                     >
                       Dismiss
                     </button>
@@ -228,7 +256,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
               )}
 
               {report.status !== 'pending' && report.reviewed_by && (
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted-foreground">
                   Reviewed by {(report as any).reviewer?.username || 'Unknown'} on{' '}
                   {report.reviewed_at
                     ? new Date(report.reviewed_at).toLocaleDateString()

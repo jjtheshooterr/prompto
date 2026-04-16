@@ -112,10 +112,10 @@ export default function ComparePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-slate-500">Loading comparison...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading comparison...</p>
                 </div>
             </div>
         )
@@ -123,18 +123,18 @@ export default function ComparePage() {
 
     if (prompts.length === 0) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-6">
-                    <svg className="w-16 h-16 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    <h2 className="text-xl font-bold text-slate-900 mb-2">No Prompts Selected</h2>
-                    <p className="text-slate-500 mb-6">
+                    <h2 className="text-xl font-bold text-foreground mb-2">No Prompts Selected</h2>
+                    <p className="text-muted-foreground mb-6">
                         Select 2-4 prompts from a problem page to compare them side-by-side.
                     </p>
                     <Link
                         href="/problems"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors"
                     >
                         Browse Problems
                     </Link>
@@ -149,20 +149,20 @@ export default function ComparePage() {
 
     if (isMultiProblem) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="text-center max-w-md mx-auto p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6 bg-card border border-border rounded-2xl shadow-sm">
                     <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h2 className="text-lg font-bold text-slate-900 mb-2">Different Problems Selected</h2>
-                    <p className="text-slate-500 text-sm mb-6">
+                    <h2 className="text-lg font-bold text-foreground mb-2">Different Problems Selected</h2>
+                    <p className="text-muted-foreground text-sm mb-6">
                         You can only compare prompts from the same problem. Please clear your selection and choose prompts from one problem.
                     </p>
                     <button
                         onClick={handleClear}
-                        className="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm"
+                        className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm"
                     >
                         Clear Selection
                     </button>
@@ -172,16 +172,16 @@ export default function ComparePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-background pb-20">
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+            <div className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
                             {problemInfo && (
                                 <Link
                                     href={`/problems/${problemInfo.slug}-${problemInfo.shortId}`}
-                                    className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -189,23 +189,23 @@ export default function ComparePage() {
                                 </Link>
                             )}
                             <div className="min-w-0">
-                                <h1 className="text-lg font-bold text-slate-900 truncate">
+                                <h1 className="text-lg font-bold text-foreground truncate">
                                     Compare Prompts
                                 </h1>
                                 {problemInfo && (
-                                    <p className="text-sm text-slate-500 truncate">
+                                    <p className="text-sm text-muted-foreground truncate">
                                         Problem: {problemInfo.title}
                                     </p>
                                 )}
                             </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                            <span className="text-sm font-semibold text-muted-foreground bg-muted px-3 py-1.5 rounded-lg">
                                 {prompts.length} prompts selected
                             </span>
                             <button
                                 onClick={handleClear}
-                                className="text-sm font-semibold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="text-sm font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
                             >
                                 Clear
                             </button>

@@ -4,6 +4,16 @@ import QualitySignals from '@/components/problems/QualitySignals'
 import Pagination from '@/components/ui/Pagination'
 import React from 'react'
 import { problemUrl } from '@/lib/utils/prompt-url'
+import { JsonLd } from '@/components/seo/JsonLd'
+import type { Metadata } from 'next'
+
+const BASE_URL = 'https://promptvexity.com'
+
+export const metadata: Metadata = {
+  title: 'Browse AI Problems - Community Prompt Solutions | Promptvexity',
+  description: 'Explore real-world problems and find community-tested AI prompt solutions. Compare approaches, vote on the best prompts, and fork to improve.',
+  alternates: { canonical: '/problems' },
+}
 
 // Enable ISR with 2-minute revalidation
 export const revalidate = 120
@@ -35,20 +45,48 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
   const start = safeTotal === 0 ? 0 : (currentPage - 1) * limit + 1
   const end = Math.min(start + limit - 1, safeTotal)
 
+  const collectionData = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'AI Problems & Prompt Solutions',
+    description: 'Browse real-world problems with community-voted AI prompt solutions.',
+    url: `${BASE_URL}/problems`,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: safeTotal,
+      itemListElement: (problems || []).slice(0, 10).map((p: any, i: number) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${BASE_URL}${problemUrl(p)}`,
+        name: p.title,
+      })),
+    },
+  }
+
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Problems', item: `${BASE_URL}/problems` },
+    ],
+  }
+
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col pt-8">
+    <div className="bg-background min-h-screen text-foreground flex flex-col pt-8">
+      <JsonLd data={[collectionData, breadcrumbData]} />
       <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 w-full flex flex-col md:flex-row gap-8">
 
         {/* LEFT SIDEBAR - FILTERS */}
         <aside className="w-full md:w-64 flex-shrink-0 space-y-6">
-          <form method="get" className="bg-white rounded border border-slate-200 p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-4">
+          <form method="get" className="bg-card rounded border border-border p-5 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
               Filters
             </h2>
 
             {/* Search filter map from top-header of new design */}
             <div className="mb-5">
-              <h3 className="text-sm font-medium mb-2 text-slate-900">
+              <h3 className="text-sm font-medium mb-2 text-foreground">
                 Search
               </h3>
               <div className="relative">
@@ -57,14 +95,14 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                   name="search"
                   defaultValue={params.search}
                   placeholder="Search prompts..."
-                  className="w-full pl-3 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 placeholder:text-slate-500 transition-colors"
+                  className="w-full pl-3 pr-3 py-2 bg-muted border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-muted-foreground transition-colors"
                 />
               </div>
             </div>
 
             {/* Difficulty - checkboxes */}
             <div className="mb-5">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Difficulty
               </h3>
               <div className="space-y-2">
@@ -79,9 +117,9 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                       name="difficulty"
                       value={value}
                       defaultChecked={(params as any).difficulty === value}
-                      className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
                     />
-                    <span className="text-sm text-slate-700 group-hover:text-slate-900">{label}</span>
+                    <span className="text-sm text-foreground group-hover:text-foreground">{label}</span>
                   </label>
                 ))}
               </div>
@@ -89,7 +127,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
 
             {/* Industry - tag pills */}
             <div className="mb-5">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Industry
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -115,8 +153,8 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                       key={value}
                       href={`?${nextParams.toString()}`}
                       className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold border transition-colors ${isActive
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted text-foreground border-border hover:bg-muted/80'
                         }`}
                     >
                       {label}
@@ -128,13 +166,13 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
 
             {/* Sort filter */}
             <div className="mb-5">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                 Sort By
               </h3>
               <select
                 name="sort"
                 defaultValue={params.sort}
-                className="w-full rounded border-slate-200 bg-slate-50 text-sm text-slate-900 focus:ring-blue-600 focus:border-blue-600 p-2"
+                className="w-full rounded border-border bg-muted text-sm text-foreground focus:ring-primary focus:border-primary p-2"
               >
                 <option value="newest">Newest</option>
                 <option value="top">Most Solved / Top</option>
@@ -143,7 +181,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm"
             >
               Apply Filters
             </button>
@@ -155,10 +193,10 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
 
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Browse Problems
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Discover coding problems and their prompt solutions from the community.
               </p>
             </div>
@@ -166,34 +204,34 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
             <div className="flex items-center gap-3">
               <Link
                 href="/create/problem"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded text-sm font-medium transition-colors shadow-sm whitespace-nowrap"
               >
                 Create New
               </Link>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden flex-grow">
+          <div className="bg-card border border-border rounded shadow-sm overflow-hidden flex-grow">
 
             {/* Table Header Row */}
-            <div className="flex items-center px-5 py-3 border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <div className="flex items-center px-5 py-3 border-b border-border bg-muted text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <div className="flex-grow">Problem</div>
               <div className="w-24 text-right">Action</div>
             </div>
 
             {/* Table Body */}
             {problems.length === 0 ? (
-              <div className="text-center py-12 bg-white">
-                <p className="text-slate-500 mb-4">No problems found matching your criteria.</p>
+              <div className="text-center py-12 bg-card">
+                <p className="text-muted-foreground mb-4">No problems found matching your criteria.</p>
                 <Link
                   href="/create/problem"
-                  className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="inline-block px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                 >
                   Create the First Problem
                 </Link>
               </div>
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-border">
                 {problems.map((problem) => {
                   const tagList = problem.tags || []
                   const primaryTag = problem.industry || 'General'
@@ -253,7 +291,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                   }
 
                   const renderIcon = () => {
-                    const baseClasses = "w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0"
+                    const baseClasses = "w-5 h-5 text-muted-foreground mt-0.5 flex-shrink-0"
                     switch (iconType) {
                       case 'bug_report':
                         return (
@@ -297,7 +335,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                   }
 
                   return (
-                    <div key={problem.id} className="group flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                    <div key={problem.id} className="group flex items-center gap-4 px-5 py-4 hover:bg-muted transition-colors">
                       {/* Left: icon + content */}
                       <div className="flex items-start gap-3 flex-grow min-w-0">
                         {renderIcon()}
@@ -307,7 +345,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                           <div className="flex items-center gap-2 flex-wrap">
                             <Link
                               href={problemUrl({ id: problem.id, slug: problem.slug || '' })}
-                              className="text-base font-semibold text-slate-900 group-hover:text-blue-600 transition-colors"
+                              className="text-base font-semibold text-foreground group-hover:text-primary transition-colors"
                             >
                               {problem.title}
                             </Link>
@@ -319,12 +357,12 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                           </div>
 
                           {/* Description */}
-                          <p className="text-sm text-slate-500 mt-0.5 line-clamp-2">
+                          <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">
                             {problem.description}
                           </p>
 
                           {/* Bottom meta row: tag • prompts • forks • active */}
-                          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-slate-500">
+                          <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-muted-foreground">
                             <span className="inline-flex items-center px-2 py-0.5 rounded font-medium border bg-blue-100 text-blue-800 border-blue-200 capitalize">
                               {primaryTag}
                             </span>
@@ -354,7 +392,7 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
                       <div className="flex-shrink-0">
                         <Link
                           href={problemUrl({ id: problem.id, slug: problem.slug || '' })}
-                          className="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded transition-colors whitespace-nowrap tracking-wide"
+                          className="inline-flex items-center px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded transition-colors whitespace-nowrap tracking-wide"
                         >
                           SOLVE
                         </Link>
@@ -367,18 +405,18 @@ export default async function ProblemsPage({ searchParams }: ProblemsPageProps) 
           </div>
 
           {problems.length > 0 && (
-            <div className="mt-6 flex flex-col md:flex-row items-center justify-between border-t border-slate-200 pt-4 gap-4 md:gap-0">
-              <p className="text-sm text-slate-500">
+            <div className="mt-6 flex flex-col md:flex-row items-center justify-between border-t border-border pt-4 gap-4 md:gap-0">
+              <p className="text-sm text-muted-foreground">
                 Showing{' '}
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-foreground">
                   {start}
                 </span>{' '}
                 to{' '}
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-foreground">
                   {end}
                 </span>{' '}
                 of{' '}
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-foreground">
                   {safeTotal}
                 </span>{' '}
                 results

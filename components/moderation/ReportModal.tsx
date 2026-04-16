@@ -79,20 +79,20 @@ export default function ReportModal({
   const selectedReason = REPORT_REASONS.find(r => r.value === reason)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-        <h2 className="text-xl font-bold mb-4">Report Content</h2>
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-card border border-border shadow-lg rounded-xl p-6 w-full max-w-md mx-4">
+        <h2 className="text-xl font-bold text-foreground mb-4">Report Content</h2>
 
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">Reporting:</div>
-          <div className="font-medium">{contentTitle}</div>
-          <div className="text-xs text-gray-500 capitalize">{contentType}</div>
+        <div className="mb-4 p-3 bg-muted/50 border border-border rounded-lg">
+          <div className="text-sm text-muted-foreground">Reporting:</div>
+          <div className="font-medium text-foreground">{contentTitle}</div>
+          <div className="text-xs text-muted-foreground capitalize">{contentType}</div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for reporting <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Reason for reporting <span className="text-destructive">*</span>
             </label>
             <div className="space-y-2">
               {REPORT_REASONS.map((reportReason) => (
@@ -106,8 +106,8 @@ export default function ReportModal({
                     className="mt-1 mr-3"
                   />
                   <div>
-                    <div className="font-medium text-sm">{reportReason.label}</div>
-                    <div className="text-xs text-gray-500">{reportReason.description}</div>
+                    <div className="font-medium text-sm text-foreground">{reportReason.label}</div>
+                    <div className="text-xs text-muted-foreground">{reportReason.description}</div>
                   </div>
                 </label>
               ))}
@@ -116,15 +116,15 @@ export default function ReportModal({
 
           {selectedReason && (selectedReason.value === 'other' || selectedReason.value === 'copyright' || selectedReason.value === 'misinformation') && (
             <div>
-              <label htmlFor="details" className="block text-sm font-medium text-gray-700 mb-1">
-                Additional Details {selectedReason.value === 'other' ? <span className="text-red-500">*</span> : '(optional)'}
+              <label htmlFor="details" className="block text-sm font-medium text-foreground mb-1">
+                Additional Details {selectedReason.value === 'other' ? <span className="text-destructive">*</span> : '(optional)'}
               </label>
               <textarea
                 id="details"
                 value={details}
                 onChange={(e) => setDetails(e.target.value)}
                 placeholder="Please provide more information about this report..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-20 resize-none"
+                className="w-full px-3 py-2 bg-background border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary h-20 resize-none"
                 required={selectedReason.value === 'other'}
               />
             </div>
@@ -134,14 +134,14 @@ export default function ReportModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-border text-foreground rounded-md hover:bg-muted transition-colors"
               disabled={submitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors disabled:opacity-50"
               disabled={submitting || !reason || (selectedReason?.value === 'other' && !details.trim())}
             >
               {submitting ? 'Submitting...' : 'Submit Report'}

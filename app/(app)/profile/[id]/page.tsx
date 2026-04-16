@@ -43,7 +43,7 @@ export default async function ProfileByIdPage({
   const activities = (activityRes.data || []) as unknown as ActivityItemData[];
 
   return (
-    <div className="bg-slate-50 min-h-screen py-8">
+    <div className="bg-background min-h-screen py-8">
       <ProfilePageClient
         profile={profile}
         stats={stats}

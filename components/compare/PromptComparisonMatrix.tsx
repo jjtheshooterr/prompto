@@ -35,36 +35,36 @@ export function PromptComparisonMatrix({ prompts }: Props) {
         }
     })
 
-    const formatCost = (c: number | null) => c !== null ? `$${c.toFixed(5)}` : '—'
-    const formatRate = (r: number | null) => r !== null ? `${Math.round(r * 100)}%` : '—'
+    const formatCost = (c: number | null) => c !== null ? `$${c.toFixed(5)}` : '-'
+    const formatRate = (r: number | null) => r !== null ? `${Math.round(r * 100)}%` : '-'
     const formatNum = (n: number | null | undefined) => n !== null && n !== undefined ? n.toLocaleString() : '0'
     const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
-    const trClass = "border-b border-slate-100 last:border-none hover:bg-slate-50 transition-colors"
-    const tdLabelClass = "py-4 px-6 text-sm font-semibold text-slate-700 bg-slate-50/50 w-48 shrink-0 align-top"
-    const tdValueClass = "py-4 px-6 text-sm text-slate-800 border-l border-slate-100 min-w-[280px] align-top"
-    const sectionHeaderClass = "bg-slate-100/80 px-6 py-2 text-xs font-bold uppercase tracking-wider text-slate-500"
+    const trClass = "border-b border-border last:border-none hover:bg-muted/50 transition-colors"
+    const tdLabelClass = "py-4 px-6 text-sm font-semibold text-muted-foreground bg-muted/30 w-48 shrink-0 align-top"
+    const tdValueClass = "py-4 px-6 text-sm text-foreground border-l border-border min-w-[280px] align-top"
+    const sectionHeaderClass = "bg-muted/50 px-6 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground"
 
     return (
         <div className="overflow-x-auto w-full pb-4">
             <table className="w-full text-left border-collapse">
                 <thead>
                     <tr>
-                        <th className="py-5 px-6 bg-white w-48 shrink-0 z-10">
+                        <th className="py-5 px-6 bg-background w-48 shrink-0 z-10">
                             {/* Empty corner */}
                         </th>
                         {columns.map(({ prompt }, i) => (
-                            <th key={prompt.id} className="py-5 px-6 bg-white border-l border-slate-100 min-w-[280px] z-10 align-top">
+                            <th key={prompt.id} className="py-5 px-6 bg-background border-l border-border min-w-[280px] z-10 align-top">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-muted text-muted-foreground">
                                         Option {i + 1}
                                     </span>
-                                    <Link href={promptUrl({ id: prompt.id, slug: prompt.slug })} className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                                    <Link href={promptUrl({ id: prompt.id, slug: prompt.slug })} className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">
                                         View full &rarr;
                                     </Link>
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-900 leading-snug">{prompt.title}</h3>
-                                <p className="text-sm font-medium text-slate-500 mt-1">by {prompt.author?.display_name || prompt.author?.username}</p>
+                                <h3 className="text-lg font-bold text-foreground leading-snug">{prompt.title}</h3>
+                                <p className="text-sm font-medium text-muted-foreground mt-1">by {prompt.author?.display_name || prompt.author?.username}</p>
                             </th>
                         ))}
                     </tr>
@@ -75,7 +75,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                     <tr><td colSpan={columns.length + 1} className={sectionHeaderClass}>Performance</td></tr>
                     <tr className={trClass}>
                         <td className={tdLabelClass}>AI Quality Score</td>
-                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-bold text-lg">{c.stats.quality_score || '—'}</span></td>)}
+                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-bold text-lg">{c.stats.quality_score || '-'}</span></td>)}
                     </tr>
                     <tr className={trClass}>
                         <td className={tdLabelClass}>Success Rate</td>
@@ -85,9 +85,9 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                         <td className={tdLabelClass}>Works / Fails</td>
                         {columns.map(c => (
                             <td key={c.prompt.id} className={tdValueClass}>
-                                <span className="text-green-600 font-medium">{c.computed.works} W</span>
-                                <span className="mx-1 text-slate-300">/</span>
-                                <span className="text-red-500 font-medium">{c.computed.fails} F</span>
+                                <span className="text-emerald-600 font-medium">{c.computed.works} W</span>
+                                <span className="mx-1 text-muted-foreground/30">/</span>
+                                <span className="text-destructive font-medium">{c.computed.fails} F</span>
                             </td>
                         ))}
                     </tr>
@@ -104,7 +104,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                     </tr>
                     <tr className={trClass}>
                         <td className={tdLabelClass}>Cost / Successful Run</td>
-                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-semibold text-emerald-700">{formatCost(c.computed.costPerSuccess)}</span></td>)}
+                        {columns.map(c => <td key={c.prompt.id} className={tdValueClass}><span className="font-semibold text-emerald-600">{formatCost(c.computed.costPerSuccess)}</span></td>)}
                     </tr>
 
                     {/* ── ADOPTION ── */}
@@ -128,7 +128,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                         <td className={tdLabelClass}>Target Model</td>
                         {columns.map(c => (
                             <td key={c.prompt.id} className={tdValueClass}>
-                                <span className="bg-slate-100 text-slate-700 px-2 py-1 flex items-center w-max rounded text-xs font-mono border border-slate-200">{c.prompt.model || '—'}</span>
+                                <span className="bg-muted text-foreground px-2 py-1 flex items-center w-max rounded text-xs font-mono border border-border">{c.prompt.model || '-'}</span>
                             </td>
                         ))}
                     </tr>
@@ -144,13 +144,13 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                         {columns.map(c => (
                             <td key={c.prompt.id} className={tdValueClass}>
                                 <div className="relative">
-                                    <div className="text-xs font-mono text-slate-600 leading-relaxed line-clamp-4 bg-slate-50 p-3 rounded border border-slate-200">
-                                        {c.prompt.system_prompt || <span className="italic text-slate-400">Empty</span>}
+                                    <div className="text-xs font-mono text-muted-foreground leading-relaxed line-clamp-4 bg-muted/30 p-3 rounded border border-border">
+                                        {c.prompt.system_prompt || <span className="italic text-muted-foreground/60">Empty</span>}
                                     </div>
                                     {c.prompt.system_prompt && c.prompt.system_prompt.length > 150 && (
                                         <button
                                             onClick={() => setExpandedPrompt({ p: c.prompt, type: 'System Prompt', text: c.prompt.system_prompt })}
-                                            className="text-xs font-bold text-blue-600 mt-2 hover:text-blue-800 transition-colors"
+                                            className="text-xs font-bold text-primary mt-2 hover:text-primary/80 transition-colors"
                                         >
                                             Expand Full Prompt &rarr;
                                         </button>
@@ -164,13 +164,13 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                         {columns.map(c => (
                             <td key={c.prompt.id} className={tdValueClass}>
                                 <div className="relative">
-                                    <div className="text-xs font-mono text-slate-600 leading-relaxed line-clamp-3 bg-slate-50 p-3 rounded border border-slate-200">
-                                        {c.prompt.user_prompt_template || <span className="italic text-slate-400">Empty</span>}
+                                    <div className="text-xs font-mono text-muted-foreground leading-relaxed line-clamp-3 bg-muted/30 p-3 rounded border border-border">
+                                        {c.prompt.user_prompt_template || <span className="italic text-muted-foreground/60">Empty</span>}
                                     </div>
                                     {c.prompt.user_prompt_template && c.prompt.user_prompt_template.length > 100 && (
                                         <button
                                             onClick={() => setExpandedPrompt({ p: c.prompt, type: 'User Template', text: c.prompt.user_prompt_template })}
-                                            className="text-xs font-bold text-blue-600 mt-2 hover:text-blue-800 transition-colors"
+                                            className="text-xs font-bold text-primary mt-2 hover:text-primary/80 transition-colors"
                                         >
                                             Expand Full Template &rarr;
                                         </button>
@@ -185,31 +185,31 @@ export function PromptComparisonMatrix({ prompts }: Props) {
 
             {/* Expanded Prompt Modal */}
             {expandedPrompt && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-[0_20px_60px_rgb(0,0,0,0.2)]">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-[0_20px_60px_rgb(0,0,0,0.2)] dark:shadow-none">
+                        <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900">{expandedPrompt.type}</h3>
-                                <p className="text-sm font-medium text-slate-500 mt-0.5">{expandedPrompt.p.title}</p>
+                                <h3 className="text-lg font-bold text-foreground">{expandedPrompt.type}</h3>
+                                <p className="text-sm font-medium text-muted-foreground mt-0.5">{expandedPrompt.p.title}</p>
                             </div>
                             <button
                                 onClick={() => setExpandedPrompt(null)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
 
-                        <div className="p-6 overflow-y-auto bg-slate-50 grow">
-                            <pre className="text-sm font-mono text-slate-700 whitespace-pre-wrap word-break">
+                        <div className="p-6 overflow-y-auto bg-muted/30 grow">
+                            <pre className="text-sm font-mono text-foreground whitespace-pre-wrap word-break">
                                 {expandedPrompt.text}
                             </pre>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-slate-100 shrink-0 bg-white rounded-b-2xl flex justify-end">
+                        <div className="px-6 py-4 border-t border-border shrink-0 bg-card rounded-b-2xl flex justify-end">
                             <button
                                 onClick={() => setExpandedPrompt(null)}
-                                className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors"
+                                className="px-5 py-2.5 bg-foreground text-background rounded-xl text-sm font-bold hover:bg-foreground/90 transition-colors"
                             >
                                 Close details
                             </button>

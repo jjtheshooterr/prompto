@@ -45,7 +45,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://yknsbonffoaxxcwvxrls.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://yknsbonffoaxxcwvxrls.supabase.co wss://yknsbonffoaxxcwvxrls.supabase.co https://vitals.vercel-insights.com; frame-ancestors 'none';"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' blob: data: https://yknsbonffoaxxcwvxrls.supabase.co; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://yknsbonffoaxxcwvxrls.supabase.co wss://yknsbonffoaxxcwvxrls.supabase.co https://vitals.vercel-insights.com; frame-ancestors 'none';"
           }
         ]
       }

@@ -260,20 +260,20 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-background">
       {/* Top Bar */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => router.back()}
-              className="text-slate-400 hover:text-slate-900 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-            <div className="h-5 w-px bg-slate-200" />
-            <h1 className="text-sm font-semibold text-slate-900 tracking-tight">New Problem</h1>
+            <div className="h-5 w-px bg-border" />
+            <h1 className="text-sm font-semibold text-foreground tracking-tight">New Problem</h1>
           </div>
           <div className="hidden md:flex items-center gap-1">
             {steps.map((step, i) => (
@@ -281,11 +281,11 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 key={step.id}
                 type="button"
                 onClick={() => scrollToSection(step.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               >
-                <span className="font-mono text-[10px] text-slate-400">{step.number}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">{step.number}</span>
                 {step.label}
-                {i < steps.length - 1 && <span className="ml-2 text-slate-300">›</span>}
+                {i < steps.length - 1 && <span className="ml-2 text-muted-foreground">›</span>}
               </button>
             ))}
           </div>
@@ -296,7 +296,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               if (form) form.requestSubmit()
             }}
             disabled={submitting}
-            className="bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 px-4 py-1.5 rounded-md text-xs font-medium shadow-sm transition-all hover:shadow-md"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 px-4 py-1.5 rounded-md text-xs font-medium shadow-sm transition-all hover:shadow-md"
           >
             {submitting ? 'Creating...' : 'Publish'}
           </button>
@@ -310,13 +310,13 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
         {/* Core Details */}
         <section id="core" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">01</span>
-            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Problem Definition</h2>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">01</span>
+            <h2 className="text-sm font-semibold text-foreground tracking-tight">Problem Definition</h2>
           </div>
           
           <div className="space-y-6">
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="title" className="block text-sm font-medium text-foreground mb-2">
                 Problem Title *
               </label>
               <input
@@ -324,13 +324,13 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 id="title"
                 name="title"
                 required
-                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
                 placeholder="e.g., Generate SQL queries from natural language"
               />
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-foreground mb-2">
                 Description *
               </label>
               <textarea
@@ -338,109 +338,109 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 name="description"
                 required
                 rows={4}
-                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white resize-y"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted resize-y"
                 placeholder="Describe the problem, constraints, and objective."
               />
             </div>
 
             <div>
-              <label htmlFor="real_world_context" className="block text-sm font-medium text-slate-900 mb-2 flex justify-between items-center">
+              <label htmlFor="real_world_context" className="block text-sm font-medium text-foreground mb-2 flex justify-between items-center">
                 Real World Context
-                <span className="text-xs font-normal text-slate-400">Optional</span>
+                <span className="text-xs font-normal text-muted-foreground">Optional</span>
               </label>
               <textarea
                 id="real_world_context"
                 name="real_world_context"
                 rows={2}
-                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white resize-y"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted resize-y"
                 placeholder="Why does this matter in production?"
               />
             </div>
           </div>
         </section>
 
-        <hr className="my-10 border-slate-200" />
+        <hr className="my-10 border-border" />
 
         {/* Data Targets */}
         <section id="data" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">02</span>
-            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Data Scaffolding</h2>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">02</span>
+            <h2 className="text-sm font-semibold text-foreground tracking-tight">Data Scaffolding</h2>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="example_input" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="example_input" className="block text-sm font-medium text-foreground mb-2">
                 Example Input
               </label>
               <textarea
                 id="example_input"
                 name="example_input"
                 rows={5}
-                className="w-full font-mono text-xs border-slate-200 rounded-lg px-4 py-3 shadow-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-slate-50 transition-shadow resize-none"
+                className="w-full font-mono text-xs border-border rounded-lg px-4 py-3 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary bg-muted transition-shadow resize-none"
                 placeholder="Sample text or JSON block"
               />
             </div>
             <div>
-              <label htmlFor="expected_output" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="expected_output" className="block text-sm font-medium text-foreground mb-2">
                 Expected Output
               </label>
               <textarea
                 id="expected_output"
                 name="expected_output"
                 rows={5}
-                className="w-full font-mono text-xs border-slate-200 rounded-lg px-4 py-3 shadow-sm text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-slate-50 transition-shadow resize-none"
+                className="w-full font-mono text-xs border-border rounded-lg px-4 py-3 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary bg-muted transition-shadow resize-none"
                 placeholder="The perfect desired output"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="goal" className="block text-sm font-medium text-slate-900 mb-2 flex justify-between items-center">
+            <label htmlFor="goal" className="block text-sm font-medium text-foreground mb-2 flex justify-between items-center">
               Primary Goal Requirement
-              <span className="text-xs font-normal text-slate-400">Optional</span>
+              <span className="text-xs font-normal text-muted-foreground">Optional</span>
             </label>
             <input
               type="text"
               id="goal"
               name="goal"
-              className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+              className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
               placeholder="e.g., Output must strictly be valid SQL"
             />
           </div>
         </section>
 
-        <hr className="my-10 border-slate-200" />
+        <hr className="my-10 border-border" />
 
         {/* Evaluation Engine */}
         <section id="eval" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">03</span>
-            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Evaluation Engine</h2>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">03</span>
+            <h2 className="text-sm font-semibold text-foreground tracking-tight">Evaluation Engine</h2>
           </div>
           
           <div className="space-y-8">
             <div>
-              <label htmlFor="known_failure_modes" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="known_failure_modes" className="block text-sm font-medium text-foreground mb-2">
                 Known Failure Modes
               </label>
               <input
                 type="text"
                 id="known_failure_modes"
                 name="known_failure_modes"
-                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
                 placeholder="e.g., Hallucinations, bad JSON syntax (comma-separated)"
               />
             </div>
 
             {/* Inputs Array */}
             <div>
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                <label className="text-sm font-medium text-slate-900">Dynamic Variables</label>
+              <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
+                <label className="text-sm font-medium text-foreground">Dynamic Variables</label>
                 <button
                   type="button"
                   onClick={addInput}
-                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
                 >
                   + Add Item
                 </button>
@@ -453,22 +453,22 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                       placeholder="Variable (e.g., user_query)"
                       value={input.name}
                       onChange={(e) => updateInput(index, 'name', e.target.value)}
-                      className="w-1/3 font-mono text-xs border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                      className="w-1/3 font-mono text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
                     <input
                       type="text"
                       placeholder="Description"
                       value={input.description}
                       onChange={(e) => updateInput(index, 'description', e.target.value)}
-                      className="w-1/2 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                      className="w-1/2 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
                     <div className="flex items-center h-9 pt-1">
-                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-slate-500 hover:text-slate-700">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                         <input
                           type="checkbox"
                           checked={input.required}
                           onChange={(e) => updateInput(index, 'required', e.target.checked)}
-                          className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 w-3.5 h-3.5"
+                          className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
                         />
                         Req
                       </label>
@@ -476,7 +476,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                         <button
                           type="button"
                           onClick={() => removeInput(index)}
-                          className="ml-4 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="ml-4 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Remove variable"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -490,12 +490,12 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
 
             {/* Constraints Array */}
             <div>
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                <label className="text-sm font-medium text-slate-900">System Constraints</label>
+              <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
+                <label className="text-sm font-medium text-foreground">System Constraints</label>
                 <button
                   type="button"
                   onClick={addConstraint}
-                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
                 >
                   + Add Item
                 </button>
@@ -508,12 +508,12 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                       placeholder="Rule constraint"
                       value={constraint.rule}
                       onChange={(e) => updateConstraint(index, 'rule', e.target.value)}
-                      className="w-2/3 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                      className="w-2/3 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
                     <select
                       value={constraint.severity}
                       onChange={(e) => updateConstraint(index, 'severity', e.target.value)}
-                      className="w-1/4 text-xs border-slate-200 rounded-md px-3 py-2 text-slate-700 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                      className="w-1/4 text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     >
                       <option value="hard">Hard Limit</option>
                       <option value="soft">Soft Guide</option>
@@ -523,7 +523,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                         <button
                           type="button"
                           onClick={() => removeConstraint(index)}
-                          className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="ml-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Remove constraint"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -537,12 +537,12 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
 
             {/* Success Criteria Array */}
             <div>
-              <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                <label className="text-sm font-medium text-slate-900">Success Criteria</label>
+              <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
+                <label className="text-sm font-medium text-foreground">Success Criteria</label>
                 <button
                   type="button"
                   onClick={addSuccessCriterion}
-                  className="text-xs text-slate-600 hover:text-slate-900 font-medium px-2 py-1 rounded hover:bg-slate-100 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
                 >
                   + Add Item
                 </button>
@@ -555,21 +555,21 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                       placeholder="Criterion definition"
                       value={criterion.criterion}
                       onChange={(e) => updateSuccessCriterion(index, 'criterion', e.target.value)}
-                      className="w-1/2 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                      className="w-1/2 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
                     <input
                       type="text"
                       placeholder="Note (optional)"
                       value={criterion.description || ''}
                       onChange={(e) => updateSuccessCriterion(index, 'description', e.target.value)}
-                      className="w-1/3 text-sm border-slate-200 rounded-md px-3 py-2 text-slate-900 shadow-sm focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                      className="w-1/3 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
                     <div className="flex items-center h-9">
                       {successCriteria.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeSuccessCriterion(index)}
-                          className="ml-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="ml-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Remove criterion"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -583,25 +583,25 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           </div>
         </section>
 
-        <hr className="my-10 border-slate-200" />
+        <hr className="my-10 border-border" />
 
         {/* Classification */}
         <section id="discovery" className="pb-8 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 text-white text-xs font-mono font-bold">04</span>
-            <h2 className="text-sm font-semibold text-slate-900 tracking-tight">Classification &amp; Discovery</h2>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">04</span>
+            <h2 className="text-sm font-semibold text-foreground tracking-tight">Classification &amp; Discovery</h2>
           </div>
           
           <div className="space-y-6">
             <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-slate-900 mb-2">
+              <label htmlFor="tags" className="block text-sm font-medium text-foreground mb-2">
                 Tags
               </label>
               <input
                 type="text"
                 id="tags"
                 name="tags"
-                className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition-shadow bg-white"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
                 placeholder="sql, database, search (comma-separated)"
                 onBlur={(e) => {
                   const cleanTags = e.target.value
@@ -617,14 +617,14 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label htmlFor="industry" className="block text-sm font-medium text-slate-900 mb-2">
+                <label htmlFor="industry" className="block text-sm font-medium text-foreground mb-2">
                   Category *
                 </label>
                 <select
                   id="industry"
                   name="industry"
                   required
-                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground bg-muted focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="">Select category</option>
                   <option value="dev">Development</option>
@@ -643,13 +643,13 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               </div>
               
               <div>
-                <label htmlFor="difficulty" className="block text-sm font-medium text-slate-900 mb-2">
+                <label htmlFor="difficulty" className="block text-sm font-medium text-foreground mb-2">
                   Difficulty
                 </label>
                 <select
                   id="difficulty"
                   name="difficulty"
-                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground bg-muted focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="">Set difficulty</option>
                   <option value="beginner">Beginner</option>
@@ -660,14 +660,14 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               </div>
 
               <div>
-                <label htmlFor="visibility" className="block text-sm font-medium text-slate-900 mb-2">
+                <label htmlFor="visibility" className="block text-sm font-medium text-foreground mb-2">
                   Access Level
                 </label>
                 <select
                   id="visibility"
                   name="visibility"
                   defaultValue="public"
-                  className="w-full text-sm border-slate-200 rounded-lg px-4 py-2.5 shadow-sm text-slate-700 bg-white focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
+                  className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground bg-muted focus:ring-2 focus:ring-primary focus:border-primary"
                 >
                   <option value="public">Public</option>
                   <option value="private">Private</option>
@@ -678,21 +678,21 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
         </section>
 
         {/* Bottom Publish Bar */}
-        <div className="mt-8 pt-8 border-t border-slate-200">
+        <div className="mt-8 pt-8 border-t border-border">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">All required fields marked with *</p>
+            <p className="text-xs text-muted-foreground">All required fields marked with *</p>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 px-5 py-2 rounded-lg text-sm font-medium transition-all"
+                className="bg-card text-muted-foreground hover:text-foreground hover:bg-muted border border-border px-5 py-2 rounded-lg text-sm font-medium transition-all"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md inline-flex items-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -711,48 +711,48 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             <div className="sticky top-20 space-y-5">
 
               {/* Prompt Engineering Tips */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="bg-card border border-border rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500"><path d="M12 2v4"/><path d="m6.34 7.34 2.83 2.83"/><path d="M2 12h4"/><path d="m6.34 16.66 2.83-2.83"/><path d="M12 18v4"/><path d="m17.66 16.66-2.83-2.83"/><path d="M18 12h4"/><path d="m17.66 7.34-2.83 2.83"/></svg>
-                  <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Boost Solver Quality</h3>
+                  <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Boost Solver Quality</h3>
                 </div>
-                <ul className="space-y-2.5 text-xs text-slate-500 leading-relaxed">
+                <ul className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">1</span>
-                    <span><strong className="text-slate-700">Be precise with constraints.</strong> Vague rules produce vague prompts. Specify exact formats, token limits, or output schemas.</span>
+                    <span><strong className="text-foreground">Be precise with constraints.</strong> Vague rules produce vague prompts. Specify exact formats, token limits, or output schemas.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">2</span>
-                    <span><strong className="text-slate-700">Provide diverse examples.</strong> Include edge cases in your example input. Solvers craft better prompts when they see the hard cases up front.</span>
+                    <span><strong className="text-foreground">Provide diverse examples.</strong> Include edge cases in your example input. Solvers craft better prompts when they see the hard cases up front.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">3</span>
-                    <span><strong className="text-slate-700">Define failure modes.</strong> Listing known pitfalls (hallucinations, format drift) helps solvers build targeted guardrails.</span>
+                    <span><strong className="text-foreground">Define failure modes.</strong> Listing known pitfalls (hallucinations, format drift) helps solvers build targeted guardrails.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">4</span>
-                    <span><strong className="text-slate-700">Use success criteria.</strong> Measurable criteria (accuracy, latency, token cost) let the community objectively rank solutions.</span>
+                    <span><strong className="text-foreground">Use success criteria.</strong> Measurable criteria (accuracy, latency, token cost) let the community objectively rank solutions.</span>
                   </li>
                 </ul>
               </div>
 
               {/* Quick Reference */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5">
+              <div className="bg-card border border-border rounded-xl p-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-                  <h3 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">Quick Reference</h3>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                  <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider">Quick Reference</h3>
                 </div>
-                <div className="text-xs text-slate-500 leading-relaxed space-y-2">
+                <div className="text-xs text-muted-foreground leading-relaxed space-y-2">
                   <p className="flex items-start gap-2">
-                    <span className="text-slate-300">&#x2022;</span> 
-                    <span>Use <code className="px-1 py-0.5 bg-slate-100 rounded text-slate-700 font-mono text-[11px]">JSON</code> or <code className="px-1 py-0.5 bg-slate-100 rounded text-slate-700 font-mono text-[11px]">plaintext</code> for inputs/outputs</span>
+                    <span className="text-muted-foreground">&#x2022;</span> 
+                    <span>Use <code className="px-1 py-0.5 bg-muted rounded text-foreground font-mono text-[11px]">JSON</code> or <code className="px-1 py-0.5 bg-muted rounded text-foreground font-mono text-[11px]">plaintext</code> for inputs/outputs</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="text-slate-300">&#x2022;</span> 
+                    <span className="text-muted-foreground">&#x2022;</span> 
                     <span>Separate tags and failure modes with commas</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="text-slate-300">&#x2022;</span> 
+                    <span className="text-muted-foreground">&#x2022;</span> 
                     <span>Hard constraints fail the submission; soft ones are advisory</span>
                   </p>
                 </div>

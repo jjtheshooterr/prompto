@@ -31,14 +31,14 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
 
     if (requestedPromptIds.length < 2) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="text-center max-w-md mx-auto p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                    <svg className="w-12 h-12 text-slate-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6 bg-card border border-border rounded-2xl shadow-sm">
+                    <svg className="w-12 h-12 text-muted-foreground mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    <h2 className="text-lg font-bold text-slate-900 mb-2">Not Enough Prompts</h2>
-                    <p className="text-slate-500 text-sm mb-6">You need to select at least 2 prompts to compare them side-by-side.</p>
-                    <Link href={`/problems/${expectedSlugParam}`} className="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm">
+                    <h2 className="text-lg font-bold text-foreground mb-2">Not Enough Prompts</h2>
+                    <p className="text-muted-foreground text-sm mb-6">You need to select at least 2 prompts to compare them side-by-side.</p>
+                    <Link href={`/problems/${expectedSlugParam}`} className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm">
                         Back to Problem
                     </Link>
                 </div>
@@ -78,18 +78,18 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
 
     if (validPrompts.length < 2) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="text-center max-w-md mx-auto p-6 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6 bg-card border border-border rounded-2xl shadow-sm">
                     <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h2 className="text-lg font-bold text-slate-900 mb-2">Invalid Selection</h2>
-                    <p className="text-slate-500 text-sm mb-6">
+                    <h2 className="text-lg font-bold text-foreground mb-2">Invalid Selection</h2>
+                    <p className="text-muted-foreground text-sm mb-6">
                         The selected prompts do not belong to this problem. You can only compare solutions that share the exact same problem context.
                     </p>
-                    <Link href={`/problems/${expectedSlugParam}`} className="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm">
+                    <Link href={`/problems/${expectedSlugParam}`} className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm">
                         Back to Problem
                     </Link>
                 </div>
@@ -98,36 +98,36 @@ export default async function ComparePage({ params, searchParams }: ComparePageP
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-20">
+        <div className="min-h-screen bg-background pb-20">
             {/* Compact Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+            <div className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3 min-w-0">
                             <Link
                                 href={`/problems/${expectedSlugParam}`}
-                                className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
+                                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                                 </svg>
                             </Link>
                             <div className="min-w-0">
-                                <h1 className="text-lg font-bold text-slate-900 truncate">
+                                <h1 className="text-lg font-bold text-foreground truncate">
                                     Compare Prompts
                                 </h1>
-                                <p className="text-sm text-slate-500 truncate">
+                                <p className="text-sm text-muted-foreground truncate">
                                     Problem: {problem.title}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">
+                            <span className="text-sm font-semibold text-muted-foreground bg-muted px-3 py-1.5 rounded-lg">
                                 {validPrompts.length} prompts selected
                             </span>
                             <Link
                                 href={`/problems/${expectedSlugParam}`}
-                                className="text-sm font-semibold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="text-sm font-semibold text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
                             >
                                 Clear
                             </Link>

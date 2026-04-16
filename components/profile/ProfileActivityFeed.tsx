@@ -35,8 +35,8 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
             case 'prompt_created':
                 return (
                     <>
-                        <span className="font-medium text-slate-900">{profileName}</span> published a new prompt{' '}
-                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-blue-600 hover:underline">
+                        <span className="font-medium text-foreground">{profileName}</span> published a new prompt{' '}
+                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-primary hover:underline">
                             {activity.entity_title}
                         </Link>
                     </>
@@ -44,8 +44,8 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
             case 'prompt_forked':
                 return (
                     <>
-                        <span className="font-medium text-slate-900">{profileName}</span> forked prompt{' '}
-                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-blue-600 hover:underline">
+                        <span className="font-medium text-foreground">{profileName}</span> forked prompt{' '}
+                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-primary hover:underline">
                             {activity.entity_title}
                         </Link>
                     </>
@@ -53,8 +53,8 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
             case 'prompt_updated':
                 return (
                     <>
-                        <span className="font-medium text-slate-900">{profileName}</span> updated their prompt{' '}
-                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-blue-600 hover:underline">
+                        <span className="font-medium text-foreground">{profileName}</span> updated their prompt{' '}
+                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-primary hover:underline">
                             {activity.entity_title}
                         </Link>
                     </>
@@ -62,8 +62,8 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
             case 'review_received':
                 return (
                     <>
-                        <span className="font-medium text-slate-900">{profileName}</span> received a review on{' '}
-                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-blue-600 hover:underline">
+                        <span className="font-medium text-foreground">{profileName}</span> received a review on{' '}
+                        <Link href={`/prompts/${activity.metadata?.slug || activity.entity_id}`} className="font-medium text-primary hover:underline">
                             {activity.entity_title}
                         </Link>
                     </>
@@ -71,8 +71,8 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
             default:
                 return (
                     <>
-                        <span className="font-medium text-slate-900">{profileName}</span> interacted with{' '}
-                        <span className="font-medium text-slate-700">{activity.entity_title || activity.entity_type}</span>
+                        <span className="font-medium text-foreground">{profileName}</span> interacted with{' '}
+                        <span className="font-medium text-muted-foreground">{activity.entity_title || activity.entity_type}</span>
                     </>
                 );
         }
@@ -98,7 +98,7 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
                 );
             case 'prompt_updated':
                 return (
-                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0 mt-0.5">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
@@ -106,7 +106,7 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
                 );
             default:
                 return (
-                    <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0 mt-0.5">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -119,10 +119,10 @@ export function ProfileActivityItem({ activity, profileName }: ProfileActivityIt
         <div className="flex gap-4">
             <Icon />
             <div className="flex flex-col gap-1">
-                <div className="text-slate-800 leading-snug">
+                <div className="text-foreground/90 leading-snug">
                     {renderContent()}
                 </div>
-                <div className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     {timeStr}
                 </div>
             </div>
@@ -138,16 +138,16 @@ interface ProfileActivityFeedProps {
 export function ProfileActivityFeed({ activities, profileName }: ProfileActivityFeedProps) {
     if (!activities || activities.length === 0) {
         return (
-            <div className="py-12 text-center border border-dashed border-slate-300 rounded-xl bg-slate-50">
-                <p className="text-slate-500">No recent activity to show.</p>
+            <div className="py-12 text-center border border-dashed border-border rounded-xl bg-card">
+                <p className="text-muted-foreground">No recent activity to show.</p>
             </div>
         );
     }
 
     return (
         <div className="flex flex-col gap-8 max-w-3xl">
-            <h3 className="text-xl font-bold text-slate-900">Recent Activity</h3>
-            <div className="flex flex-col gap-8 relative before:absolute before:inset-y-0 before:-left-[15px] before:w-[2px] before:bg-slate-200 ml-[15px]">
+            <h3 className="text-xl font-bold text-foreground">Recent Activity</h3>
+            <div className="flex flex-col gap-8 relative before:absolute before:inset-y-0 before:-left-[15px] before:w-[2px] before:bg-border ml-[15px]">
                 {activities.map((activity) => (
                     <div key={activity.activity_id} className="relative z-10 -ml-[31px]">
                         <ProfileActivityItem activity={activity} profileName={profileName} />

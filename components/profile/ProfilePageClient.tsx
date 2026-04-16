@@ -42,8 +42,8 @@ export function ProfilePageClient({ profile, stats, initialActivities }: Profile
             {tab === 'prompts' && <UserPromptsList userId={profile.id} />}
             {tab === 'forks' && <UserForksList userId={profile.id} />}
             {tab === 'reviews' && (
-              <div className="py-12 text-center border border-dashed border-slate-300 rounded-xl bg-white">
-                <p className="text-slate-500">Reviews feature coming soon.</p>
+              <div className="py-12 text-center border border-dashed border-border rounded-xl bg-card">
+                <p className="text-muted-foreground">Reviews feature coming soon.</p>
               </div>
             )}
             {tab === 'activity' && (

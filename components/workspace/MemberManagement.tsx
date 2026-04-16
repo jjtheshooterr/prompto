@@ -159,22 +159,22 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'owner': return 'bg-green-100 text-green-800'
-      case 'admin': return 'bg-purple-100 text-purple-800'
-      case 'member': return 'bg-blue-100 text-blue-800'
-      case 'viewer': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'owner': return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+      case 'admin': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+      case 'member': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+      case 'viewer': return 'bg-muted text-muted-foreground'
+      default: return 'bg-muted text-muted-foreground'
     }
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-card border border-border shadow-lg rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Manage Members</h2>
+          <h2 className="text-xl font-bold text-foreground">Manage Members</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -183,11 +183,11 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
         </div>
 
         {/* Add Member Form */}
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-medium mb-3">Add New Member</h3>
+        <div className="mb-6 p-4 bg-muted/50 border border-border rounded-lg">
+          <h3 className="font-medium text-foreground mb-3">Add New Member</h3>
           <form onSubmit={handleAddMember} className="space-y-3">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
                 Email Address
               </label>
               <input
@@ -196,20 +196,20 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
                 value={newMemberEmail}
                 onChange={(e) => setNewMemberEmail(e.target.value)}
                 placeholder="user@example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-background border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="role" className="block text-sm font-medium text-foreground mb-1">
                 Role
               </label>
               <select
                 id="role"
                 value={newMemberRole}
                 onChange={(e) => setNewMemberRole(e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-background border border-border text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="viewer">Viewer - Can view only</option>
                 <option value="member">Member - Can view and contribute</option>
@@ -220,7 +220,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
             <button
               type="submit"
               disabled={adding}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {adding ? 'Adding...' : 'Add Member'}
             </button>
@@ -229,21 +229,21 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
 
         {/* Current Members */}
         <div>
-          <h3 className="font-medium mb-3">Current Members ({members.length})</h3>
+          <h3 className="font-medium text-foreground mb-3">Current Members ({members.length})</h3>
 
           {loading ? (
-            <div className="text-center py-4">Loading members...</div>
+            <div className="text-center py-4 text-muted-foreground">Loading members...</div>
           ) : members.length === 0 ? (
-            <div className="text-center py-4 text-gray-500">No members yet</div>
+            <div className="text-center py-4 text-muted-foreground">No members yet</div>
           ) : (
             <div className="space-y-3">
               {members.map((member) => (
-                <div key={`${member.problem_id}-${member.user_id}`} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div key={`${member.problem_id}-${member.user_id}`} className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
                   <div className="flex-1">
-                    <div className="font-medium">
+                    <div className="font-medium text-foreground">
                       {member.profiles.display_name || member.profiles.username || 'Unknown User'}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       Added {new Date(member.created_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -256,7 +256,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
                     {member.role !== 'owner' && (
                       <button
                         onClick={() => handleRemoveMember(member.user_id)}
-                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        className="text-destructive hover:text-destructive/80 text-sm font-medium transition-colors"
                       >
                         Remove
                       </button>
@@ -269,13 +269,13 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
         </div>
 
         {/* Role Descriptions */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">Role Permissions</h4>
-          <div className="text-sm text-blue-800 space-y-1">
-            <div><strong>Owner:</strong> Full control, cannot be removed</div>
-            <div><strong>Admin:</strong> Can manage members and contribute</div>
-            <div><strong>Member:</strong> Can view and contribute prompts</div>
-            <div><strong>Viewer:</strong> Can only view content</div>
+        <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+          <h4 className="font-medium text-foreground mb-2">Role Permissions</h4>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <div><strong className="text-foreground">Owner:</strong> Full control, cannot be removed</div>
+            <div><strong className="text-foreground">Admin:</strong> Can manage members and contribute</div>
+            <div><strong className="text-foreground">Member:</strong> Can view and contribute prompts</div>
+            <div><strong className="text-foreground">Viewer:</strong> Can only view content</div>
           </div>
         </div>
       </div>

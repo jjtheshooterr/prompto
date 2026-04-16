@@ -18,14 +18,14 @@ export default async function LeaderboardPage() {
   ])
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col pt-8">
+    <div className="bg-background min-h-screen text-foreground flex flex-col pt-8">
       <main className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
         {/* Header Section */}
         <div className="mb-8 text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tight">
             The Leaderboard
           </h1>
-          <p className="mt-3 text-base text-slate-600">
+          <p className="mt-3 text-base text-muted-foreground">
             Showcasing the top prompt engineers and the highest-rated solutions in the community.
             Rankings are updated every 24 hours based on AI evaluations and community forks.
           </p>

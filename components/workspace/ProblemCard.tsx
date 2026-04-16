@@ -85,34 +85,34 @@ export default function ProblemCard({
 
   const getVisibilityColor = (vis: string) => {
     switch (vis) {
-      case 'private': return 'bg-slate-100 text-slate-600'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'private': return 'bg-muted text-muted-foreground'
+      default: return 'bg-primary/10 text-primary'
     }
   }
 
   const getRoleColor = (role?: string) => {
     switch (role) {
-      case 'admin': return 'bg-purple-100 text-purple-800'
-      case 'member': return 'bg-blue-100 text-blue-800'
-      case 'viewer': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-green-100 text-green-800'
+      case 'admin': return 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+      case 'member': return 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+      case 'viewer': return 'bg-muted text-muted-foreground'
+      default: return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
     }
   }
 
   const promptCount = problem.prompts?.length || 0
 
   return (
-    <div className="bg-white border rounded-lg p-6 hover:shadow-md transition-shadow">
+    <div className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <Link 
             href={`/problems/${problem.slug}`}
-            className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+            className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
           >
             {problem.title}
           </Link>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {new Date(problem.created_at).toLocaleDateString()}
           </p>
         </div>
@@ -130,20 +130,20 @@ export default function ProblemCard({
       </div>
 
       {/* Description */}
-      <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
         {problem.description}
       </p>
 
       {/* Stats */}
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-muted-foreground">
           {promptCount} prompt{promptCount !== 1 ? 's' : ''}
         </span>
         
         {isOwner && (
           <Link
             href={`/create/prompt?problem=${problem.id}`}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-primary hover:text-primary/80 font-medium"
           >
             Add Prompt
           </Link>
@@ -154,7 +154,7 @@ export default function ProblemCard({
       <div className="flex gap-2">
         <Link
           href={`/problems/${problem.slug}`}
-          className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
+          className="flex-1 px-3 py-2 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors text-center"
         >
           View Problem
         </Link>
@@ -164,7 +164,7 @@ export default function ProblemCard({
             {visibility === 'private' && onManageMembers && (
               <button
                 onClick={onManageMembers}
-                className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
+                className="px-3 py-2 text-sm border border-border text-foreground rounded hover:bg-muted transition-colors"
               >
                 Members
               </button>
@@ -175,15 +175,15 @@ export default function ProblemCard({
 
       {/* Visibility Controls for Owner */}
       {isOwner && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <label className="block text-xs font-medium text-gray-700 mb-2">
+        <div className="mt-4 pt-4 border-t border-border">
+          <label className="block text-xs font-medium text-foreground mb-2">
             Visibility
           </label>
           <select
             value={visibility}
             onChange={(e) => handleVisibilityChange(e.target.value as any)}
             disabled={updating}
-            className="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+            className="w-full text-xs px-2 py-1 bg-background border border-border text-foreground rounded focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50"
           >
             <option value="private">Private - Workspace only</option>
           </select>

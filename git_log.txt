@@ -1,0 +1,10 @@
+﻿4621956 - jjtheshooterr, 2026-03-18 : Merge pull request #6 from jjtheshooterr/dependabot/npm_and_yarn/next-16.1.7
+e513f0f - dependabot[bot], 2026-03-17 : Bump next from 16.1.5 to 16.1.7
+6fe0349 - jjtheshooterr, 2026-03-11 : deploy issues header after commits of leaderboard and compare prompts
+e2c4bfa - jjtheshooterr, 2026-03-11 : Merge origin/main and keep my local changes
+f3abde3 - jjtheshooterr, 2026-03-11 : Save my local work before pulling partner changes
+39adfa5 - OrygnsCode, 2026-03-11 : fix: set vercel cron to daily to comply with hobby tier, update leaderboard revalidate
+37736e4 - OrygnsCode, 2026-03-11 : fix: hydration mismatch in TierBadge, add Guide page, compact nav, privacy/author improvements
+b5e0045 - OrygnsCode, 2026-03-11 : style: overhaul profile design and add svg visual tier badges
+bbd8618 - OrygnsCode, 2026-03-11 : feat: complete public user profiles and privacy controls
+a3c716d - OrygnsCode, 2026-03-11 : UI Polish: Elevated Create Problem page and redesigned Footer

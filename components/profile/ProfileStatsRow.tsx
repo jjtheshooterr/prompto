@@ -22,11 +22,11 @@ export function ProfileStatCard({
     subtext?: string;
 }) {
     return (
-        <div className="flex-1 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col gap-2">
-            <div className="text-sm font-medium text-slate-500">{label}</div>
-            <div className="text-3xl font-bold text-slate-900">{value}</div>
+        <div className="flex-1 bg-card border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-2">
+            <div className="text-sm font-medium text-muted-foreground">{label}</div>
+            <div className="text-3xl font-bold text-foreground">{value}</div>
             {subtext && (
-                <div className="text-xs font-medium text-blue-600 flex items-center gap-1">
+                <div className="text-xs font-medium text-primary flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>

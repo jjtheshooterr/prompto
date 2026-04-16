@@ -40,10 +40,10 @@ export function AuthorChip({
   return (
     <Link
       href={profileUrl}
-      className={`inline-flex items-center ${sizeClasses[size]} text-gray-700 hover:text-blue-600 transition-colors ${className}`}
+      className={`inline-flex items-center ${sizeClasses[size]} text-foreground hover:text-primary transition-colors ${className}`}
     >
       {showAvatar && (
-        <div className={`${avatarSizes[size]} rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0`}>
+        <div className={`${avatarSizes[size]} rounded-full overflow-hidden bg-muted flex items-center justify-center flex-shrink-0`}>
           {avatarUrl ? (
             <Image
               src={avatarUrl}
@@ -54,7 +54,7 @@ export function AuthorChip({
               unoptimized
             />
           ) : (
-            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           )}
@@ -64,7 +64,7 @@ export function AuthorChip({
         {name}
       </span>
       {username && (
-        <span className="text-gray-500 truncate">
+        <span className="text-muted-foreground truncate">
           @{username}
         </span>
       )}

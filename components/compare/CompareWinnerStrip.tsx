@@ -88,28 +88,28 @@ export function CompareWinnerStrip({ prompts }: Props) {
 
 function WinnerCard({ title, winner, metric, icon, color }: any) {
     const bgColors: Record<string, string> = {
-        yellow: 'bg-yellow-50 text-yellow-600',
-        green: 'bg-green-50 text-green-600',
-        blue: 'bg-blue-50 text-blue-600',
-        emerald: 'bg-emerald-50 text-emerald-600'
+        yellow: 'bg-amber-500/10 text-amber-600',
+        green: 'bg-emerald-500/10 text-emerald-600',
+        blue: 'bg-primary/10 text-primary',
+        emerald: 'bg-emerald-500/10 text-emerald-600'
     }
 
     return (
-        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+        <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bgColors[color]}`}>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">{icon}</svg>
                 </div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
             </div>
 
             {winner ? (
                 <>
-                    <div className="font-bold text-slate-900 text-lg truncate mb-1">{winner.prompt.title}</div>
-                    <p className="text-xs font-medium text-slate-500">{metric}</p>
+                    <div className="font-bold text-foreground text-lg truncate mb-1">{winner.prompt.title}</div>
+                    <p className="text-xs font-medium text-muted-foreground">{metric}</p>
                 </>
             ) : (
-                <div className="text-sm font-medium text-slate-400 italic mt-3">{metric}</div>
+                <div className="text-sm font-medium text-muted-foreground/60 italic mt-3">{metric}</div>
             )}
         </div>
     )
