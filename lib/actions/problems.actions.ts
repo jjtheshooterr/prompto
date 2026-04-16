@@ -89,12 +89,45 @@ export async function listProblems({
     }
   }
 
+  // Fetch top prompt for each problem (for preview on browse page)
+  const problemIds = (problems || []).map((p: any) => p.id)
+  let topPromptsMap: Record<string, any> = {}
+
+  if (problemIds.length > 0) {
+    const { data: topPrompts } = await supabase
+      .from('prompts')
+      .select(`
+        id, problem_id, title, system_prompt, example_output, model,
+        prompt_stats(quality_score, works_count, fails_count)
+      `)
+      .in('problem_id', problemIds)
+      .eq('is_listed', true)
+      .eq('is_hidden', false)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false })
+      .limit(problemIds.length * 3) // fetch a few per problem to pick best
+
+    if (topPrompts) {
+      // Group by problem_id and pick the one with highest quality_score
+      for (const prompt of topPrompts) {
+        const pid = prompt.problem_id
+        const score = prompt.prompt_stats?.[0]?.quality_score || 0
+        const existing = topPromptsMap[pid]
+        const existingScore = existing?.prompt_stats?.[0]?.quality_score || 0
+        if (!existing || score > existingScore) {
+          topPromptsMap[pid] = prompt
+        }
+      }
+    }
+  }
+
   // Transform tags and attach author data
   const transformedProblems = (problems || []).map((p: any) => {
     const problem = {
       ...p,
       tags: p.problem_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) || [],
-      author: p.created_by ? authorsMap[p.created_by] : null
+      author: p.created_by ? authorsMap[p.created_by] : null,
+      top_prompt: topPromptsMap[p.id] || null
     }
     return problem
   })

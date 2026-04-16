@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/app/providers'
 
 interface Member {
-  id: string
+  problem_id: string
   user_id: string
   role: 'owner' | 'admin' | 'member' | 'viewer'
   created_at: string
@@ -238,7 +238,7 @@ export default function MemberManagement({ problemId, onClose, onUpdate }: Membe
           ) : (
             <div className="space-y-3">
               {members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div key={`${member.problem_id}-${member.user_id}`} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div className="flex-1">
                     <div className="font-medium">
                       {member.profiles.display_name || member.profiles.username || 'Unknown User'}
