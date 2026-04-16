@@ -29,21 +29,17 @@ export default function SignInForm() {
       return
     }
 
-    const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-
-    if (hasTurnstile && !turnstileToken) {
+    if (!turnstileToken) {
       setError('Please complete the security challenge')
       setLoading(false)
       return
     }
 
-    if (hasTurnstile && turnstileToken) {
-      const verification = await verifyTurnstileToken(turnstileToken)
-      if (!verification.success) {
-        setError(verification.error || 'Verification failed')
-        setLoading(false)
-        return
-      }
+    const verification = await verifyTurnstileToken(turnstileToken)
+    if (!verification.success) {
+      setError(verification.error || 'Verification failed')
+      setLoading(false)
+      return
     }
 
     const supabase = createClient()
@@ -139,9 +135,7 @@ export default function SignInForm() {
             onSuccess={(token) => setTurnstileToken(token)}
             onError={() => setError('Verification challenge failed to load.')}
           />
-        ) : (
-          <p className="text-xs text-muted-foreground">CAPTCHA disabled (dev mode)</p>
-        )}
+        ) : null}
       </div>
 
       <button
