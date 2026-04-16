@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface SelectedPrompt {
     id: string
@@ -136,10 +137,10 @@ export function CompareCart() {
                     >
                         <div className="flex-grow min-w-0">
                             <h3 className="font-semibold text-foreground text-sm mb-1 truncate">
-                                {prompt.title}
+                                {toDisplayString(prompt.title)}
                             </h3>
                             <p className="text-xs text-muted-foreground truncate">
-                                Problem: {prompt.problemTitle}
+                                Problem: {toDisplayString(prompt.problemTitle)}
                             </p>
                         </div>
                         <button

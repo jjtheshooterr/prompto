@@ -3,7 +3,7 @@ import { listPromptsByProblem, type PromptSort } from '@/lib/actions/prompts.act
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { Suspense } from 'react'
-import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
+import { promptUrl, problemUrl, extractDbSlug, toDisplayString } from '@/lib/utils/prompt-url'
 import { ProblemPromptsList } from '@/components/problems/ProblemPromptsList'
 import { JsonLd } from '@/components/seo/JsonLd'
 import type { Metadata } from 'next'
@@ -173,7 +173,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-foreground font-medium truncate">{problem.title}</span>
+          <span className="text-foreground font-medium truncate">{toDisplayString(problem.title)}</span>
         </div>
 
         {/* ── Problem Header ────────────────────────────────────────────── */}
@@ -181,7 +181,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-2 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{problem.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground break-words">{toDisplayString(problem.title)}</h1>
                 {isAdmin && (
                   <AdminFeatureToggle 
                     contentType="problem" 
@@ -211,10 +211,10 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
               </div>
 
               <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">
-                {problem.title}
+                {toDisplayString(problem.title)}
               </h1>
               <p className="text-muted-foreground leading-relaxed max-w-2xl mb-4">
-                {problem.description}
+                {toDisplayString(problem.description)}
               </p>
 
               {/* Submission count */}
@@ -298,7 +298,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
             </h2>
             {(problem.real_world_context || problem.goal) && (
               <p className="text-sm text-foreground leading-relaxed mb-4">
-                {problem.real_world_context || problem.goal}
+                {toDisplayString(problem.real_world_context || problem.goal)}
               </p>
             )}
             {problem.success_criteria?.length > 0 && (
@@ -306,7 +306,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                 {problem.success_criteria.map((c: any, i: number) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                     <span className="text-primary mt-0.5 font-bold">•</span>
-                    {c.criterion}
+                    {toDisplayString(c)}
                   </li>
                 ))}
               </ul>

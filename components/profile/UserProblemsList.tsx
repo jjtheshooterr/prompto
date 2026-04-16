@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { toDisplayString } from '@/lib/utils/prompt-url';
 
 export function UserProblemsList({ userId }: { userId: string }) {
   const [problems, setProblems] = useState<any[]>([]);
@@ -69,9 +70,9 @@ export function UserProblemsList({ userId }: { userId: string }) {
                   href={`/problems/${problem.slug}`}
                   className="text-xl font-semibold text-foreground hover:text-primary transition-colors"
                 >
-                  {problem.title}
+                  {toDisplayString(problem.title)}
                 </Link>
-                <p className="text-muted-foreground mt-2 line-clamp-2">{problem.description}</p>
+                <p className="text-muted-foreground mt-2 line-clamp-2">{toDisplayString(problem.description)}</p>
                 <div className="text-sm text-muted-foreground mt-2">
                   Created {new Date(problem.created_at).toLocaleDateString()}
                   {problem.updated_at !== problem.created_at && (

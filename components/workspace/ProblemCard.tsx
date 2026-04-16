@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface Problem {
   id: string
@@ -110,7 +111,7 @@ export default function ProblemCard({
             href={`/problems/${problem.slug}`}
             className="text-lg font-semibold text-foreground hover:text-primary transition-colors"
           >
-            {problem.title}
+            {toDisplayString(problem.title)}
           </Link>
           <p className="text-sm text-muted-foreground mt-1">
             {new Date(problem.created_at).toLocaleDateString()}
@@ -131,7 +132,7 @@ export default function ProblemCard({
 
       {/* Description */}
       <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-        {problem.description}
+        {toDisplayString(problem.description)}
       </p>
 
       {/* Stats */}

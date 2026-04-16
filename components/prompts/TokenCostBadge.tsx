@@ -1,4 +1,5 @@
 import { calculateTokenCount, estimateCost, formatEstimatedCost, AIModel, MODEL_PRICING } from "@/lib/utils/tokenizer";
+import { toDisplayString } from "@/lib/utils/prompt-url";
 
 interface TokenCostBadgeProps {
   systemPrompt: string | null | undefined;
@@ -9,7 +10,7 @@ interface TokenCostBadgeProps {
 
 export function TokenCostBadge({ systemPrompt, userPromptTemplate, exampleOutput, model }: TokenCostBadgeProps) {
   const fallbackModel = model || "gpt-4o"; // default mapped model if somehow missing
-  const inputText = `${systemPrompt || ''}\n\n${userPromptTemplate || ''}`;
+  const inputText = `${toDisplayString(systemPrompt)}\n\n${toDisplayString(userPromptTemplate)}`;
   const inputTokens = calculateTokenCount(inputText);
   const outputTokens = calculateTokenCount(exampleOutput);
   const totalTokens = inputTokens + outputTokens;
@@ -40,7 +41,7 @@ export function TokenCostBadge({ systemPrompt, userPromptTemplate, exampleOutput
 }
 
 export function CompactTokenBadge({ systemPrompt, userPromptTemplate, exampleOutput, model }: { systemPrompt: string | null | undefined, userPromptTemplate: string | null | undefined, exampleOutput?: string | null | undefined, model?: string | null }) {
-  const inputText = `${systemPrompt || ''}\n\n${userPromptTemplate || ''}`;
+  const inputText = `${toDisplayString(systemPrompt)}\n\n${toDisplayString(userPromptTemplate)}`;
   const inputTokens = calculateTokenCount(inputText);
   const outputTokens = calculateTokenCount(exampleOutput);
   const totalTokens = inputTokens + outputTokens;

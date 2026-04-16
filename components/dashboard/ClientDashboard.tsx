@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/app/providers'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 import {
   User,
   Settings,
@@ -142,7 +142,7 @@ export default function ClientDashboard() {
           id: `prob-${p.id}`,
           type: 'problem',
           title: `Created Problem`,
-          subtitle: p.title,
+          subtitle: toDisplayString(p.title),
           date: p.created_at,
           link: `/problems/${p.slug}`
         })
@@ -153,7 +153,7 @@ export default function ClientDashboard() {
       let promptProblems: Record<string, string> = {}
       if (probIdsForPrompts.length > 0) {
         const { data: promptProbsData } = await supabase.from('problems').select('id, title').in('id', probIdsForPrompts)
-        promptProbsData?.forEach(p => promptProblems[p.id] = p.title)
+        promptProbsData?.forEach(p => promptProblems[p.id] = toDisplayString(p.title))
       }
 
       promptsResult.data?.forEach(p => {
@@ -162,7 +162,7 @@ export default function ClientDashboard() {
           id: `pmpt-${p.id}`,
           type: isFork ? 'fork' : 'prompt',
           title: isFork ? `Forked Prompt` : `Submitted Prompt`,
-          subtitle: p.title + (p.problem_id && promptProblems[p.problem_id] ? ` for ${promptProblems[p.problem_id]}` : ''),
+          subtitle: toDisplayString(p.title) + (p.problem_id && promptProblems[p.problem_id] ? ` for ${promptProblems[p.problem_id]}` : ''),
           date: p.created_at,
           link: promptUrl(p)
         })
@@ -179,7 +179,7 @@ export default function ClientDashboard() {
               id: `vote-${v.id}`,
               type: 'vote',
               title: `Voted on Prompt`,
-              subtitle: prompt.title,
+              subtitle: toDisplayString(prompt.title),
               date: v.created_at,
               link: promptUrl(prompt)
             })
@@ -352,7 +352,7 @@ export default function ClientDashboard() {
                           </div>
                           <div>
                             <Link href={`/problems/${prob.slug}`} className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                              {prob.title}
+                              {toDisplayString(prob.title)}
                             </Link>
                             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
                               {prob.created_by === user.id ? (
@@ -401,7 +401,7 @@ export default function ClientDashboard() {
                       <div key={prompt.id} className={`p-5 hover:bg-card transition-colors cursor-pointer border-b ${i > 1 ? 'sm:border-b-0 sm:border-t border-border' : ''}`} onClick={() => window.location.href = `/prompts/${prompt.id}/edit`}>
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-foreground truncate pr-4 text-[15px]">{prompt.title}</h3>
+                            <h3 className="font-semibold text-foreground truncate pr-4 text-[15px]">{toDisplayString(prompt.title)}</h3>
                             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                               Last edited: {timeAgo(prompt.updated_at || prompt.created_at)}

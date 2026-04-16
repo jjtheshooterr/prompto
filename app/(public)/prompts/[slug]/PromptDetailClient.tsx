@@ -9,7 +9,7 @@ import PromptReviewForm from '@/components/prompts/PromptReviewForm'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { promptUrl, problemUrl, extractDbSlug } from '@/lib/utils/prompt-url'
+import { promptUrl, problemUrl, extractDbSlug, toDisplayString } from '@/lib/utils/prompt-url'
 import { TokenCostBadge } from '@/components/prompts/TokenCostBadge'
 import { AdminFeatureToggle } from '@/components/admin/AdminFeatureToggle'
 
@@ -160,7 +160,7 @@ export default function PromptDetailClient() {
     }
 
     const handleCopy = async () => {
-        const text = `${prompt.system_prompt || ''}\n\n${prompt.user_prompt_template || ''}`
+        const text = `${toDisplayString(prompt.system_prompt)}\n\n${toDisplayString(prompt.user_prompt_template)}`
         await navigator.clipboard.writeText(text)
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
@@ -236,19 +236,19 @@ export default function PromptDetailClient() {
                         <>
                             <span>/</span>
                             <Link href={problemUrl(prompt.problems)} className="hover:text-foreground transition-colors">
-                                {prompt.problems.title}
+                                {toDisplayString(prompt.problems.title)}
                             </Link>
                         </>
                     )}
                     <span>/</span>
-                    <span className="text-foreground font-medium truncate max-w-xs">{prompt.title}</span>
+                    <span className="text-foreground font-medium truncate max-w-xs">{toDisplayString(prompt.title)}</span>
                 </div>
 
                 {/* Page Header */}
                 <div className="flex items-start justify-between gap-4 mb-8">
                     <div className="min-w-0">
                         <div className="flex items-center gap-3 flex-wrap">
-                            <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
+                            <h1 className="text-2xl font-bold text-foreground">{toDisplayString(prompt.title)}</h1>
                             {isAdmin && (
                                 <AdminFeatureToggle 
                                     contentType="prompt" 
@@ -419,7 +419,7 @@ export default function PromptDetailClient() {
                                     <div>
                                         {prompt.system_prompt ? (
                                             <div className="relative group">
-                                                <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{prompt.system_prompt}</pre>
+                                                <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{toDisplayString(prompt.system_prompt)}</pre>
                                                 <button onClick={handleCopy} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 text-xs bg-card border border-border rounded text-muted-foreground hover:bg-muted">{copied ? '✓' : 'Copy'}</button>
                                             </div>
                                         ) : <p className="text-muted-foreground italic text-sm">No system prompt provided.</p>}
@@ -428,13 +428,13 @@ export default function PromptDetailClient() {
                                                 {prompt.usage_context && (
                                                     <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                                                         <p className="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-1">Usage Context</p>
-                                                        <p className="text-sm text-blue-900">{prompt.usage_context}</p>
+                                                        <p className="text-sm text-blue-900">{toDisplayString(prompt.usage_context)}</p>
                                                     </div>
                                                 )}
                                                 {prompt.tradeoffs && (
                                                     <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
                                                         <p className="text-xs font-semibold uppercase tracking-wider text-purple-500 mb-1">Tradeoffs</p>
-                                                        <p className="text-sm text-purple-900">{prompt.tradeoffs}</p>
+                                                        <p className="text-sm text-purple-900">{toDisplayString(prompt.tradeoffs)}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -444,12 +444,12 @@ export default function PromptDetailClient() {
                                 {activeTab === 'template' && (
                                     <div>
                                         {prompt.user_prompt_template
-                                            ? <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{prompt.user_prompt_template}</pre>
+                                            ? <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{toDisplayString(prompt.user_prompt_template)}</pre>
                                             : <p className="text-muted-foreground italic text-sm">No user template provided.</p>}
                                         {prompt.notes && (
                                             <div className="mt-4 bg-amber-50 border border-amber-100 rounded-lg p-4">
                                                 <p className="text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">Notes</p>
-                                                <p className="text-sm text-amber-900">{prompt.notes}</p>
+                                                <p className="text-sm text-amber-900">{toDisplayString(prompt.notes)}</p>
                                             </div>
                                         )}
                                     </div>
@@ -479,7 +479,7 @@ export default function PromptDetailClient() {
                                         {prompt.parent_prompt_id && prompt.fix_summary && (
                                             <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
                                                 <p className="text-xs font-semibold uppercase tracking-wider text-orange-500 mb-1">Fork Summary</p>
-                                                <p className="text-sm text-orange-900">{prompt.fix_summary}</p>
+                                                <p className="text-sm text-orange-900">{toDisplayString(prompt.fix_summary)}</p>
                                             </div>
                                         )}
                                         <ForkLineage promptId={promptId} />
@@ -509,7 +509,7 @@ export default function PromptDetailClient() {
                                                 <span className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</span>
                                             </div>
                                             {(review.worked_reason || review.failure_reason || review.comment) && (
-                                                <p className="text-sm text-muted-foreground leading-relaxed">{review.worked_reason || review.failure_reason || review.comment}</p>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">{toDisplayString(review.worked_reason || review.failure_reason || review.comment)}</p>
                                             )}
                                         </div>
                                     ))}

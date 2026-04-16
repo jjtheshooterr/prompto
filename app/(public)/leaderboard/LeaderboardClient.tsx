@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { LeaderboardUser, LeaderboardPrompt } from '@/lib/actions/leaderboard.actions'
-import { problemUrl, promptUrl } from '@/lib/utils/prompt-url'
+import { problemUrl, promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 import { TierBadge } from '@/components/badges/TierBadge'
 
 interface LeaderboardClientProps {
@@ -195,7 +195,7 @@ function PromptTable({ prompts }: { prompts: LeaderboardPrompt[] }) {
                   href={promptUrl({ id: prompt.prompt_id, slug: prompt.slug })}
                   className="font-semibold text-foreground group-hover:text-primary transition-colors block line-clamp-1"
                 >
-                  {prompt.title}
+                  {toDisplayString(prompt.title)}
                 </Link>
               </td>
               <td className="px-6 py-4">
@@ -207,7 +207,7 @@ function PromptTable({ prompts }: { prompts: LeaderboardPrompt[] }) {
                    href={`/problems/${prompt.problem_slug}`}
                    className="text-muted-foreground hover:text-foreground transition-colors capitalize text-xs bg-muted px-2 py-1 rounded inline-block line-clamp-1 whitespace-nowrap"
                 >
-                  {prompt.problem_title}
+                  {toDisplayString(prompt.problem_title)}
                 </Link>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">

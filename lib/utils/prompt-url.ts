@@ -41,6 +41,27 @@ export function extractDbSlug(slugParam: string): { dbSlug: string; shortId: str
     return { dbSlug: slugParam, shortId: null, isFullUuid: false }
 }
 
+/**
+ * Safely converts a DB value that may be a string or an object (e.g. { text: "..." })
+ * to a display string. Prevents "Objects are not valid as a React child" errors.
+ */
+export function toDisplayString(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    // Common DB object shapes
+    if (typeof obj.text === 'string') return obj.text
+    if (typeof obj.criterion === 'string') return obj.criterion
+    if (typeof obj.name === 'string') return obj.name
+    if (typeof obj.label === 'string') return obj.label
+    if (typeof obj.value === 'string') return obj.value
+    return JSON.stringify(value)
+  }
+  return String(value)
+}
+
 /** @deprecated use extractDbSlug instead */
 export function extractShortId(slugParam: string): string | null {
     const parts = slugParam.split('-')

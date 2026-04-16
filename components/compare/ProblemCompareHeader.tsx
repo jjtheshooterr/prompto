@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface Props {
     problem: any;
@@ -17,19 +18,19 @@ export function ProblemCompareHeader({ problem }: Props) {
                 </div>
                 <h1 className="text-3xl font-bold text-foreground mb-2">Compare Solutions</h1>
                 <p className="text-muted-foreground mb-6 max-w-3xl">
-                    Comparing prompt strategies for <span className="font-semibold text-foreground">{problem.title}</span> using quality, reliability, token usage, and cost.
+                    Comparing prompt strategies for <span className="font-semibold text-foreground">{toDisplayString(problem.title)}</span> using quality, reliability, token usage, and cost.
                 </p>
 
                 {(problem.goal || problem.success_criteria?.length > 0) && (
                     <div className="bg-muted/30 border border-border rounded-xl p-5 mb-4 max-w-4xl">
                         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Problem Context</h2>
-                        {problem.goal && <p className="text-sm text-foreground mb-3">{problem.goal}</p>}
+                        {problem.goal && <p className="text-sm text-foreground mb-3">{toDisplayString(problem.goal)}</p>}
                         {problem.success_criteria?.length > 0 && (
                             <ul className="space-y-1">
                                 {problem.success_criteria.map((c: any, i: number) => (
                                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                                         <span className="text-primary mt-0.5 font-bold">•</span>
-                                        {c.criterion}
+                                        {toDisplayString(c)}
                                     </li>
                                 ))}
                             </ul>

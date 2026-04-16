@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 import {
   FolderOpen,
   Zap,
@@ -338,11 +339,11 @@ export default function WorkspacePage() {
               </div>
               <h3 className="text-lg font-bold text-foreground mb-2">
                 <Link href={`/problems/${problem.slug}`} className="hover:text-primary transition-colors">
-                  {problem.title}
+                  {toDisplayString(problem.title)}
                 </Link>
               </h3>
               <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                {problem.description || "No description provided."}
+                {toDisplayString(problem.description) || "No description provided."}
               </p>
               <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
                 <span className="flex items-center gap-1">

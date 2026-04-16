@@ -1,4 +1,5 @@
 import { calculateTokenCount, estimateCost, type AIModel } from '@/lib/utils/tokenizer'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface Props {
     prompts: any[];
@@ -15,7 +16,7 @@ export function CompareWinnerStrip({ prompts }: Props) {
         const successRate = totalRuns > 0 ? works / totalRuns : null
 
         // Tokens & Cost
-        const totalText = (p.system_prompt || '') + '\n' + (p.user_prompt_template || '')
+        const totalText = toDisplayString(p.system_prompt) + '\n' + toDisplayString(p.user_prompt_template)
         const avgTokens = calculateTokenCount(totalText)
         const costPerRun = estimateCost(avgTokens, 0, p.model || '').totalCost // rough proxy
         const costPerSuccess = successRate && successRate > 0 ? costPerRun / successRate : null
@@ -105,7 +106,7 @@ function WinnerCard({ title, winner, metric, icon, color }: any) {
 
             {winner ? (
                 <>
-                    <div className="font-bold text-foreground text-lg truncate mb-1">{winner.prompt.title}</div>
+                    <div className="font-bold text-foreground text-lg truncate mb-1">{toDisplayString(winner.prompt.title)}</div>
                     <p className="text-xs font-medium text-muted-foreground">{metric}</p>
                 </>
             ) : (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 
 interface Props {
     prompts: any[]
@@ -98,7 +98,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     )}
                                 </div>
                                 <h3 className="text-lg font-bold text-foreground leading-tight mb-2">
-                                    {prompt.title}
+                                    {toDisplayString(prompt.title)}
                                 </h3>
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                                     <span className="font-medium">{prompt.author?.display_name || prompt.author?.username || 'Anonymous'}</span>
@@ -181,12 +181,12 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                         <>
                                             <div className="bg-muted/30 border border-border rounded-lg p-3">
                                                 <p className="text-xs font-mono text-foreground leading-relaxed line-clamp-3">
-                                                    {prompt.system_prompt}
+                                                    {toDisplayString(prompt.system_prompt)}
                                                 </p>
                                             </div>
-                                            {prompt.system_prompt.length > 150 && (
+                                            {toDisplayString(prompt.system_prompt).length > 150 && (
                                                 <button
-                                                    onClick={() => setExpandedPrompt({ prompt, type: 'System Prompt', text: prompt.system_prompt })}
+                                                    onClick={() => setExpandedPrompt({ prompt, type: 'System Prompt', text: toDisplayString(prompt.system_prompt) })}
                                                     className="text-xs font-semibold text-primary hover:text-primary/80 mt-1.5 transition-colors"
                                                 >
                                                     Show more →
@@ -207,12 +207,12 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                         <>
                                             <div className="bg-muted/30 border border-border rounded-lg p-3">
                                                 <p className="text-xs font-mono text-foreground leading-relaxed line-clamp-3">
-                                                    {prompt.user_prompt_template}
+                                                    {toDisplayString(prompt.user_prompt_template)}
                                                 </p>
                                             </div>
-                                            {prompt.user_prompt_template.length > 150 && (
+                                            {toDisplayString(prompt.user_prompt_template).length > 150 && (
                                                 <button
-                                                    onClick={() => setExpandedPrompt({ prompt, type: 'User Template', text: prompt.user_prompt_template })}
+                                                    onClick={() => setExpandedPrompt({ prompt, type: 'User Template', text: toDisplayString(prompt.user_prompt_template) })}
                                                     className="text-xs font-semibold text-primary hover:text-primary/80 mt-1.5 transition-colors"
                                                 >
                                                     Show more →
@@ -231,7 +231,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     </div>
                                     {prompt.improvement_summary ? (
                                         <p className="text-sm text-foreground leading-relaxed">
-                                            {prompt.improvement_summary}
+                                            {toDisplayString(prompt.improvement_summary)}
                                         </p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic py-0.5">- Not provided</p>
@@ -245,12 +245,15 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     </div>
                                     {prompt.best_for && prompt.best_for.length > 0 ? (
                                         <ul className="space-y-0.5">
-                                            {prompt.best_for.map((item: string, i: number) => (
-                                                <li key={i} className="flex items-start gap-2 text-sm text-foreground">
-                                                    <span className="text-emerald-500 mt-0.5">•</span>
-                                                    {item}
-                                                </li>
-                                            ))}
+                                            {prompt.best_for.map((item: any, i: number) => {
+                                                const label = toDisplayString(item)
+                                                return (
+                                                    <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                                                        <span className="text-emerald-500 mt-0.5">•</span>
+                                                        {label}
+                                                    </li>
+                                                )
+                                            })}
                                         </ul>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic py-0.5">- Not provided</p>
@@ -264,7 +267,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     </div>
                                     {prompt.tradeoffs ? (
                                         <p className="text-sm text-foreground/80 leading-relaxed italic">
-                                            {prompt.tradeoffs}
+                                            {toDisplayString(prompt.tradeoffs)}
                                         </p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic py-0.5">- Not provided</p>
@@ -278,7 +281,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     </div>
                                     {prompt.fix_summary ? (
                                         <p className="text-sm text-foreground/80 leading-relaxed">
-                                            {prompt.fix_summary}
+                                            {toDisplayString(prompt.fix_summary)}
                                         </p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic py-0.5">- Not provided</p>
@@ -292,7 +295,7 @@ export function SimplePromptComparison({ prompts, onRemovePrompt }: Props) {
                                     </div>
                                     {prompt.usage_context ? (
                                         <p className="text-sm text-foreground/80 leading-relaxed">
-                                            {prompt.usage_context}
+                                            {toDisplayString(prompt.usage_context)}
                                         </p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground italic py-0.5">- Not provided</p>

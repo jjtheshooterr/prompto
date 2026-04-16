@@ -28,17 +28,21 @@ export default function SimpleLoginForm() {
 
     console.log('Attempting login for:', email)
 
-    if (!turnstileToken) {
+    const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+
+    if (hasTurnstile && !turnstileToken) {
       setError('Please complete the security challenge')
       setLoading(false)
       return
     }
 
-    const verification = await verifyTurnstileToken(turnstileToken)
-    if (!verification.success) {
-      setError(verification.error || 'Verification failed')
-      setLoading(false)
-      return
+    if (hasTurnstile && turnstileToken) {
+      const verification = await verifyTurnstileToken(turnstileToken)
+      if (!verification.success) {
+        setError(verification.error || 'Verification failed')
+        setLoading(false)
+        return
+      }
     }
 
     const supabase = createClient()
@@ -135,9 +139,7 @@ export default function SimpleLoginForm() {
                 onError={() => setError('Verification challenge failed to load.')}
               />
             ) : (
-              <div className="text-sm text-destructive border border-destructive/20 bg-destructive/10 p-3 rounded">
-                Security configuration missing. Cannot load CAPTCHA.
-              </div>
+              <p className="text-xs text-muted-foreground">CAPTCHA disabled (dev mode)</p>
             )}
           </div>
 

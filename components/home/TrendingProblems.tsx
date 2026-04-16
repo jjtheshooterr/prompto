@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface TrendingProblem {
   id: string
@@ -165,11 +166,11 @@ export default function TrendingProblems() {
               </div>
               
               <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
-                {problem.title}
+                {toDisplayString(problem.title)}
               </h3>
               
               <p className="text-muted-foreground text-sm line-clamp-3 mb-3">
-                {problem.description}
+                {toDisplayString(problem.description)}
               </p>
               
               <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border mt-auto">

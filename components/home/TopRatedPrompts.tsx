@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 
 interface TopRatedPrompt {
   id: string
@@ -195,17 +195,17 @@ export default function TopRatedPrompts() {
               {/* Main content - flexible */}
               <div className="flex-grow flex flex-col">
                 <h3 className="text-lg font-semibold text-foreground mb-2 leading-snug">
-                  {prompt.title.length > 60 ? prompt.title.substring(0, 60) + '...' : prompt.title}
+                  {(() => { const t = toDisplayString(prompt.title); return t.length > 60 ? t.substring(0, 60) + '...' : t })()} 
                 </h3>
 
                 <p className="text-muted-foreground text-sm leading-relaxed mb-3">
-                  {prompt.system_prompt.length > 120 ? prompt.system_prompt.substring(0, 120) + '...' : prompt.system_prompt}
+                  {(() => { const s = toDisplayString(prompt.system_prompt); return s.length > 120 ? s.substring(0, 120) + '...' : s })()} 
                 </p>
 
                 {/* Signal density - ONE micro-signal per card */}
                 <div className="text-xs text-muted-foreground mb-4">
                   {prompt.best_for && prompt.best_for.length > 0 ? (
-                    <span>Best for: {prompt.best_for.slice(0, 2).join(', ')}</span>
+                    <span>Best for: {prompt.best_for.slice(0, 2).map((t: any) => typeof t === 'string' ? t : (t?.text ?? t?.name ?? '')).join(', ')}</span>
                   ) : (
                     <span>Improved via {Math.floor(Math.random() * 4) + 2} forks</span>
                   )}
@@ -218,7 +218,7 @@ export default function TopRatedPrompts() {
                   <div className="truncate">by {prompt.profiles?.username || 'Anonymous'}</div>
                   {prompt.problems && prompt.problems.length > 0 && (
                     <div className="text-primary truncate">
-                      {prompt.problems[0].title}
+                      {toDisplayString(prompt.problems[0].title)}
                     </div>
                   )}
                 </div>

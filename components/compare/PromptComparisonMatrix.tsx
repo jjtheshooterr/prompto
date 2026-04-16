@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { calculateTokenCount, estimateCost, type AIModel } from '@/lib/utils/tokenizer'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 
 interface Props {
     prompts: any[];
@@ -20,7 +20,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
         const totalRuns = works + fails
         const successRate = totalRuns > 0 ? works / totalRuns : null
 
-        const totalText = (p.system_prompt || '') + '\n' + (p.user_prompt_template || '')
+        const totalText = toDisplayString(p.system_prompt) + '\n' + toDisplayString(p.user_prompt_template)
         const avgTokens = calculateTokenCount(totalText)
         const costPerRun = estimateCost(avgTokens, 0, p.model || '').totalCost
         const costPerSuccess = successRate && successRate > 0 ? costPerRun / successRate : null
@@ -63,7 +63,7 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                                         View full &rarr;
                                     </Link>
                                 </div>
-                                <h3 className="text-lg font-bold text-foreground leading-snug">{prompt.title}</h3>
+                                <h3 className="text-lg font-bold text-foreground leading-snug">{toDisplayString(prompt.title)}</h3>
                                 <p className="text-sm font-medium text-muted-foreground mt-1">by {prompt.author?.display_name || prompt.author?.username}</p>
                             </th>
                         ))}
@@ -145,11 +145,11 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                             <td key={c.prompt.id} className={tdValueClass}>
                                 <div className="relative">
                                     <div className="text-xs font-mono text-muted-foreground leading-relaxed line-clamp-4 bg-muted/30 p-3 rounded border border-border">
-                                        {c.prompt.system_prompt || <span className="italic text-muted-foreground/60">Empty</span>}
+                                        {toDisplayString(c.prompt.system_prompt) || <span className="italic text-muted-foreground/60">Empty</span>}
                                     </div>
-                                    {c.prompt.system_prompt && c.prompt.system_prompt.length > 150 && (
+                                    {toDisplayString(c.prompt.system_prompt).length > 150 && (
                                         <button
-                                            onClick={() => setExpandedPrompt({ p: c.prompt, type: 'System Prompt', text: c.prompt.system_prompt })}
+                                            onClick={() => setExpandedPrompt({ p: c.prompt, type: 'System Prompt', text: toDisplayString(c.prompt.system_prompt) })}
                                             className="text-xs font-bold text-primary mt-2 hover:text-primary/80 transition-colors"
                                         >
                                             Expand Full Prompt &rarr;
@@ -165,11 +165,11 @@ export function PromptComparisonMatrix({ prompts }: Props) {
                             <td key={c.prompt.id} className={tdValueClass}>
                                 <div className="relative">
                                     <div className="text-xs font-mono text-muted-foreground leading-relaxed line-clamp-3 bg-muted/30 p-3 rounded border border-border">
-                                        {c.prompt.user_prompt_template || <span className="italic text-muted-foreground/60">Empty</span>}
+                                        {toDisplayString(c.prompt.user_prompt_template) || <span className="italic text-muted-foreground/60">Empty</span>}
                                     </div>
-                                    {c.prompt.user_prompt_template && c.prompt.user_prompt_template.length > 100 && (
+                                    {toDisplayString(c.prompt.user_prompt_template).length > 100 && (
                                         <button
-                                            onClick={() => setExpandedPrompt({ p: c.prompt, type: 'User Template', text: c.prompt.user_prompt_template })}
+                                            onClick={() => setExpandedPrompt({ p: c.prompt, type: 'User Template', text: toDisplayString(c.prompt.user_prompt_template) })}
                                             className="text-xs font-bold text-primary mt-2 hover:text-primary/80 transition-colors"
                                         >
                                             Expand Full Template &rarr;

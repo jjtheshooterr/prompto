@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AuthorChip } from '@/components/common/AuthorChip'
+import { toDisplayString } from '@/lib/utils/prompt-url'
 
 interface ProblemCardProps {
   problem: {
@@ -29,7 +30,7 @@ export default function ProblemCard({ problem }: ProblemCardProps) {
       <div className="bg-card text-card-foreground border border-border rounded-lg p-6 hover:border-primary/50 hover:bg-primary/5 transition-all">
         <div className="flex items-start justify-between mb-3">
           <h3 className="text-lg font-semibold text-foreground line-clamp-2">
-            {problem.title}
+            {toDisplayString(problem.title)}
           </h3>
           {problem.industry && (
             <span className="ml-2 px-2 py-1 text-xs bg-primary/10 text-primary border border-primary/20 rounded-full whitespace-nowrap">
@@ -40,7 +41,7 @@ export default function ProblemCard({ problem }: ProblemCardProps) {
         
         {problem.description && (
           <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-            {problem.description}
+            {toDisplayString(problem.description)}
           </p>
         )}
         

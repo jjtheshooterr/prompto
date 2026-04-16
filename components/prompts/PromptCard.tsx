@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import ReportModal from '@/components/moderation/ReportModal'
 import { AuthorChip } from '@/components/common/AuthorChip'
 import { toast } from 'sonner'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 import { CompactTokenBadge } from '@/components/prompts/TokenCostBadge'
 
 interface PromptCardProps {
@@ -116,20 +116,23 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               href={promptUrl(prompt)}
               className="text-lg sm:text-xl font-semibold hover:text-primary transition-colors block"
             >
-              {prompt.title}
+              {toDisplayString(prompt.title)}
             </Link>
 
             {/* Best For tags */}
             {prompt.best_for && prompt.best_for.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {prompt.best_for.map((tag: string, index: number) => (
-                  <span
-                    key={`${tag}-${index}`}
-                    className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {prompt.best_for.map((tag: any, index: number) => {
+                  const label = toDisplayString(tag)
+                  return (
+                    <span
+                      key={`${label}-${index}`}
+                      className="px-2 py-1 text-xs bg-primary/10 text-primary rounded-full"
+                    >
+                      {label}
+                    </span>
+                  )
+                })}
               </div>
             )}
 
@@ -141,7 +144,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   <span className="font-medium">Improvement:</span>
-                  <span>{prompt.improvement_summary}</span>
+                  <span>{toDisplayString(prompt.improvement_summary)}</span>
                 </div>
               </div>
             )}
@@ -154,16 +157,16 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                   </svg>
                   <span className="font-medium">Forked to:</span>
-                  <span>{forkDetails.reason}</span>
+                  <span>{toDisplayString(forkDetails.reason)}</span>
                 </div>
                 {forkDetails.changes && (
                   <div className="mt-2 text-xs text-orange-500 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20">
-                    <span className="font-medium">Changes:</span> {forkDetails.changes}
+                    <span className="font-medium">Changes:</span> {toDisplayString(forkDetails.changes)}
                   </div>
                 )}
                 {parentPrompt && (
                   <div className="mt-1 text-xs text-orange-500">
-                    from <Link href={promptUrl({ id: parentPrompt.id, slug: '' })} className="underline hover:text-orange-600">{parentPrompt.title}</Link>
+                    from <Link href={promptUrl({ id: parentPrompt.id, slug: '' })} className="underline hover:text-orange-600">{toDisplayString(parentPrompt.title)}</Link>
                   </div>
                 )}
               </div>
@@ -184,7 +187,7 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
                 <>
                   <span className="text-border">•</span>
                   <Link href={`/problems/${prompt.problems.slug}`} className="hover:text-foreground transition-colors truncate max-w-[150px]">
-                    {prompt.problems.title}
+                    {toDisplayString(prompt.problems.title)}
                   </Link>
                 </>
               )}
@@ -246,10 +249,10 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
         <div className="mb-3 sm:mb-4 flex-1">
           <div className="text-xs sm:text-sm text-muted-foreground mb-2">System Prompt:</div>
           <div className="bg-muted/50 border border-border p-2 sm:p-3 rounded text-xs sm:text-sm font-mono line-clamp-3 relative group mb-3 text-foreground">
-            {prompt.system_prompt}
+            {toDisplayString(prompt.system_prompt)}
             <button
               onClick={() => {
-                navigator.clipboard.writeText(prompt.system_prompt)
+                navigator.clipboard.writeText(toDisplayString(prompt.system_prompt))
                 toast('System prompt copied')
               }}
               className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground px-2 py-1 rounded text-xs hover:bg-primary/90"
@@ -264,13 +267,13 @@ export default function PromptCard({ prompt, onAddToCompare, showProblemTitle = 
               {prompt.usage_context && (
                 <div className="flex-1 bg-accent/50 border border-border rounded p-3 text-xs sm:text-sm">
                   <div className="font-semibold text-foreground mb-1">Usage Context:</div>
-                  <div className="text-muted-foreground line-clamp-2">{prompt.usage_context}</div>
+                  <div className="text-muted-foreground line-clamp-2">{toDisplayString(prompt.usage_context)}</div>
                 </div>
               )}
               {prompt.tradeoffs && (
                 <div className="flex-1 bg-primary/5 border border-primary/20 rounded p-3 text-xs sm:text-sm">
                   <div className="font-semibold text-foreground mb-1">Tradeoffs:</div>
-                  <div className="text-muted-foreground line-clamp-2">{prompt.tradeoffs}</div>
+                  <div className="text-muted-foreground line-clamp-2">{toDisplayString(prompt.tradeoffs)}</div>
                 </div>
               )}
             </div>

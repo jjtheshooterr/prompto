@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CompactTokenBadge } from '@/components/prompts/TokenCostBadge';
+import { toDisplayString } from '@/lib/utils/prompt-url';
 
 interface ProfilePromptCardProps {
     prompt: {
@@ -32,7 +33,7 @@ export function ProfilePromptCard({ prompt }: ProfilePromptCardProps) {
                     href={`/prompts/${prompt.slug}`}
                     className="font-semibold text-foreground hover:text-primary transition-colors text-lg group-hover:underline line-clamp-1"
                 >
-                    {prompt.title}
+                    {toDisplayString(prompt.title)}
                 </Link>
                 <div className="flex items-center gap-2 shrink-0">
                     <CompactTokenBadge 
@@ -49,7 +50,7 @@ export function ProfilePromptCard({ prompt }: ProfilePromptCardProps) {
 
             {/* Snippet Row */}
             <p className="text-sm text-muted-foreground font-mono bg-muted/50 p-3 rounded-lg border border-border line-clamp-2 leading-relaxed">
-                {prompt.system_prompt}
+                {toDisplayString(prompt.system_prompt)}
             </p>
 
             {/* Footer Stats Row */}

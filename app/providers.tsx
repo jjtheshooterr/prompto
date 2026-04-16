@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { createBrowserClient } from "@supabase/ssr";
+import { ThemeProvider } from "@/components/theme-provider";
 
 type AuthCtx = {
     session: Session | null;
@@ -26,14 +27,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         let mounted = true;
 
-        // getSession() reads from local storage/cookie — no network round-trip in most cases
         supabase.auth.getSession().then(({ data }) => {
             if (!mounted) return;
             setSession(data.session ?? null);
             setLoading(false);
         });
 
-        // The single, app-wide onAuthStateChange subscriber
         const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
             setSession(nextSession);
             setLoading(false);
@@ -54,7 +53,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         [session, loading]
     );
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+        </ThemeProvider>
+    );
 }
 
 export function useAuth() {

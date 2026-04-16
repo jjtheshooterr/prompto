@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { promptUrl } from '@/lib/utils/prompt-url'
+import { promptUrl, toDisplayString } from '@/lib/utils/prompt-url'
 import { CompareSelectionBar } from './CompareSelectionBar'
 
 function WorksBadge({ works, fails }: { works: number; fails: number }) {
@@ -134,7 +134,7 @@ export function ProblemPromptsList({ prompts, problemSlug }: Props) {
                                                 href={promptUrl({ id: prompt.id, slug: prompt.slug || '' })}
                                                 className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
                                             >
-                                                {prompt.title}
+                                                {toDisplayString(prompt.title)}
                                             </Link>
                                             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                                                 {/* Type tags */}
@@ -168,7 +168,7 @@ export function ProblemPromptsList({ prompts, problemSlug }: Props) {
                                 {prompt.system_prompt && (
                                     <div className="bg-muted/30 border border-border rounded-md p-3 mb-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => toggleSelection(prompt.id)}>
                                         <p className="text-xs font-mono text-muted-foreground line-clamp-3 leading-relaxed">
-                                            {prompt.system_prompt}
+                                            {toDisplayString(prompt.system_prompt)}
                                         </p>
                                     </div>
                                 )}
