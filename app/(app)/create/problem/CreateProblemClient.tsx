@@ -774,7 +774,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="text-muted-foreground">&#x2022;</span>
-                    <span>Hard constraints disqualify a submission — soft ones are just guidance</span>
+                    <span>Hard constraints disqualify a submission. Soft ones are just guidance</span>
                   </p>
                 </div>
               </div>
