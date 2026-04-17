@@ -342,7 +342,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
         {/* Core Details */}
         <section id="core" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">01</span>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-primary/15 text-primary text-xs font-mono font-bold">01</span>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">Problem Definition</h2>
           </div>
           
@@ -362,7 +362,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                   setTitle(val)
                   setSlug(sanitizeSlug(val))
                 }}
-                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-card"
                 placeholder="e.g., Generate SQL queries from natural language"
               />
               {title && (
@@ -389,7 +389,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 name="description"
                 required
                 rows={4}
-                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted resize-y"
+                className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-card resize-y"
                 placeholder="Describe the problem, constraints, and objective."
               />
             </div>
@@ -413,12 +413,16 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           </div>
         </section>
 
-        <hr className="my-10 border-border" />
+        <div className="my-10 flex items-center gap-3">
+          <div className="flex-1 h-px bg-border/60" />
+          <div className="w-1.5 h-1.5 rounded-full bg-border" />
+          <div className="flex-1 h-px bg-border/60" />
+        </div>
 
         {/* Data Targets */}
         <section id="data" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">02</span>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold">02</span>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">Data Scaffolding</h2>
           </div>
           
@@ -469,12 +473,16 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           </div>
         </section>
 
-        <hr className="my-10 border-border" />
+        <div className="my-10 flex items-center gap-3">
+          <div className="flex-1 h-px bg-border/60" />
+          <div className="w-1.5 h-1.5 rounded-full bg-border" />
+          <div className="flex-1 h-px bg-border/60" />
+        </div>
 
         {/* Evaluation Engine */}
         <section id="eval" className="pb-10 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">03</span>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold">03</span>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">Evaluation Engine</h2>
           </div>
           
@@ -503,49 +511,47 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 <button
                   type="button"
                   onClick={addInput}
-                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
+                  className="flex items-center gap-1 text-xs text-primary/60 hover:text-primary font-medium px-2.5 py-1 rounded-md border border-dashed border-primary/25 hover:border-primary/50 hover:bg-primary/5 transition-colors"
                 >
-                  + Add Item
+                  + Add Variable
                 </button>
               </div>
               <div className="space-y-2">
                 {inputs.map((input, index) => (
-                  <div key={index} className="flex gap-3 items-start relative group">
+                  <div key={index} className="flex gap-3 items-center bg-muted/40 border border-border/60 rounded-lg px-3 py-2.5">
                     <input
                       type="text"
                       placeholder="Variable (e.g., user_query)"
                       value={input.name}
                       onChange={(e) => updateInput(index, 'name', e.target.value)}
-                      className="w-1/3 font-mono text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
+                      className="w-1/3 font-mono text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-card"
                     />
                     <input
                       type="text"
                       placeholder="Description"
                       value={input.description}
                       onChange={(e) => updateInput(index, 'description', e.target.value)}
-                      className="w-1/2 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
+                      className="flex-1 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-card"
                     />
-                    <div className="flex items-center h-9 pt-1">
-                      <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground">
-                        <input
-                          type="checkbox"
-                          checked={input.required}
-                          onChange={(e) => updateInput(index, 'required', e.target.checked)}
-                          className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
-                        />
-                        Req
-                      </label>
-                      {inputs.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeInput(index)}
-                          className="ml-4 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Remove variable"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                      )}
-                    </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground hover:text-foreground shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={input.required}
+                        onChange={(e) => updateInput(index, 'required', e.target.checked)}
+                        className="rounded border-border text-primary focus:ring-primary w-3.5 h-3.5"
+                      />
+                      Req
+                    </label>
+                    {inputs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeInput(index)}
+                        className="text-muted-foreground/40 hover:text-destructive transition-colors shrink-0"
+                        title="Remove variable"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -561,41 +567,39 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 <button
                   type="button"
                   onClick={addConstraint}
-                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
+                  className="flex items-center gap-1 text-xs text-primary/60 hover:text-primary font-medium px-2.5 py-1 rounded-md border border-dashed border-primary/25 hover:border-primary/50 hover:bg-primary/5 transition-colors"
                 >
-                  + Add Item
+                  + Add Constraint
                 </button>
               </div>
               <div className="space-y-2">
                 {constraints.map((constraint, index) => (
-                  <div key={index} className="flex gap-3 items-start group">
+                  <div key={index} className="flex gap-3 items-center bg-muted/40 border border-border/60 rounded-lg px-3 py-2.5">
                     <input
                       type="text"
                       placeholder="Rule constraint"
                       value={constraint.rule}
                       onChange={(e) => updateConstraint(index, 'rule', e.target.value)}
-                      className="w-2/3 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
+                      className="flex-1 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-card"
                     />
                     <select
                       value={constraint.severity}
                       onChange={(e) => updateConstraint(index, 'severity', e.target.value)}
-                      className="w-1/4 text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
+                      className="text-xs border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-card shrink-0"
                     >
                       <option value="hard">Hard Limit</option>
                       <option value="soft">Soft Guide</option>
                     </select>
-                    <div className="flex items-center h-9">
-                      {constraints.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeConstraint(index)}
-                          className="ml-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Remove constraint"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                      )}
-                    </div>
+                    {constraints.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeConstraint(index)}
+                        className="text-muted-foreground/40 hover:text-destructive transition-colors shrink-0"
+                        title="Remove constraint"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -611,20 +615,20 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 <button
                   type="button"
                   onClick={addSuccessCriterion}
-                  className="text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1 rounded hover:bg-muted transition-colors"
+                  className="flex items-center gap-1 text-xs text-primary/60 hover:text-primary font-medium px-2.5 py-1 rounded-md border border-dashed border-primary/25 hover:border-primary/50 hover:bg-primary/5 transition-colors"
                 >
-                  + Add Item
+                  + Add Criterion
                 </button>
               </div>
               <div className="space-y-2">
                 {successCriteria.map((criterion, index) => (
-                  <div key={index} className="flex gap-3 items-start group">
+                  <div key={index} className="flex gap-3 items-center bg-muted/40 border border-border/60 rounded-lg px-3 py-2.5">
                     <input
                       type="text"
                       placeholder="Criterion definition"
                       value={criterion.criterion}
                       onChange={(e) => updateSuccessCriterion(index, 'criterion', e.target.value)}
-                      className="w-1/2 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
+                      className="flex-1 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-card"
                     />
                     <input
                       type="text"
@@ -633,18 +637,16 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                       onChange={(e) => updateSuccessCriterion(index, 'description', e.target.value)}
                       className="w-1/3 text-sm border-border rounded-md px-3 py-2 text-foreground shadow-sm focus:ring-1 focus:ring-primary focus:border-primary bg-muted"
                     />
-                    <div className="flex items-center h-9">
-                      {successCriteria.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeSuccessCriterion(index)}
-                          className="ml-2 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Remove criterion"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
-                      )}
-                    </div>
+                    {successCriteria.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSuccessCriterion(index)}
+                        className="text-muted-foreground/40 hover:text-destructive transition-colors shrink-0"
+                        title="Remove criterion"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -652,12 +654,16 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           </div>
         </section>
 
-        <hr className="my-10 border-border" />
+        <div className="my-10 flex items-center gap-3">
+          <div className="flex-1 h-px bg-border/60" />
+          <div className="w-1.5 h-1.5 rounded-full bg-border" />
+          <div className="flex-1 h-px bg-border/60" />
+        </div>
 
         {/* Classification */}
         <section id="discovery" className="pb-8 scroll-mt-20">
           <div className="flex items-center gap-3 mb-6">
-            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-foreground text-background text-xs font-mono font-bold">04</span>
+            <span className="flex items-center justify-center w-7 h-7 rounded-md bg-violet-500/15 text-violet-600 dark:text-violet-400 text-xs font-mono font-bold">04</span>
             <h2 className="text-sm font-semibold text-foreground tracking-tight">Classification &amp; Discovery</h2>
           </div>
           
