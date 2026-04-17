@@ -11,6 +11,36 @@ interface CreateProblemClientProps {
   user: any
 }
 
+// Pure CSS hover tooltip — no JS state, valid inside <label> (uses <span> only)
+function FieldTip({ text }: { text: string }) {
+  return (
+    <span className="relative inline-flex group">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-muted-foreground/40 group-hover:text-muted-foreground cursor-default transition-colors shrink-0"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 16v-4" />
+        <path d="M12 8h.01" />
+      </svg>
+      <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+        <span className="block bg-popover border border-border text-popover-foreground text-xs rounded-lg px-2.5 py-2 shadow-lg leading-relaxed">
+          {text}
+        </span>
+        <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-[5px] block w-2.5 h-2.5 bg-popover border-b border-r border-border rotate-45" />
+      </span>
+    </span>
+  )
+}
+
 export default function CreateProblemClient({ user }: CreateProblemClientProps) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
@@ -365,8 +395,11 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             </div>
 
             <div>
-              <label htmlFor="real_world_context" className="block text-sm font-medium text-foreground mb-2 flex justify-between items-center">
-                Real World Context
+              <label htmlFor="real_world_context" className="flex justify-between items-center text-sm font-medium text-foreground mb-2">
+                <span className="flex items-center gap-1">
+                  Real World Context
+                  <FieldTip text="Helps solvers understand why this problem matters. A real scenario leads to more practical, grounded solutions." />
+                </span>
                 <span className="text-xs font-normal text-muted-foreground">Optional</span>
               </label>
               <textarea
@@ -391,8 +424,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label htmlFor="example_input" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="example_input" className="flex items-center gap-1 text-sm font-medium text-foreground mb-2">
                 Example Input
+                <FieldTip text="Paste a realistic input a prompt would receive at runtime. Include a tricky edge case if you have one. Solvers test their prompts against this." />
               </label>
               <textarea
                 id="example_input"
@@ -403,8 +437,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               />
             </div>
             <div>
-              <label htmlFor="expected_output" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="expected_output" className="flex items-center gap-1 text-sm font-medium text-foreground mb-2">
                 Expected Output
+                <FieldTip text="Show exactly what a perfect response looks like. The AI scoring engine compares each prompt's output against this when ranking submissions." />
               </label>
               <textarea
                 id="expected_output"
@@ -417,8 +452,11 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           </div>
 
           <div>
-            <label htmlFor="goal" className="block text-sm font-medium text-foreground mb-2 flex justify-between items-center">
-              Primary Goal Requirement
+            <label htmlFor="goal" className="flex justify-between items-center text-sm font-medium text-foreground mb-2">
+              <span className="flex items-center gap-1">
+                Primary Goal Requirement
+                <FieldTip text="One sentence defining the must-have outcome. e.g. 'Output must be valid JSON' or 'Reply must be under 80 words'. Leave blank if your description already covers it." />
+              </span>
               <span className="text-xs font-normal text-muted-foreground">Optional</span>
             </label>
             <input
@@ -442,8 +480,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           
           <div className="space-y-8">
             <div>
-              <label htmlFor="known_failure_modes" className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="known_failure_modes" className="flex items-center gap-1 text-sm font-medium text-foreground mb-2">
                 Known Failure Modes
+                <FieldTip text="Things you already know can go wrong: hallucinations, wrong format, off-topic replies. Enter comma-separated. Solvers use this to build targeted guardrails." />
               </label>
               <input
                 type="text"
@@ -457,7 +496,10 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             {/* Inputs Array */}
             <div>
               <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
-                <label className="text-sm font-medium text-foreground">Dynamic Variables</label>
+                <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+                  Dynamic Variables
+                  <FieldTip text="Placeholders a prompt receives at runtime. Give each one a short name and describe what it holds. Solvers reference these by name when writing their prompts." />
+                </span>
                 <button
                   type="button"
                   onClick={addInput}
@@ -512,7 +554,10 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             {/* Constraints Array */}
             <div>
               <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
-                <label className="text-sm font-medium text-foreground">System Constraints</label>
+                <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+                  System Constraints
+                  <FieldTip text="Hard limits must be met or a submission fails scoring. Soft guides are goals solvers should aim for but are not strict requirements." />
+                </span>
                 <button
                   type="button"
                   onClick={addConstraint}
@@ -559,7 +604,10 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
             {/* Success Criteria Array */}
             <div>
               <div className="flex items-center justify-between mb-3 border-b border-border pb-2">
-                <label className="text-sm font-medium text-foreground">Success Criteria</label>
+                <span className="flex items-center gap-1 text-sm font-medium text-foreground">
+                  Success Criteria
+                  <FieldTip text="Define what a winning response looks like in measurable terms. These feed directly into the AI quality scoring rubric used to rank submitted prompts." />
+                </span>
                 <button
                   type="button"
                   onClick={addSuccessCriterion}
@@ -664,8 +712,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               </div>
               
               <div>
-                <label htmlFor="difficulty" className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="difficulty" className="flex items-center gap-1 text-sm font-medium text-foreground mb-2">
                   Difficulty
+                  <FieldTip text="Helps users filter by skill level on the Browse page. Choose based on how much prompt engineering experience is needed to solve this well." />
                 </label>
                 <select
                   id="difficulty"
@@ -681,8 +730,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
               </div>
 
               <div>
-                <label htmlFor="visibility" className="block text-sm font-medium text-foreground mb-2">
+                <label htmlFor="visibility" className="flex items-center gap-1 text-sm font-medium text-foreground mb-2">
                   Access Level
+                  <FieldTip text="Public problems appear on Browse and in search. Private problems are invite-only and only visible to you and any members you add." />
                 </label>
                 <select
                   id="visibility"
