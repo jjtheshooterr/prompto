@@ -800,7 +800,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">2</span>
-                    <span><strong className="text-foreground">Add a real example.</strong> Include a tricky case — not just the easy one. Solvers write better prompts when they see the hard cases early.</span>
+                    <span><strong className="text-foreground">Add a real example.</strong> Include a tricky case, not just the easy one. Solvers write better prompts when they see the hard cases early.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">3</span>
