@@ -740,19 +740,19 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 <ul className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">1</span>
-                    <span><strong className="text-foreground">Be precise with constraints.</strong> Vague rules produce vague prompts. Specify exact formats, token limits, or output schemas.</span>
+                    <span><strong className="text-foreground">Be specific with constraints.</strong> Vague rules get vague prompts. Say exactly what format, length, or structure you need.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">2</span>
-                    <span><strong className="text-foreground">Provide diverse examples.</strong> Include edge cases in your example input. Solvers craft better prompts when they see the hard cases up front.</span>
+                    <span><strong className="text-foreground">Add a real example.</strong> Include a tricky case — not just the easy one. Solvers write better prompts when they see the hard cases early.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">3</span>
-                    <span><strong className="text-foreground">Define failure modes.</strong> Listing known pitfalls (hallucinations, format drift) helps solvers build targeted guardrails.</span>
+                    <span><strong className="text-foreground">List what&apos;s gone wrong.</strong> If you already know the failure points (bad formatting, off-topic replies), say so. It saves everyone time.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-emerald-400 font-bold mt-px">4</span>
-                    <span><strong className="text-foreground">Use success criteria.</strong> Measurable criteria (accuracy, latency, token cost) let the community objectively rank solutions.</span>
+                    <span><strong className="text-foreground">Set clear success criteria.</strong> If solvers know what &ldquo;good&rdquo; looks like, they can actually aim for it.</span>
                   </li>
                 </ul>
               </div>
@@ -773,8 +773,8 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                     <span>Separate tags and failure modes with commas</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="text-muted-foreground">&#x2022;</span> 
-                    <span>Hard constraints fail the submission; soft ones are advisory</span>
+                    <span className="text-muted-foreground">&#x2022;</span>
+                    <span>Hard constraints disqualify a submission — soft ones are just guidance</span>
                   </p>
                 </div>
               </div>
