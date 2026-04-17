@@ -1,6 +1,6 @@
 # 🧠 Prompto - Core Project Architecture & AI Handoff Ledger
 
-**Last Updated:** April 17, 2026
+**Last Updated:** April 17, 2026 (Session 2)
 **Current Branch:** `main` (pushed — fully up to date)
 
 ---
@@ -242,8 +242,33 @@ Before introducing deep logical shifts, ensure compliance with the `sanitizeSlug
 
 ---
 
+---
+
+## 🐛 Bug Fixes — Admin Reports (April 17, 2026, Session 2)
+
+### Root Cause
+The admin reports page was silently returning no data due to **two compounding issues**:
+
+1. **RLS Policy gap**: `is_moderator()` SQL function only checked for `role IN ('admin', 'moderator')` — it never included `'owner'`. Since `daniel@orygn.tech` is `role = 'owner'`, the `reports_select_mod` policy denied all SELECT queries.
+2. **Supabase join syntax**: The query used `reporter:profiles!reporter_id(username)` — a double join to the same table via different FKs — which can silently fail when FK constraint names don't match exactly.
+
+### Fixes Applied
+- **`lib/supabase/admin.ts`** (new): Service-role Supabase client using `SUPABASE_SERVICE_ROLE_KEY`. Bypasses RLS entirely. Safe because it's only instantiated after verifying `admin` or `owner` role in the authenticated session.
+- **`app/(app)/admin/reports/page.tsx`** (rewritten):
+  - Uses `createAdminClient()` for all data queries (reports, counts, profiles, slugs) — no more RLS blocking
+  - Removed the fragile double-join; instead does 3 clean batch lookups: reports → profile usernames → content slugs
+  - Fixed **tab counts**: was computing from the filtered dataset (when on Pending tab, Reviewed count was always 0). Now a separate `select('id, status')` query fetches all statuses for accurate counts on all tabs.
+  - Fixed **View Content links**: `content_slug` doesn't exist as a DB column (never stored). Now does a batch lookup of actual slugs from `prompts` and `problems` tables.
+  - Added error banner (shows query error message if something goes wrong — aids debugging).
+  - Badge colors converted from hardcoded `bg-yellow-100 text-yellow-800` to opacity variants (`bg-yellow-500/15 text-yellow-700 dark:text-yellow-400`) for proper dark mode.
+- **`supabase/migrations/20260417000000_fix_owner_moderator_rls.sql`** (new): Updates `is_moderator()` to include `'owner'` — belt-and-suspenders fix for any other RLS policies using this function. Run manually in Supabase SQL editor.
+
+---
+
 ## 📋 Pending / Deferred Work
 
+- **Apply migration manually**: Run `supabase/migrations/20260417000000_fix_owner_moderator_rls.sql` in the Supabase SQL editor to update `is_moderator()` to include `'owner'`.
+- **Create Problem page**: Add contextual tooltips + visual redesign with smart placement.
 - **Cookie Consent UI**: Waiting on Jaxon for GA/Tag Manager setup. Will need region-based display + banner component.
 - **Header hover tooltips** (separate from onboarding tour): Score badge breakdown, tier badge, fork count — deferred.
 - **`scratch/` dir + `scripts/create-daniel-admin.ts`**: Test artifacts from Antigravity — not committed.
