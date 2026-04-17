@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         const supabase = await createClient()
 
         // Fetch prompts with all compare-relevant fields
-        const { data: prompts, error: promptsError } = await supabase
+        const { data: rawPrompts, error: promptsError } = await supabase
             .from('prompts')
             .select(`
                 id,
@@ -51,7 +51,6 @@ export async function POST(request: Request) {
                 status
             `)
             .in('id', promptIds)
-            .eq('status', 'published')
 
         if (promptsError) {
             console.error('Error fetching prompts:', promptsError)
@@ -61,9 +60,18 @@ export async function POST(request: Request) {
             )
         }
 
+        // Get authenticated user to check draft ownership
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // Filter: Keep published, or drafts if the current user owns them
+        const prompts = rawPrompts?.filter(prompt => {
+            return prompt.status === 'published' || 
+                   (prompt.status === 'draft' && prompt.created_by === user?.id)
+        })
+
         if (!prompts || prompts.length === 0) {
             return NextResponse.json(
-                { error: 'No prompts found' },
+                { error: 'No prompts found — the selected prompts may be restricted or still in draft' },
                 { status: 404 }
             )
         }

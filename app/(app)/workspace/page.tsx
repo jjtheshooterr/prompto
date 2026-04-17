@@ -366,7 +366,7 @@ export default function WorkspacePage() {
                 View Problem
               </Link>
               <Link
-                href={`/prompts/new?problemId=${problem.id}`}
+                href={`/create/prompt?problem=${problem.id}`}
                 className="flex flex-1 items-center justify-center rounded-lg bg-primary/10 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
               >
                 Add Prompt

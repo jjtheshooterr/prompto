@@ -4,6 +4,7 @@ import { Redis } from '@upstash/redis'
 
 // Global rate limiter setup. We fail open gracefully if Upstash credentials are missing.
 let rateLimiter: Ratelimit | null = null
+let authRateLimiter: Ratelimit | null = null
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   try {
@@ -14,32 +15,19 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 
     // General global rate limit: 100 requests per 10 seconds per IP
     rateLimiter = new Ratelimit({
-      redis: redis,
+      redis,
       limiter: Ratelimit.slidingWindow(100, '10 s'),
       analytics: true,
     })
-  } catch (err) {
-    console.error('Failed to initialize Upstash ratelimiter:', err)
-  }
-}
 
-// Special rate limit for authentication routes to prevent credential stuffing: 5 req per 60s
-let authRateLimiter: Ratelimit | null = null
-
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  try {
-    const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-
+    // Strict rate limit for authentication routes to prevent credential stuffing: 5 req per 60s
     authRateLimiter = new Ratelimit({
-      redis: redis,
+      redis,
       limiter: Ratelimit.slidingWindow(5, '60 s'),
       analytics: true,
     })
   } catch (err) {
-    console.error('Failed to initialize auth ratelimiter:', err)
+    console.error('Failed to initialize Upstash ratelimiters:', err)
   }
 }
 

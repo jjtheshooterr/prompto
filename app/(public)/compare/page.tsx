@@ -40,6 +40,7 @@ export default function ComparePage() {
     const [prompts, setPrompts] = useState<PromptData[]>([])
     const [loading, setLoading] = useState(true)
     const [problemInfo, setProblemInfo] = useState<{ title: string; slug: string; shortId: string } | null>(null)
+    const [apiError] = useState<string | null>(null)
 
     useEffect(() => {
         const loadPrompts = async () => {
@@ -59,10 +60,9 @@ export default function ComparePage() {
 
                 if (response.ok) {
                     const data = await response.json()
-                    console.log('Compare API response:', data)
-                    
-                    setPrompts(data.prompts)
-                    
+
+                    setPrompts(data.prompts || [])
+
                     if (data.problem) {
                         setProblemInfo({
                             title: data.problem.title,
@@ -70,23 +70,24 @@ export default function ComparePage() {
                             shortId: data.problem.short_id || data.problem.id.slice(0, 8)
                         })
                     }
-                    
-                    // Clean up invalid IDs
-                    const validIds = data.prompts.map((p: PromptData) => p.id)
-                    if (validIds.length !== ids.length) {
-                        localStorage.setItem('comparePrompts', JSON.stringify(validIds))
-                    }
+
+                    // Sync localStorage to only valid returned IDs
+                    const validIds = (data.prompts || []).map((p: PromptData) => p.id)
+                    localStorage.setItem('comparePrompts', JSON.stringify(validIds))
                 } else {
-                    const error = await response.json()
-                    console.error('Compare API error:', error)
-                    
+                    const error = await response.json().catch(() => ({}))
+
                     if (response.status === 400 && error.error?.includes('same problem')) {
-                        // Handle multi-problem error
-                        setLoading(false)
+                        // Multi-problem error — handled by isMultiProblem check below
+                    } else {
+                        // Any other API error (stale IDs, auth, etc.) → clear and show empty state
+                        localStorage.removeItem('comparePrompts')
+                        // Don't set apiError — fall through to the helpful empty state
                     }
                 }
-            } catch (error) {
-                console.error('Failed to load prompts:', error)
+            } catch (error: any) {
+                // Network / parse error → clear and fall through to empty state
+                localStorage.removeItem('comparePrompts')
             } finally {
                 setLoading(false)
             }
@@ -121,7 +122,7 @@ export default function ComparePage() {
         )
     }
 
-    if (prompts.length === 0) {
+    if (prompts.length === 0 && !apiError && !loading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center max-w-md mx-auto p-6">
@@ -138,6 +139,30 @@ export default function ComparePage() {
                     >
                         Browse Problems
                     </Link>
+                </div>
+            </div>
+        )
+    }
+
+    if (apiError) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center max-w-md mx-auto p-6 bg-card border border-destructive/20 rounded-2xl shadow-sm">
+                    <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-lg font-bold text-foreground mb-2">Error Loading Prompts</h2>
+                    <p className="text-muted-foreground text-sm mb-6">
+                        {apiError}
+                    </p>
+                    <button
+                        onClick={handleClear}
+                        className="inline-block px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors text-sm"
+                    >
+                        Clear Selection
+                    </button>
                 </div>
             </div>
         )

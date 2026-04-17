@@ -68,8 +68,8 @@ export async function updateReportStatus({
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
-    throw new Error('Must be admin to update reports')
+  if (profile?.role !== 'admin' && profile?.role !== 'owner') {
+    throw new Error('Must be admin or owner to update reports')
   }
 
   // Get report details
@@ -143,8 +143,8 @@ export async function getReports(filter: 'all' | 'pending' | 'reviewed' = 'pendi
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
-    throw new Error('Must be admin to view reports')
+  if (profile?.role !== 'admin' && profile?.role !== 'owner') {
+    throw new Error('Must be admin or owner to view reports')
   }
 
   let query = supabase

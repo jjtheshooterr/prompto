@@ -58,6 +58,13 @@ export default function LeaderboardClient({ initialUsers, initialPrompts }: Lead
   )
 }
 
+const RANK_MEDALS = ['🥇', '🥈', '🥉']
+const RANK_ROW_STYLES = [
+  'bg-yellow-500/5 dark:bg-yellow-500/10',
+  'bg-slate-400/5 dark:bg-slate-400/10',
+  'bg-amber-600/5 dark:bg-amber-600/10',
+]
+
 function UserTable({ users }: { users: LeaderboardUser[] }) {
   if (!users || users.length === 0) {
     return (
@@ -68,31 +75,34 @@ function UserTable({ users }: { users: LeaderboardUser[] }) {
   }
 
   return (
-    <table className="w-full text-sm text-left whitespace-nowrap">
+    <table className="w-full text-sm text-left">
       <thead className="bg-muted border-b border-border text-xs uppercase font-semibold text-muted-foreground tracking-wider">
         <tr>
-          <th className="px-6 py-4 w-16 text-center">Rank</th>
-          <th className="px-6 py-4">Engineer</th>
-          <th className="px-6 py-4 text-center">Tier</th>
-          <th className="px-6 py-4 text-right">Points</th>
-          <th className="px-6 py-4 text-right">Problems Solved</th>
-          <th className="px-6 py-4 text-right">Avg Quality</th>
+          <th className="px-4 py-4 w-14 text-center">Rank</th>
+          <th className="px-4 py-4">Engineer</th>
+          <th className="px-4 py-4 text-center">Tier</th>
+          <th className="px-4 py-4 text-right">Points</th>
+          <th className="px-4 py-4 text-right">Solved</th>
+          <th className="px-4 py-4 text-right">Avg Quality</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-border text-foreground">
         {users.map((user, index) => {
           const rank = index + 1
           const isTop3 = rank <= 3
-          const rankColor = rank === 1 ? 'text-yellow-500' : rank === 2 ? 'text-slate-400' : rank === 3 ? 'text-amber-600' : 'text-slate-400'
+          const medal = isTop3 ? RANK_MEDALS[rank - 1] : null
+          const rowStyle = isTop3 ? RANK_ROW_STYLES[rank - 1] : ''
 
           return (
-            <tr key={user.user_id} className="hover:bg-muted transition-colors group">
-              <td className="px-6 py-4 text-center">
-                <span className={`font-bold ${isTop3 ? rankColor + ' text-base' : ''}`}>
-                  #{rank}
-                </span>
+            <tr key={user.user_id} className={`hover:bg-muted/60 transition-colors group ${rowStyle}`}>
+              <td className="px-4 py-4 text-center">
+                {medal ? (
+                  <span className="text-xl leading-none">{medal}</span>
+                ) : (
+                  <span className="text-sm font-semibold text-muted-foreground">#{rank}</span>
+                )}
               </td>
-              <td className="px-6 py-4">
+              <td className="px-4 py-4">
                 <div className="flex items-center gap-3">
                   {user.username ? (
                     <Link href={`/u/${user.username}`}>
@@ -115,23 +125,24 @@ function UserTable({ users }: { users: LeaderboardUser[] }) {
                       )}
                     </>
                   )}
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     {user.username ? (
-                      <Link href={`/u/${user.username}`} className="font-semibold text-foreground hover:text-primary transition-colors">
+                      <Link href={`/u/${user.username}`} className="font-semibold text-foreground hover:text-primary transition-colors truncate">
                         {user.display_name || 'Anonymous Engineer'}
+                        {rank === 1 && <span className="ml-1.5 text-[10px] font-bold text-yellow-500 uppercase tracking-wider">👑 Leader</span>}
                       </Link>
                     ) : (
-                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <span className="font-semibold text-foreground truncate">
                         {user.display_name || 'Anonymous Engineer'}
                       </span>
                     )}
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground truncate">
                       @{user.username || user.user_id.split('-')[0]}
                     </span>
                   </div>
                 </div>
               </td>
-              <td className="px-6 py-4 text-center">
+              <td className="px-4 py-4 text-center">
                 <div className="flex flex-col items-center justify-center gap-1">
                   <TierBadge tier={user.tier} size="md" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -139,13 +150,13 @@ function UserTable({ users }: { users: LeaderboardUser[] }) {
                   </span>
                 </div>
               </td>
-              <td className="px-6 py-4 text-right font-bold text-foreground">
+              <td className="px-4 py-4 text-right font-bold text-foreground tabular-nums">
                 {user.total_points.toLocaleString()}
               </td>
-              <td className="px-6 py-4 text-right font-medium">
+              <td className="px-4 py-4 text-right font-medium tabular-nums">
                 {user.problems_solved}
               </td>
-              <td className="px-6 py-4 text-right font-medium">
+              <td className="px-4 py-4 text-right font-medium tabular-nums">
                 {user.problems_solved > 0 ? (user.total_quality_score / user.problems_solved).toFixed(1) : '0.0'}
               </td>
             </tr>
@@ -169,96 +180,95 @@ function PromptTable({ prompts }: { prompts: LeaderboardPrompt[] }) {
     <table className="w-full text-sm text-left">
       <thead className="bg-muted border-b border-border text-xs uppercase font-semibold text-muted-foreground tracking-wider">
         <tr>
-          <th className="px-6 py-4 w-16 text-center whitespace-nowrap">Rank</th>
-          <th className="px-6 py-4 whitespace-nowrap">Prompt Solution</th>
-          <th className="px-6 py-4 whitespace-nowrap">Problem</th>
-          <th className="px-6 py-4 whitespace-nowrap">Author</th>
-          <th className="px-6 py-4 text-right whitespace-nowrap">Quality Score</th>
-          <th className="px-6 py-4 text-right whitespace-nowrap">Forks</th>
+          <th className="px-4 py-4 w-14 text-center">Rank</th>
+          <th className="px-4 py-4">Prompt Solution</th>
+          <th className="px-4 py-4">Problem</th>
+          <th className="px-4 py-4">Author</th>
+          <th className="px-4 py-4 text-right">Score</th>
+          <th className="px-4 py-4 text-right">Forks</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-border text-foreground">
         {prompts.map((prompt, index) => {
           const rank = index + 1
           const isTop3 = rank <= 3
-          const rankColor = rank === 1 ? 'text-yellow-500' : rank === 2 ? 'text-slate-400' : rank === 3 ? 'text-amber-600' : 'text-slate-400'
+          const medal = isTop3 ? RANK_MEDALS[rank - 1] : null
+          const rowStyle = isTop3 ? RANK_ROW_STYLES[rank - 1] : ''
 
           return (
-            <tr key={prompt.prompt_id} className="hover:bg-muted transition-colors group">
-              <td className="px-6 py-4 text-center">
-                <span className={`font-bold ${isTop3 ? rankColor + ' text-base' : ''}`}>
-                  #{rank}
-                </span>
+            <tr key={prompt.prompt_id} className={`hover:bg-muted/60 transition-colors group ${rowStyle}`}>
+              <td className="px-4 py-4 text-center">
+                {medal ? (
+                  <span className="text-xl leading-none">{medal}</span>
+                ) : (
+                  <span className="text-sm font-semibold text-muted-foreground">#{rank}</span>
+                )}
               </td>
-              <td className="px-6 py-4">
-                <Link 
+              <td className="px-4 py-4 max-w-[180px]">
+                <Link
                   href={promptUrl({ id: prompt.prompt_id, slug: prompt.slug })}
-                  className="font-semibold text-foreground group-hover:text-primary transition-colors block line-clamp-1"
+                  className="font-semibold text-foreground group-hover:text-primary transition-colors block truncate"
                 >
                   {toDisplayString(prompt.title)}
                 </Link>
               </td>
-              <td className="px-6 py-4">
-                {/* We don't have problem.id in the view, so we construct the fallback problem URL using /problems/[slug] 
-                    or omit the link to avoid broken problemUrl output without the ID.
-                    Since we don't have problem ID, let's just supply the bare slug structure or omit the link for now.
-                    Wait, let's use `/problems/${prompt.problem_slug}` as the fallback since the routing usually accepts just the slug. */}
-                <Link 
+              <td className="px-4 py-4 max-w-[160px]">
+                <Link
                    href={`/problems/${prompt.problem_slug}`}
-                   className="text-muted-foreground hover:text-foreground transition-colors capitalize text-xs bg-muted px-2 py-1 rounded inline-block line-clamp-1 whitespace-nowrap"
+                   className="text-muted-foreground hover:text-foreground transition-colors text-xs bg-muted px-2 py-1 rounded inline-block truncate max-w-full"
                 >
                   {toDisplayString(prompt.problem_title)}
                 </Link>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
+              <td className="px-4 py-4">
                 <div className="flex items-center gap-2">
                   {prompt.author_username ? (
                     <>
                       <Link href={`/u/${prompt.author_username}`}>
                         {prompt.author_avatar ? (
-                          <img src={prompt.author_avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all" />
+                          <img src={prompt.author_avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover hover:ring-2 hover:ring-primary transition-all shrink-0" />
                         ) : (
-                          <div className="w-6 h-6 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full text-[10px] hover:ring-2 hover:ring-primary transition-all">
+                          <div className="w-6 h-6 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full text-[10px] hover:ring-2 hover:ring-primary transition-all shrink-0">
                             {(prompt.author_name || prompt.author_username || 'U')[0].toUpperCase()}
                           </div>
                         )}
                       </Link>
-                      <Link href={`/u/${prompt.author_username}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors">
+                      <Link href={`/u/${prompt.author_username}`} className="text-xs font-medium text-foreground hover:text-primary transition-colors truncate">
                         {prompt.author_name || 'Anonymous'}
                       </Link>
                     </>
                   ) : (
                     <>
                       {prompt.author_avatar ? (
-                        <img src={prompt.author_avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
+                        <img src={prompt.author_avatar} alt="avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
                       ) : (
-                        <div className="w-6 h-6 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full text-[10px]">
+                        <div className="w-6 h-6 bg-primary/10 text-primary font-bold flex items-center justify-center rounded-full text-[10px] shrink-0">
                           {(prompt.author_name || 'U')[0].toUpperCase()}
                         </div>
                       )}
-                      <span className="text-xs font-medium text-foreground">
+                      <span className="text-xs font-medium text-foreground truncate">
                         {prompt.author_name || 'Anonymous'}
                       </span>
                     </>
                   )}
                 </div>
               </td>
-              <td className="px-6 py-4 text-right">
+              <td className="px-4 py-4 text-right">
                 <div className="flex items-center justify-end gap-1.5">
-                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                     <div 
+                  <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                     <div
                        className={`h-full rounded-full ${prompt.quality_score >= 80 ? 'bg-green-500' : prompt.quality_score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
                        style={{ width: `${Math.min(100, prompt.quality_score)}%` }}
                      />
                   </div>
-                  <span className="font-bold text-foreground w-8 inline-block">
+                  <span className="font-bold text-foreground tabular-nums w-7 text-right">
                     {prompt.quality_score}
                   </span>
                 </div>
               </td>
-              <td className="px-6 py-4 text-right font-medium whitespace-nowrap">
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 text-primary">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+              <td className="px-4 py-4 text-right">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary/10 text-primary tabular-nums">
+                  <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
                   {prompt.forks}
                 </span>
               </td>

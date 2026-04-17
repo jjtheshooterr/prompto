@@ -21,11 +21,13 @@ export default async function AdminDashboardPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  const isAdminOrOwner = profile?.role === 'admin' || profile?.role === 'owner'
+
+  if (!isAdminOrOwner) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">This restricted area is for PromptVexity Administrators.</p>
+        <p className="text-muted-foreground mb-6">This restricted area is for PromptVexity Administrators and Owners.</p>
         <Link href="/dashboard" className="text-primary hover:underline">Return to Workspace</Link>
       </div>
     )

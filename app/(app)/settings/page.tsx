@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { exportUserData, deleteAccount } from '@/lib/actions/gdpr.actions';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -12,6 +14,7 @@ export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
@@ -23,6 +26,12 @@ export default function SettingsPage() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [originalUsername, setOriginalUsername] = useState('');
+
+  // GDPR state
+  const [exporting, setExporting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -63,13 +72,11 @@ export default function SettingsPage() {
       return;
     }
 
-    // If it's the same as original, it's available
     if (value === originalUsername) {
       setUsernameAvailable(true);
       return;
     }
 
-    // Validate format
     if (!/^[a-z0-9_]{3,20}$/.test(value)) {
       setUsernameAvailable(false);
       return;
@@ -86,7 +93,6 @@ export default function SettingsPage() {
     const value = e.target.value.toLowerCase();
     setUsername(value);
 
-    // Debounce the check
     const timeoutId = setTimeout(() => checkUsername(value), 500);
     return () => clearTimeout(timeoutId);
   };
@@ -95,14 +101,12 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
       toast.error('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image must be less than 5MB');
       return;
@@ -112,29 +116,25 @@ export default function SettingsPage() {
     const supabase = createClient();
 
     try {
-      // Delete old avatar if exists
       if (avatarUrl) {
         const oldPath = avatarUrl.split('/').slice(-2).join('/');
         await supabase.storage.from('avatars').remove([oldPath]);
       }
 
-      // Upload new avatar with timestamp to prevent caching
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const fileName = `${user.id}/avatar-${timestamp}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      // Update profile with new avatar URL using secure RPC
       const { error: updateError } = await supabase.rpc('update_profile', {
         p_avatar_url: publicUrl
       });
@@ -158,11 +158,9 @@ export default function SettingsPage() {
     const supabase = createClient();
 
     try {
-      // Delete from storage
       const oldPath = avatarUrl.split('/').slice(-2).join('/');
       await supabase.storage.from('avatars').remove([oldPath]);
 
-      // Update profile using secure RPC
       const { error } = await supabase.rpc('update_profile', {
         p_avatar_url: null
       });
@@ -182,7 +180,6 @@ export default function SettingsPage() {
   const handleSave = async () => {
     if (!user) return;
 
-    // Validate username if provided and changed
     if (username && username !== originalUsername && usernameAvailable !== true) {
       toast.error('Please choose an available username');
       return;
@@ -192,7 +189,6 @@ export default function SettingsPage() {
     const supabase = createClient();
 
     try {
-      // Update profile fields using secure RPC
       const { data, error: profileError } = await supabase.rpc('update_profile', {
         p_display_name: displayName || null,
         p_bio: bio || null,
@@ -203,13 +199,11 @@ export default function SettingsPage() {
 
       if (profileError) {
         console.error('Profile update error:', profileError);
-        console.error('Error details:', JSON.stringify(profileError, null, 2));
         throw profileError;
       }
 
       console.log('Profile updated successfully:', data);
 
-      // Update username separately if changed
       if (username && username !== originalUsername) {
         const { error: usernameError } = await supabase.rpc('change_username', {
           p_new_username: username
@@ -233,7 +227,6 @@ export default function SettingsPage() {
       toast.success('Profile updated! Refreshing page to show changes...');
       setOriginalUsername(username);
 
-      // Force a page refresh after a short delay to clear all caches
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -241,6 +234,51 @@ export default function SettingsPage() {
       console.error('Error updating profile:', error);
       toast.error('Failed to update profile');
       setSaving(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const data = await exportUserData();
+      const filename = `prompto-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.setAttribute('download', filename);
+      document.body.appendChild(a);
+      a.click();
+      
+      // Increased timeout to 3s to ensure browser captures filename before revocation
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 3000);
+      
+      toast.success('Data exported successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to export data');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deleteConfirmEmail) {
+      toast.error('Please enter your email to confirm');
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deleteAccount(deleteConfirmEmail);
+      toast.success('Account deleted. Goodbye.');
+      router.push('/');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete account');
+      setDeleting(false);
     }
   };
 
@@ -300,7 +338,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleRemoveAvatar}
                   disabled={uploading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                  className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                 >
                   Remove Photo
                 </button>
@@ -314,9 +352,7 @@ export default function SettingsPage() {
 
         {/* Email (read-only) */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Email
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-2">Email</label>
           <input
             type="email"
             value={user?.email || ''}
@@ -328,9 +364,7 @@ export default function SettingsPage() {
 
         {/* Display Name */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Display Name
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-2">Display Name</label>
           <input
             type="text"
             value={displayName}
@@ -345,9 +379,7 @@ export default function SettingsPage() {
 
         {/* Username */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Username
-          </label>
+          <label className="block text-sm font-medium text-foreground mb-2">Username</label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
             <input
@@ -365,26 +397,20 @@ export default function SettingsPage() {
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">✓</span>
             )}
             {!checkingUsername && usernameAvailable === false && username.length >= 3 && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-600">✗</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-destructive">✗</span>
             )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             3-20 characters • lowercase letters, numbers, and underscores only
           </p>
           {usernameAvailable === true && username && username !== originalUsername && (
-            <p className="mt-1 text-xs text-green-600">
-              ✓ Available! Your profile will be at prompto.com/u/{username}
-            </p>
+            <p className="mt-1 text-xs text-green-600">✓ Available! Your profile will be at prompto.com/u/{username}</p>
           )}
           {usernameAvailable === false && username.length >= 3 && username !== originalUsername && (
-            <p className="mt-1 text-xs text-red-600">
-              ✗ Username taken or invalid format
-            </p>
+            <p className="mt-1 text-xs text-destructive">✗ Username taken or invalid format</p>
           )}
           {username && username === originalUsername && (
-            <p className="mt-1 text-xs text-primary">
-              Current username
-            </p>
+            <p className="mt-1 text-xs text-primary">Current username</p>
           )}
         </div>
 
@@ -452,7 +478,7 @@ export default function SettingsPage() {
         )}
 
         {/* Save Button */}
-        <div className="flex justify-end pt-4 border-t">
+        <div className="flex justify-end pt-4 border-t border-border">
           <button
             onClick={handleSave}
             disabled={saving || (!!username && username !== originalUsername && usernameAvailable !== true)}
@@ -460,6 +486,82 @@ export default function SettingsPage() {
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
+        </div>
+      </div>
+
+      {/* ── Data & Privacy ──────────────────────────────────────────────────── */}
+      <div className="mt-8 bg-card rounded-lg border border-border p-6 space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1">Data & Privacy</h2>
+          <p className="text-sm text-muted-foreground">
+            Download a copy of your data or permanently delete your account.
+          </p>
+        </div>
+
+        {/* Export */}
+        <div className="flex items-start justify-between gap-4 py-4 border-t border-border">
+          <div>
+            <p className="text-sm font-medium text-foreground">Download my data</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Export your profile, prompts, problems, reviews, and votes as a JSON file.
+            </p>
+          </div>
+          <button
+            id="export-data-btn"
+            onClick={handleExportData}
+            disabled={exporting}
+            className="shrink-0 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+          >
+            {exporting ? 'Exporting...' : 'Export Data'}
+          </button>
+        </div>
+
+        {/* Delete */}
+        <div className="flex items-start justify-between gap-4 py-4 border-t border-border">
+          <div>
+            <p className="text-sm font-medium text-destructive">Delete account</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Permanently removes your personal data. Your public content stays but is disassociated
+              from your account. This cannot be undone.
+            </p>
+          </div>
+          {!showDeleteDialog ? (
+            <button
+              id="delete-account-btn"
+              onClick={() => setShowDeleteDialog(true)}
+              className="shrink-0 px-4 py-2 bg-destructive/10 text-destructive border border-destructive/30 rounded-lg hover:bg-destructive/20 transition-colors text-sm font-medium"
+            >
+              Delete Account
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2 min-w-[220px]">
+              <p className="text-xs text-destructive font-medium">Type your email to confirm:</p>
+              <input
+                id="delete-confirm-email"
+                type="email"
+                value={deleteConfirmEmail}
+                onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+                placeholder={user?.email}
+                className="px-3 py-2 border border-destructive/50 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-destructive bg-background"
+              />
+              <div className="flex gap-2">
+                <button
+                  id="delete-account-confirm-btn"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="flex-1 px-3 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90 disabled:opacity-50 transition-colors text-sm font-medium"
+                >
+                  {deleting ? 'Deleting...' : 'Confirm Delete'}
+                </button>
+                <button
+                  onClick={() => { setShowDeleteDialog(false); setDeleteConfirmEmail(''); }}
+                  className="px-3 py-2 bg-muted text-muted-foreground rounded-lg hover:bg-muted/80 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

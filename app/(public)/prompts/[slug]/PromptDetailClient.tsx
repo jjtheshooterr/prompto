@@ -43,7 +43,7 @@ export default function PromptDetailClient() {
 
             if (currentUser) {
                 const { data: profile } = await supabase.from('profiles').select('role').eq('id', currentUser.id).single()
-                setIsAdmin(profile?.role === 'admin')
+                setIsAdmin(profile?.role === 'admin' || profile?.role === 'owner')
             }
 
             let promptData = null
@@ -351,18 +351,18 @@ export default function PromptDetailClient() {
                         <p className="text-xs text-muted-foreground mt-2 hover:text-primary transition-colors cursor-help">Hover for breakdown</p>
                         
                         {/* Tooltip Breakdown */}
-                        <div className="absolute top-[80%] left-0 mt-2 w-64 bg-slate-900 border border-slate-800 text-white p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-sm">
+                        <div className="absolute top-[80%] left-0 mt-2 w-64 bg-popover border border-border text-popover-foreground p-3 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-sm">
                             <div className="flex justify-between mb-1">
-                                <span className="text-slate-300">Structure</span>
-                                <span className="font-semibold text-blue-400">{stats.structure_score || 0}/70</span>
+                                <span className="text-muted-foreground">Structure</span>
+                                <span className="font-semibold text-primary">{stats.structure_score || 0}/70</span>
                             </div>
                             <div className="flex justify-between mb-1">
-                                <span className="text-slate-300">AI Evaluation</span>
-                                <span className="font-semibold text-purple-400">{stats.ai_quality_score || 0}/30</span>
+                                <span className="text-muted-foreground">AI Evaluation</span>
+                                <span className="font-semibold text-primary">{stats.ai_quality_score || 0}/30</span>
                             </div>
-                            <div className="flex justify-between pt-2 border-t border-slate-700 mt-2">
-                                <span className="text-slate-400 text-xs">Community Impact</span>
-                                <span className="text-slate-400 text-xs text-right truncate pl-2 max-w-[130px]" title="Dynamic Weighting dynamically shifts the final quality score progressively towards community votes over time.">Dynamic Weights</span>
+                            <div className="flex justify-between pt-2 border-t border-border mt-2">
+                                <span className="text-muted-foreground text-xs">Community Impact</span>
+                                <span className="text-muted-foreground text-xs text-right truncate pl-2 max-w-[130px]" title="Dynamic Weighting dynamically shifts the final quality score progressively towards community votes over time.">Dynamic Weights</span>
                             </div>
                         </div>
                     </div>
@@ -426,15 +426,15 @@ export default function PromptDetailClient() {
                                         {(prompt.usage_context || prompt.tradeoffs) && (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
                                                 {prompt.usage_context && (
-                                                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                                                        <p className="text-xs font-semibold uppercase tracking-wider text-blue-500 mb-1">Usage Context</p>
-                                                        <p className="text-sm text-blue-900">{toDisplayString(prompt.usage_context)}</p>
+                                                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                                                        <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Usage Context</p>
+                                                        <p className="text-sm text-foreground">{toDisplayString(prompt.usage_context)}</p>
                                                     </div>
                                                 )}
                                                 {prompt.tradeoffs && (
-                                                    <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
-                                                        <p className="text-xs font-semibold uppercase tracking-wider text-purple-500 mb-1">Tradeoffs</p>
-                                                        <p className="text-sm text-purple-900">{toDisplayString(prompt.tradeoffs)}</p>
+                                                    <div className="bg-muted border border-border rounded-lg p-4">
+                                                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Tradeoffs</p>
+                                                        <p className="text-sm text-foreground">{toDisplayString(prompt.tradeoffs)}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -447,9 +447,9 @@ export default function PromptDetailClient() {
                                             ? <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted rounded-lg p-4 leading-relaxed border border-border max-h-[480px] overflow-y-auto">{toDisplayString(prompt.user_prompt_template)}</pre>
                                             : <p className="text-muted-foreground italic text-sm">No user template provided.</p>}
                                         {prompt.notes && (
-                                            <div className="mt-4 bg-amber-50 border border-amber-100 rounded-lg p-4">
-                                                <p className="text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">Notes</p>
-                                                <p className="text-sm text-amber-900">{toDisplayString(prompt.notes)}</p>
+                                            <div className="mt-4 bg-muted border border-border rounded-lg p-4">
+                                                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
+                                                <p className="text-sm text-foreground">{toDisplayString(prompt.notes)}</p>
                                             </div>
                                         )}
                                     </div>
@@ -465,9 +465,9 @@ export default function PromptDetailClient() {
                                                     </div>
                                                 </div>
                                                 <div>
-                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Output</span></div>
-                                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 min-h-[120px]">
-                                                        <pre className="whitespace-pre-wrap font-mono text-xs text-green-900">{typeof prompt.example_output === 'string' ? prompt.example_output : JSON.stringify(prompt.example_output, null, 2)}</pre>
+                                                    <div className="flex items-center gap-2 mb-2"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /><span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Output</span></div>
+                                                    <div className="bg-muted border border-border rounded-lg p-4 min-h-[120px]">
+                                                        <pre className="whitespace-pre-wrap font-mono text-xs text-foreground">{typeof prompt.example_output === 'string' ? prompt.example_output : JSON.stringify(prompt.example_output, null, 2)}</pre>
                                                     </div>
                                                 </div>
                                             </div>
@@ -477,9 +477,9 @@ export default function PromptDetailClient() {
                                 {activeTab === 'lineage' && (
                                     <div>
                                         {prompt.parent_prompt_id && prompt.fix_summary && (
-                                            <div className="mb-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                                                <p className="text-xs font-semibold uppercase tracking-wider text-orange-500 mb-1">Fork Summary</p>
-                                                <p className="text-sm text-orange-900">{toDisplayString(prompt.fix_summary)}</p>
+                                            <div className="mb-4 bg-muted border border-border rounded-lg p-4">
+                                                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Fork Summary</p>
+                                                <p className="text-sm text-foreground">{toDisplayString(prompt.fix_summary)}</p>
                                             </div>
                                         )}
                                         <ForkLineage promptId={promptId} />

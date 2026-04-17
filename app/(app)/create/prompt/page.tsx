@@ -1,74 +1,43 @@
-'use client'
-
-import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState, Suspense } from 'react'
+import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getAiGenerationEnabled } from '@/lib/actions/admin.actions'
 import CreatePromptClient from './CreatePromptClient'
 
-function CreatePromptContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const problemId = searchParams.get('problem')
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      console.log('Create prompt - Auth check:', { user: user?.email || 'No user' })
-      
-      if (!user) {
-        console.log('No user found, redirecting to login')
-        router.push('/login')
-        return
-      }
-      
-      setUser(user)
-      setLoading(false)
-    }
-
-    checkAuth()
-  }, [router])
-
-  useEffect(() => {
-    if (!problemId) {
-      router.push('/problems')
-    }
-  }, [problemId, router])
-
-  if (!problemId) {
-    return null
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center">Redirecting to login...</div>
-      </div>
-    )
-  }
-
-  return <CreatePromptClient user={user} problemId={problemId} />
+interface PageProps {
+  searchParams: Promise<{ problem?: string }>
 }
 
-export default function CreatePromptPage() {
+export default async function CreatePromptPage({ searchParams }: PageProps) {
+  const { problem: problemId } = await searchParams
+
+  // If no problem ID provided, redirect immediately server-side (no flash)
+  if (!problemId) {
+    redirect('/problems')
+  }
+
+  // Auth check server-side
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect(`/login?next=/create/prompt?problem=${problemId}`)
+  }
+
+  // Read the ai_generation_enabled flag once, server-side, before rendering
+  const aiGenerationEnabled = await getAiGenerationEnabled()
+
   return (
     <Suspense fallback={
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center">Loading...</div>
       </div>
     }>
-      <CreatePromptContent />
+      <CreatePromptClient
+        user={user}
+        problemId={problemId}
+        aiGenerationEnabled={aiGenerationEnabled}
+      />
     </Suspense>
   )
 }

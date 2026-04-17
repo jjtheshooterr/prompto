@@ -71,12 +71,14 @@ export default async function AdminReportsPage({ searchParams }: Props) {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  const isAdminOrOwner = profile?.role === 'admin' || profile?.role === 'owner'
+
+  if (!isAdminOrOwner) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
         <p className="text-muted-foreground mb-6">
-          You must be an admin to access this page.
+          You must be an admin or owner to access this page.
         </p>
         <Link href="/dashboard" className="text-primary hover:underline">
           Go to Dashboard
@@ -204,8 +206,8 @@ export default async function AdminReportsPage({ searchParams }: Props) {
                 <Link
                   href={
                     report.content_type === 'prompt'
-                      ? promptUrl({ id: report.content_id, slug: '' })
-                      : problemUrl({ id: report.content_id, slug: '' })
+                      ? promptUrl({ id: report.content_id, slug: report.content_slug || '' }) || `/prompts/${report.content_id}`
+                      : problemUrl({ id: report.content_id, slug: report.content_slug || '' }) || `/problems/${report.content_id}`
                   }
                   className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
                   target="_blank"

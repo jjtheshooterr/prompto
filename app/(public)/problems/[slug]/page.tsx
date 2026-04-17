@@ -82,7 +82,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
   let isAdmin = false
   if (user) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-    isAdmin = profile?.role === 'admin'
+    isAdmin = profile?.role === 'admin' || profile?.role === 'owner'
   }
 
   // ─── Compute page-level metrics ─────────────────────────────────────────────
@@ -210,9 +210,6 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
                 )}
               </div>
 
-              <h1 className="text-3xl font-bold text-foreground mb-3 leading-tight">
-                {toDisplayString(problem.title)}
-              </h1>
               <p className="text-muted-foreground leading-relaxed max-w-2xl mb-4">
                 {toDisplayString(problem.description)}
               </p>
@@ -331,7 +328,7 @@ export default async function ProblemDetailPage({ params, searchParams }: Proble
               {sortOptions.map(({ value, label }) => (
                 <Link
                   key={value}
-                  href={`/problems/${problem.slug}?sort=${value}`}
+                  href={`/problems/${slugParam}?sort=${value}`}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors whitespace-nowrap ${sort === value
                     ? 'bg-primary/10 text-primary'
                     : 'bg-card border border-border text-muted-foreground hover:bg-muted'

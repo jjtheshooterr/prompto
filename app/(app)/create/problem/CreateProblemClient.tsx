@@ -5,6 +5,7 @@ import { ProblemInput, ProblemConstraint, ProblemSuccessCriterion } from '@/type
 import { toast } from 'sonner'
 import { useAuth } from '@/app/providers'
 import { problemUrl } from '@/lib/utils/prompt-url'
+import { sanitizeSlug } from '@/lib/utils/slug'
 
 interface CreateProblemClientProps {
   user: any
@@ -14,6 +15,8 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const { user: contextUser } = useAuth()
+  const [title, setTitle] = useState('')
+  const [slug, setSlug] = useState('')
   const [inputs, setInputs] = useState<ProblemInput[]>([
     { name: '', description: '', required: true }
   ])
@@ -83,7 +86,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
         throw new Error('Please log in again')
       }
 
-      const title = formData.get('title') as string
+      // Title is now controlled via state
       const description = formData.get('description') as string
       const goal = formData.get('goal') as string
       const tagsRaw = formData.get('tags') as string || ''
@@ -109,10 +112,9 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
       const validConstraints = constraints.filter(constraint => constraint.rule.trim())
       const validCriteria = successCriteria.filter(criterion => criterion.criterion.trim())
 
-      // Create slug from title
-      const slug = title.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '')
+      // Slug is now tracked in state for real-time preview
+      // sanitizeSlug guards against reserved route words and collisions
+      const finalSlug = slug || sanitizeSlug(title)
 
       // Get or create user's workspace and ensure membership
       let { data: workspace } = await supabase
@@ -184,7 +186,7 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
           // tags handled via RPC below
           industry,
           visibility,
-          slug,
+          slug: finalSlug,
           is_listed: true,
           created_by: user.id,
           owner_id: user.id, // Set owner_id for new visibility system
@@ -324,9 +326,28 @@ export default function CreateProblemClient({ user }: CreateProblemClientProps) 
                 id="title"
                 name="title"
                 required
+                value={title}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setTitle(val)
+                  setSlug(sanitizeSlug(val))
+                }}
                 className="w-full text-sm border-border rounded-lg px-4 py-2.5 shadow-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:border-primary transition-shadow bg-muted"
                 placeholder="e.g., Generate SQL queries from natural language"
               />
+              {title && (
+                <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-md">
+                  <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">URL Preview</span>
+                  <span className="text-xs text-muted-foreground font-mono truncate">
+                    prompto.com/p/<span className="text-primary font-bold">{slug}</span>
+                  </span>
+                  {slug.includes('-') && !title.toLowerCase().includes('-') && (
+                    <span className="text-[10px] text-amber-500 font-medium ml-auto" title="Reserved word protected with unique suffix">
+                      (Guard active)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>

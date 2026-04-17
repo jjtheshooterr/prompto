@@ -18,11 +18,12 @@ export default async function AdminUsersPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  const allowedRoles = ['admin', 'owner']
+  if (!profile || !allowedRoles.includes(profile.role)) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">You must be an admin to access this page.</p>
+        <p className="text-muted-foreground mb-6">You must be an admin or owner to access this page.</p>
         <Link href="/dashboard" className="text-primary hover:underline">Go to Dashboard</Link>
       </div>
     )
@@ -49,6 +50,7 @@ export default async function AdminUsersPage() {
             <li><strong className="text-foreground">Audit Ledger:</strong> Every moderation action taken — shadowbans, trust score changes, bans, unbans, featured toggles, and even Panic Button activations — is written to an immutable, append-only database log. Entries cannot be edited or deleted. Each record captures the acting Admin, the target, the action type, and the exact timestamp.</li>
             <li><strong className="text-foreground">Curation (Featured):</strong> Admins see a ★ icon on any public Problem or Prompt card. Toggling it marks the content as <code className="text-xs bg-muted px-1 py-0.5 rounded">is_featured</code>, which injects a large algorithmic weight boost (+10,000 score) to anchor it to the top of trending feeds and front-page placements.</li>
             <li><strong className="text-foreground">Panic Button:</strong> A platform-wide emergency killswitch in the System Health dashboard. When engaged, it circuit-breaks the AI evaluation engine — all prompt scoring requests are immediately rejected with a 503 error, preventing Denial of Wallet attacks or runaway API spend. Re-enabling it restores scoring instantly.</li>
+            <li><strong className="text-foreground">Role Hierarchy (Owner &gt; Admin &gt; User):</strong> The platform enforces a strict three-tier permission model. <strong className="text-foreground">Owners</strong> hold supreme authority — they can promote or demote Admins, grant or revoke Owner status, and perform all moderation actions. <strong className="text-foreground">Admins</strong> can fully moderate regular users (trust scores, shadowbans, hard bans) but cannot touch other Admin or Owner accounts in any way — all role management buttons are locked to them. Role changes are only possible via the Hierarchy Management column, which is exclusively visible to Owner-tier accounts.</li>
           </ul>
         </div>
       </div>
@@ -81,7 +83,11 @@ export default async function AdminUsersPage() {
       </div>
 
       <div className="bg-card rounded-lg overflow-hidden border border-border">
-        <UsersTable users={users as any} />
+        <UsersTable 
+          users={users as any} 
+          currentUserId={user.id} 
+          currentUserRole={profile.role}
+        />
       </div>
     </div>
   )

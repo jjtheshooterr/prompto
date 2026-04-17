@@ -57,9 +57,7 @@ export default function SimpleLoginForm() {
         console.log('Login successful! User:', data.session.user.email)
         console.log('Session data:', data.session)
 
-        // Test redirect to a simple page first
-        console.log('About to redirect to problems page for testing...')
-        window.location.href = '/problems'
+        router.push('/dashboard')
 
       } else {
         setError('Login failed - no session created')

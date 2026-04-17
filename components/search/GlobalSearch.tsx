@@ -1,28 +1,28 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { promptUrl } from '@/lib/utils/prompt-url'
 
 interface SearchResult {
   id: string
-  slug: string
   kind: 'prompt' | 'problem'
   title: string
-  problem_title?: string
-  problem_slug?: string
-  problem_id?: string
-  tags?: string[]
-  score?: number
+  href: string
+  subtitle?: string | null
 }
 
-function debounce(fn: (q: string) => void, ms: number): (q: string) => void {
+interface SearchResponse {
+  results: SearchResult[]
+  isTrending: boolean
+  isAnon: boolean
+}
+
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   let timer: ReturnType<typeof setTimeout>
-  return (q: string) => {
+  return ((...args: any[]) => {
     clearTimeout(timer)
-    timer = setTimeout(() => fn(q), ms)
-  }
+    timer = setTimeout(() => fn(...args), ms)
+  }) as T
 }
 
 export default function GlobalSearch() {
@@ -31,21 +31,26 @@ export default function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [focused, setFocused] = useState(false)
+  const [isTrending, setIsTrending] = useState(false)
+  const [isAnon, setIsAnon] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Cache trending so we don't re-fetch on every clear
+  const trendingCache = useRef<SearchResponse | null>(null)
 
-  // Close on outside click
+  // ── Outside click ──────────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsOpen(false)
+        setFocused(false)
       }
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // Keyboard shortcut: Cmd/Ctrl + K
+  // ── Keyboard shortcuts ─────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -61,127 +66,80 @@ export default function GlobalSearch() {
     return () => document.removeEventListener('keydown', handler)
   }, [])
 
-  const runSearch = useCallback(async (q: string) => {
-    if (q.trim().length < 2) {
-      setResults([])
-      setIsOpen(false)
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    try {
-      const supabase = createClient()
-
-      // ── Prompt fuzzy search via RPC ──────────────────────────────────
-      const [
-        { data: promptHits, error: rpcError },
-        { data: problemHits },
-      ] = await Promise.all([
-        supabase.rpc('global_search_prompts', { q: q.trim(), workspace: null, lim: 15 }),
-        supabase.rpc('global_search_problems', { q: q.trim(), workspace: null, lim: 5 }),
-      ])
-
-      if (rpcError) {
-        console.error('Search RPC error:', rpcError)
-        setResults([])
-        setIsOpen(false)
-        return
-      }
-
-      const combined: SearchResult[] = [
-        ...(promptHits ?? []).map((h: {
-          id: string
-          title: string
-          problem_id: string
-          problem_title: string
-          problem_slug: string
-          tags: string[]
-          quality_score: number
-        }) => ({
-          id: h.id,
-          slug: (h as any).slug || '',
-          kind: 'prompt' as const,
-          title: h.title,
-          problem_id: h.problem_id,
-          problem_title: h.problem_title || undefined,
-          problem_slug: h.problem_slug || undefined,
-          tags: h.tags?.length ? h.tags : undefined,
-          score: h.quality_score,
-        })),
-        ...(problemHits ?? []).map((p: {
-          id: string
-          title: string
-          slug: string
-          tags: string[]
-          quality_score: number
-        }) => ({
-          id: p.id,
-          slug: '',
-          kind: 'problem' as const,
-          title: p.title,
-          problem_slug: p.slug,
-          tags: p.tags?.length ? p.tags : undefined,
-          score: p.quality_score,
-        })),
-      ].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-
-      setResults(combined)
-      setIsOpen(combined.length > 0)
-    } catch (err) {
-      console.error('Search error:', err)
-    } finally {
-      setLoading(false)
-    }
+  // ── Apply a search response to state ──────────────────────────────────────
+  const applyResponse = useCallback((data: SearchResponse) => {
+    setResults(data.results)
+    setIsTrending(data.isTrending)
+    setIsAnon(data.isAnon)
+    setIsOpen(data.results.length > 0)
+    setLoading(false)
   }, [])
 
-  const doSearch = useMemo(() => debounce(runSearch, 280), [runSearch])
+  // ── Fetch trending (cached after first load) ──────────────────────────────
+  const fetchTrending = useCallback(async () => {
+    if (trendingCache.current) {
+      applyResponse(trendingCache.current)
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/search?q=')
+      if (!res.ok) { setLoading(false); return }
+      const data: SearchResponse = await res.json()
+      trendingCache.current = data
+      applyResponse(data)
+    } catch {
+      setLoading(false)
+    }
+  }, [applyResponse])
 
+  // ── Live search ────────────────────────────────────────────────────────────
+  const runSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 2) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`)
+      if (!res.ok) { setLoading(false); return }
+      const data: SearchResponse = await res.json()
+      applyResponse(data)
+    } catch {
+      setLoading(false)
+    }
+  }, [applyResponse])
+
+  const doSearch = useMemo(() => debounce(runSearch, 350), [runSearch])
+
+  // ── React to query + focus changes ────────────────────────────────────────
   useEffect(() => {
-    doSearch(query)
-  }, [query, doSearch])
+    if (!query) {
+      if (focused) fetchTrending()
+      else setIsOpen(false)
+    } else if (query.length === 1) {
+      // Too short — close without loading
+      setIsOpen(false)
+    } else {
+      doSearch(query)
+    }
+  }, [query, focused, fetchTrending, doSearch])
 
   const clear = () => {
-    setIsOpen(false)
     setQuery('')
+    setIsOpen(false)
   }
 
   return (
     <div ref={searchRef} className="relative w-full max-w-sm">
-      {/* Input */}
+      {/* ── Input ── */}
       <div className="relative">
         <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {loading ? (
-            <svg
-              className="h-4 w-4 animate-spin text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12" cy="12" r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              />
+            <svg className="h-4 w-4 animate-spin text-primary" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
           ) : (
-            <svg
-              className="h-4 w-4 text-muted-foreground"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
+            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           )}
         </span>
@@ -194,17 +152,11 @@ export default function GlobalSearch() {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => {
             setFocused(true)
-            if (results.length > 0) setIsOpen(true)
+            if (!query) fetchTrending()
+            else if (results.length > 0) setIsOpen(true)
           }}
           onBlur={() => setFocused(false)}
-          className={[
-            'w-full py-2 pl-9 pr-8 text-sm transition-all duration-200',
-            'rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground',
-            'hover:bg-muted',
-            'focus:outline-none focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/10 focus:shadow-sm',
-          ]
-            .filter(Boolean)
-            .join(' ')}
+          className="w-full py-2 pl-9 pr-8 text-sm rounded-full bg-muted/50 border border-border/50 text-foreground placeholder:text-muted-foreground hover:bg-muted focus:outline-none focus:bg-background focus:border-primary/30 focus:ring-4 focus:ring-primary/10 focus:shadow-sm transition-all duration-200"
         />
 
         {query && (
@@ -220,85 +172,90 @@ export default function GlobalSearch() {
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* ── Dropdown ── */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-xl z-50 max-h-[28rem] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-popover border border-border rounded-xl shadow-xl z-50 overflow-hidden">
+
+          {/* Section label */}
+          <div className="px-3 pt-2.5 pb-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {isTrending ? 'Trending' : `Results`}
+            </span>
+          </div>
+
           {results.length > 0 ? (
-            <ul className="py-1" role="listbox">
-              {results.map((r) => (
-                <li key={`${r.kind}-${r.id}`}>
-                  <Link
-                    href={
-                      r.kind === 'problem'
-                        ? `/problems/${r.problem_slug}`
-                        : promptUrl({ id: r.id, slug: r.slug })
-                    }
-                    onClick={clear}
-                    className="flex flex-col gap-1 px-4 py-3 hover:bg-accent/50 border-b border-border/50 last:border-b-0 transition-colors"
-                  >
-                    {/* Type badge + title row */}
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={[
-                          'shrink-0 px-1.5 py-0.5 text-xs font-medium rounded',
-                          r.kind === 'problem'
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-emerald-500/10 text-emerald-500',
-                        ].join(' ')}
-                      >
-                        {r.kind}
-                      </span>
-                      <span className="font-medium text-foreground text-sm truncate">
-                        {r.title}
-                      </span>
-                    </div>
-
-                    {/* Problem context for prompt results */}
-                    {r.kind === 'prompt' && r.problem_title && (
-                      <p className="text-xs text-muted-foreground pl-0.5 truncate">
-                        in {r.problem_title}
-                      </p>
-                    )}
-
-                    {/* Tags */}
-                    {r.tags && r.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-0.5">
-                        {r.tags.slice(0, 4).map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-1.5 py-0.5 text-xs bg-muted text-muted-foreground rounded"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {r.tags.length > 4 && (
-                          <span className="text-xs text-muted-foreground/70">
-                            +{r.tags.length - 4}
-                          </span>
+            <>
+              <ul role="listbox">
+                {results.map((r) => (
+                  <li key={`${r.kind}-${r.id}`}>
+                    <Link
+                      href={r.href}
+                      onClick={clear}
+                      className="flex items-center gap-2.5 px-3 py-2.5 hover:bg-accent/60 transition-colors"
+                    >
+                      {/* Icon */}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                        r.kind === 'problem'
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-emerald-500/10 text-emerald-500'
+                      }`}>
+                        {r.kind === 'problem' ? (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3-3-3z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                          </svg>
                         )}
                       </div>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : query.length >= 2 && !loading ? (
-            <div className="px-4 py-8 text-center text-muted-foreground">
-              <svg
-                className="mx-auto h-8 w-8 text-muted-foreground/40 mb-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <p className="text-sm">No results for &ldquo;{query}&rdquo;</p>
-              <p className="text-xs mt-1 text-muted-foreground/70">Try different keywords or browse problems</p>
+
+                      {/* Text */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{r.title}</p>
+                        {r.subtitle && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {r.kind === 'prompt' ? `in ${r.subtitle}` : r.subtitle}
+                          </p>
+                        )}
+                      </div>
+
+                      <svg className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+
+              {/* ── Anon CTA ── */}
+              {isAnon && (
+                <Link
+                  href="/signup"
+                  onClick={clear}
+                  className="flex items-center justify-between gap-2 px-3 py-2.5 bg-primary/5 hover:bg-primary/10 border-t border-border/50 transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                      <svg className="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">Create a free account</p>
+                      <p className="text-[11px] text-muted-foreground">Submit prompts &amp; track your ranking</p>
+                    </div>
+                  </div>
+                  <svg className="w-3.5 h-3.5 text-primary group-hover:translate-x-0.5 transition-transform shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              )}
+            </>
+          ) : !loading ? (
+            <div className="px-4 py-6 text-center">
+              <p className="text-sm text-muted-foreground">No results for &ldquo;{query}&rdquo;</p>
+              <p className="text-xs mt-1 text-muted-foreground/60">Try different keywords or browse problems</p>
             </div>
           ) : null}
         </div>

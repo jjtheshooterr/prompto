@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { sendForkNotification } from '@/lib/email/fork-notification'
+import { promptUrl } from '@/lib/utils/prompt-url'
+import { sanitizeSlug } from '@/lib/utils/slug'
 
 const CreatePromptSchema = z.object({
   problem_id: z.string().uuid('Invalid problem ID'),
@@ -14,7 +16,7 @@ const CreatePromptSchema = z.object({
   params: z.string().optional(),
   example_input: z.string().max(5000).trim().optional(),
   example_output: z.string().max(5000).trim().optional(),
-  status: z.enum(['draft', 'production', 'archived']).default('production'),
+  status: z.enum(['draft', 'published', 'archived', 'flagged']).default('published'),
   tradeoffs: z.string().max(5000).trim().optional(),
   usage_context: z.string().max(5000).trim().optional(),
   improvement_summary: z.string().max(1000).trim().optional(),
@@ -187,7 +189,7 @@ export async function createPrompt(formData: FormData) {
       params: formData.get('params'),
       example_input: formData.get('example_input'),
       example_output: formData.get('example_output'),
-      status: formData.get('status') || 'production',
+      status: formData.get('status') || 'published',
       tradeoffs: formData.get('tradeoffs'),
       usage_context: formData.get('usage_context'),
       improvement_summary: formData.get('improvement_summary') || 'Initial version',
@@ -265,15 +267,8 @@ export async function createPrompt(formData: FormData) {
       throw new Error('Invalid JSON in params field')
     }
 
-    // Generate slug from title
-    const cleanTitle = title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .substring(0, 50)
-
-    const slug = (cleanTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
+    const randomSuffix = Math.random().toString(36).substring(2, 8)
+    const slug = sanitizeSlug(title, 50, randomSuffix) + '-' + randomSuffix
 
     const { data, error } = await supabase
       .from('prompts')
@@ -372,17 +367,11 @@ export async function forkPrompt(parentPromptId: string) {
 
   // Generate slug for forked prompt (retry on collision — UNIQUE(problem_id, slug))
   const forkTitle = `${parentPrompt.title} (Fork)`
-  const cleanForkTitle = forkTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .substring(0, 50)
-
   let forkedPrompt: any = null
   let forkInsertError: any = null
   for (let attempt = 0; attempt < 3; attempt++) {
-    const slug = (cleanForkTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
+    const forkRandomSuffix = Math.random().toString(36).substring(2, 8)
+    const slug = sanitizeSlug(forkTitle, 50, forkRandomSuffix) + '-' + forkRandomSuffix
 
     const { data: inserted, error: err } = await supabase
       .from('prompts')
@@ -455,7 +444,7 @@ export async function forkPrompt(parentPromptId: string) {
       .single()
 
     if (authorProfile?.email && forkerProfile?.username) {
-      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}/prompts/${forkedPrompt.id}`
+      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}${promptUrl({ id: forkedPrompt.id, slug: forkedPrompt.slug })}`
 
       await sendForkNotification({
         authorEmail: authorProfile.email,
@@ -544,14 +533,8 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
   const attributedNotes = `Forked from ${parentPromptId}. ${notes}`
 
   // Generate slug from new title
-  const cleanNewTitle = newTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .substring(0, 50)
-
-  const slug = (cleanNewTitle || 'prompt') + '-' + Math.random().toString(36).substring(2, 8)
+  const forkModalSuffix = Math.random().toString(36).substring(2, 8)
+  const slug = sanitizeSlug(newTitle, 50, forkModalSuffix) + '-' + forkModalSuffix
 
   // Create forked prompt
   const { data: forkedPrompt, error } = await supabase
@@ -621,7 +604,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
       .single()
 
     if (authorProfile?.email && forkerProfile?.username) {
-      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}/prompts/${forkedPrompt.id}`
+      const forkedPromptLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'https://promptvexity.com'}${promptUrl({ id: forkedPrompt.id, slug: forkedPrompt.slug })}`
 
       await sendForkNotification({
         authorEmail: authorProfile.email,

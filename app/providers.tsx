@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import type { Session, User } from "@supabase/supabase-js";
 import { createBrowserClient } from "@supabase/ssr";
 import { ThemeProvider } from "@/components/theme-provider";
+import TourProvider from "@/components/tour/TourProvider";
 
 type AuthCtx = {
     session: Session | null;
@@ -55,7 +56,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+            <AuthContext.Provider value={value}>
+                <TourProvider>{children}</TourProvider>
+            </AuthContext.Provider>
         </ThemeProvider>
     );
 }

@@ -1,8 +1,15 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Pagination from '@/components/ui/Pagination'
+import PageSizeSelector from '@/components/admin/PageSizeSelector'
 
-export default async function AdminAuditLogsPage() {
+export default async function AdminAuditLogsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
+}) {
+  const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -14,18 +21,28 @@ export default async function AdminAuditLogsPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
+  const allowedRoles = ['admin', 'owner']
+  if (!profile || !allowedRoles.includes(profile.role)) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-muted-foreground mb-6">Security Incident: Only authenticated Super Admins can view the immutable audit ledger.</p>
+        <p className="text-muted-foreground mb-6">Security Incident: Only authenticated Super Admins or Owners can view the immutable audit ledger.</p>
         <Link href="/dashboard" className="text-primary hover:underline">Go to Dashboard</Link>
       </div>
     )
   }
 
+  // Pagination Logic
+  const pageSizeOptions = [10, 20, 50]
+  const page = Number(params.page) || 1
+  const rawPageSize = Number(params.pageSize) || 10
+  const pageSize = pageSizeOptions.includes(rawPageSize) ? rawPageSize : 10
+  
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
   // Fetch the logs and join with the admin and target users
-  const { data: logs, error } = await supabase
+  const { data: logs, count, error } = await supabase
     .from('admin_audit_logs')
     .select(`
       id,
@@ -34,18 +51,25 @@ export default async function AdminAuditLogsPage() {
       created_at,
       admin:profiles!admin_id (username),
       target:profiles!target_user_id (username)
-    `)
+    `, { count: 'exact' })
     .order('created_at', { ascending: false })
-    .limit(100)
+    .range(from, to)
+
+  const totalPages = Math.ceil((count || 0) / pageSize)
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-8 flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Immutable Audit Ledger</h1>
-          <p className="text-muted-foreground">
-            A permanent record of all Trust & Safety moderation actions. No logs can be altered or deleted.
-          </p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Immutable Audit Ledger</h1>
+            <p className="text-muted-foreground">
+              A permanent record of all Trust & Safety moderation actions. No logs can be altered or deleted.
+            </p>
+          </div>
+          <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-lg border border-border">
+            <PageSizeSelector currentSize={pageSize} />
+          </div>
         </div>
       </div>
 
@@ -102,7 +126,7 @@ export default async function AdminAuditLogsPage() {
                     <td className="p-3 text-muted-foreground whitespace-nowrap">
                       {new Date(log.created_at).toLocaleString()}
                     </td>
-                    <td className="p-3 font-bold text-red-500">
+                    <td className="p-3 font-bold text-red-500 text-xs truncate max-w-[120px]" title={log.admin?.username}>
                       {log.admin?.username || 'UnknownAdmin'}
                     </td>
                     <td className="p-3">
@@ -113,7 +137,7 @@ export default async function AdminAuditLogsPage() {
                         {log.action.toUpperCase()}
                       </span>
                     </td>
-                    <td className="p-3 font-medium">
+                    <td className="p-3 font-medium text-xs truncate max-w-[120px]" title={log.target?.username}>
                       {log.target?.username || 'UnknownTarget'}
                     </td>
                     <td className="p-3 text-muted-foreground text-xs break-all">
@@ -125,6 +149,15 @@ export default async function AdminAuditLogsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+        <div className="text-sm text-muted-foreground">
+          Showing <span className="font-bold text-foreground">{from + 1}</span>-
+          <span className="font-bold text-foreground">{Math.min(to + 1, count || 0)}</span> of{' '}
+          <span className="font-bold text-foreground">{count || 0}</span> actions
+        </div>
+        <Pagination currentPage={page} totalPages={totalPages} />
       </div>
     </div>
   )

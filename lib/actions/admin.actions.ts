@@ -12,7 +12,7 @@ function getAdminClient() {
   )
 }
 
-// Helper to verify caller is admin
+// Helper to verify caller is admin or owner
 async function verifyAdmin() {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -25,11 +25,14 @@ async function verifyAdmin() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') {
-    throw new Error('Must be admin to perform this action')
+  const isAdmin = profile?.role === 'admin'
+  const isOwner = profile?.role === 'owner'
+
+  if (!profile || (!isAdmin && !isOwner)) {
+    throw new Error('Must be admin or owner to perform this action')
   }
 
-  return { user, supabase }
+  return { user, profile, supabase, isAdmin, isOwner }
 }
 
 export async function getUsers() {
@@ -71,8 +74,19 @@ export async function getUsers() {
 }
 
 export async function toggleShadowban(userId: string, isShadowbanned: boolean, reason?: string) {
-  const { user: adminUser, supabase } = await verifyAdmin()
+  const { user: adminUser, profile: callerProfile, supabase } = await verifyAdmin()
   const adminClient = getAdminClient()
+
+  // Security check: Admins cannot shadowban other admins or owners
+  const { data: targetProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (callerProfile.role === 'admin' && (targetProfile?.role === 'admin' || targetProfile?.role === 'owner')) {
+    throw new Error('Permission Denied: Admins cannot shadowban other Admins or Owners')
+  }
 
   const updatePayload: Record<string, unknown> = { is_shadowbanned: isShadowbanned }
   if (isShadowbanned && reason) {
@@ -105,8 +119,19 @@ export async function toggleShadowban(userId: string, isShadowbanned: boolean, r
 }
 
 export async function updateTrustScore(userId: string, newScore: number) {
-  const { user: adminUser, supabase } = await verifyAdmin()
+  const { user: adminUser, profile: callerProfile, supabase } = await verifyAdmin()
   const adminClient = getAdminClient()
+
+  // Security check: Admins cannot modify trust scores of other admins or owners
+  const { data: targetProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (callerProfile.role === 'admin' && (targetProfile?.role === 'admin' || targetProfile?.role === 'owner')) {
+    throw new Error('Permission Denied: Admins cannot modify trust scores for other Admins or Owners')
+  }
 
   const { error } = await adminClient
     .from('profiles')
@@ -132,20 +157,24 @@ export async function updateTrustScore(userId: string, newScore: number) {
 }
 
 export async function banUser(userId: string, reason: string) {
-  const { user: adminUser, supabase } = await verifyAdmin()
+  const { user: adminUser, profile: callerProfile, supabase } = await verifyAdmin()
   const adminClient = getAdminClient()
 
-  // 1. Snapshot the user's current shadowban state BEFORE banning
-  const { data: profile } = await adminClient
+  // Security check: Admins cannot ban other admins or owners
+  const { data: currentProfile } = await adminClient
     .from('profiles')
-    .select('is_shadowbanned, shadowban_reason')
+    .select('role, is_shadowbanned, shadowban_reason')
     .eq('id', userId)
     .single()
 
-  const preBanShadowbanned = profile?.is_shadowbanned ?? false
-  const preBanShadowbanReason = profile?.shadowban_reason ?? null
+  if (callerProfile.role === 'admin' && (currentProfile?.role === 'admin' || currentProfile?.role === 'owner')) {
+    throw new Error('Permission Denied: Admins cannot ban other Admins or Owners')
+  }
 
-  // 2. Hard ban via Supabase Auth API (prevents logins and revokes sessions)
+  const preBanShadowbanned = currentProfile?.is_shadowbanned ?? false
+  const preBanShadowbanReason = currentProfile?.shadowban_reason ?? null
+
+  // 2. Hard ban via Supabase Auth API
   const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
     ban_duration: '87600h' // 10 years
   })
@@ -154,18 +183,17 @@ export async function banUser(userId: string, reason: string) {
     throw new Error(`Failed to ban auth user: ${authError.message}`)
   }
 
-  // 3. Force-shadowban the user so all their content vanishes from public feeds
+  // 3. Force-shadowban content
   const { error: shadowErr } = await adminClient
     .from('profiles')
     .update({ is_shadowbanned: true, shadowban_reason: `Account banned: ${reason}` })
     .eq('id', userId)
 
   if (shadowErr) {
-    // Non-fatal: auth ban succeeded, content hiding failed — log but don't rollback
     console.error(`[banUser] Failed to shadowban content for ${userId}:`, shadowErr.message)
   }
 
-  // 4. Log ban in our database, storing the pre-ban snapshot for safe restoration
+  // 4. Log ban record
   const { error: dbError } = await supabase
     .from('user_bans')
     .insert({
@@ -223,32 +251,39 @@ export async function toggleFeatured(contentType: 'prompt' | 'problem', contentI
     action: isFeatured ? 'feature_content' : 'unfeature_content'
   })
 
-  // Revalidate the public facing paths that rely on algorithms
   revalidatePath('/')
   if (contentType === 'problem') {
     revalidatePath('/problems')
     revalidatePath('/problems/[slug]', 'page')
   } else {
-    // Revalidation is harder for prompt slugs, simply rely on time-based or revalidate whole route
     revalidatePath('/prompts/[problemId]/[promptSlug]', 'page')
   }
 
   return { success: true }
 }
+
 export async function unbanUser(userId: string) {
-  const { user: adminUser, supabase } = await verifyAdmin()
+  const { user: adminUser, profile: callerProfile, supabase } = await verifyAdmin()
   const adminClient = getAdminClient()
 
-  // 1. Fetch the ban record to retrieve the pre-ban shadowban snapshot
+  // Security check: Admins cannot unban other admins or owners (though they shouldn't be banned)
+  const { data: targetProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  if (callerProfile.role === 'admin' && (targetProfile?.role === 'admin' || targetProfile?.role === 'owner')) {
+    throw new Error('Permission Denied: Admins cannot perform actions on other Admins or Owners')
+  }
+
+  // 1. Fetch ban record
   const { data: banRecord } = await adminClient
     .from('user_bans')
     .select('pre_ban_shadowbanned, pre_ban_shadowban_reason')
     .eq('user_id', userId)
     .single()
 
-  // 2. Restore the user's original shadowban state faithfully
-  //    If they were shadowbanned BEFORE the ban, keep them shadowbanned.
-  //    If they were NOT shadowbanned before the ban, clear it.
   const restoreShadowbanned = banRecord?.pre_ban_shadowbanned ?? false
   const restoreShadowbanReason = banRecord?.pre_ban_shadowban_reason ?? null
 
@@ -260,7 +295,7 @@ export async function unbanUser(userId: string) {
     })
     .eq('id', userId)
 
-  // 3. Remove ban from Supabase Auth API
+  // 3. Remove auth ban
   const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
     ban_duration: 'none'
   })
@@ -269,7 +304,7 @@ export async function unbanUser(userId: string) {
     throw new Error(`Failed to unban auth user: ${authError.message}`)
   }
 
-  // 4. Remove ban record from our database
+  // 4. Delete ban record
   const { error: dbError } = await adminClient
     .from('user_bans')
     .delete()
@@ -311,7 +346,7 @@ export async function toggleEmergencyLockdown(isEmergencyLockdown: boolean) {
 
   if (error) throw new Error(`Failed to toggle lockdown: ${error.message}`)
 
-  // Immutable audit log — platform-level event, no target_user_id
+  // Immutable audit log
   await supabase.from('admin_audit_logs').insert({
     admin_id: adminUser.id,
     target_content_type: 'platform',
@@ -321,5 +356,172 @@ export async function toggleEmergencyLockdown(isEmergencyLockdown: boolean) {
   })
 
   revalidatePath('/admin/dashboard')
+  return { success: true }
+}
+
+export async function getAiGenerationEnabled(): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('platform_settings')
+      .select('ai_generation_enabled')
+      .eq('id', 1)
+      .single()
+    if (error || !data) return true
+    return data.ai_generation_enabled ?? true
+  } catch {
+    return true
+  }
+}
+
+/**
+ * Promotes `targetUserId` to the 'admin' role.
+ * Callable BY OWNERS ONLY.
+ */
+export async function promoteToAdmin(targetUserId: string) {
+  const { user: caller, profile: callerProfile, supabase, isOwner } = await verifyAdmin()
+  const adminClient = getAdminClient()
+
+  if (!isOwner) {
+    throw new Error('Permission Denied: Only Owners can promote users to Admin')
+  }
+
+  if (caller.id === targetUserId) {
+    throw new Error('You cannot modify your own role')
+  }
+
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role: 'admin' })
+    .eq('id', targetUserId)
+
+  if (error) {
+    throw new Error(`Failed to promote user to admin: ${error.message}`)
+  }
+
+  await supabase.from('admin_audit_logs').insert({
+    admin_id: caller.id,
+    target_user_id: targetUserId,
+    target_content_type: 'profile',
+    target_content_id: targetUserId,
+    action: 'promote_to_admin',
+    details: { caller_role: callerProfile.role }
+  })
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+/**
+ * Revokes admin role from `targetUserId`, setting them back to 'user'.
+ * Callable BY OWNERS ONLY.
+ */
+export async function revokeAdmin(targetUserId: string) {
+  const { user: caller, profile: callerProfile, supabase, isOwner } = await verifyAdmin()
+  const adminClient = getAdminClient()
+
+  if (!isOwner) {
+    throw new Error('Permission Denied: Only Owners can revoke Admin roles')
+  }
+
+  if (caller.id === targetUserId) {
+    throw new Error('You cannot modify your own role')
+  }
+
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role: 'user' })
+    .eq('id', targetUserId)
+
+  if (error) {
+    throw new Error(`Failed to revoke admin role: ${error.message}`)
+  }
+
+  await supabase.from('admin_audit_logs').insert({
+    admin_id: caller.id,
+    target_user_id: targetUserId,
+    target_content_type: 'profile',
+    target_content_id: targetUserId,
+    action: 'revoke_admin',
+    details: { caller_role: callerProfile.role }
+  })
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+/**
+ * Promotes `targetUserId` to the 'owner' role.
+ * Callable BY OWNERS ONLY.
+ */
+export async function promoteToOwner(targetUserId: string) {
+  const { user: caller, profile: callerProfile, supabase, isOwner } = await verifyAdmin()
+  const adminClient = getAdminClient()
+
+  if (!isOwner) {
+    throw new Error('Permission Denied: Only Owners can promote other users to Owner')
+  }
+
+  if (caller.id === targetUserId) {
+    throw new Error('You cannot modify your own role')
+  }
+
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role: 'owner' })
+    .eq('id', targetUserId)
+
+  if (error) {
+    throw new Error(`Failed to promote user to owner: ${error.message}`)
+  }
+
+  await supabase.from('admin_audit_logs').insert({
+    admin_id: caller.id,
+    target_user_id: targetUserId,
+    target_content_type: 'profile',
+    target_content_id: targetUserId,
+    action: 'promote_to_owner',
+    details: { caller_role: callerProfile.role }
+  })
+
+  revalidatePath('/admin/users')
+  return { success: true }
+}
+
+/**
+ * Revokes owner role from `targetUserId`, setting them back to 'admin'.
+ * Callable BY OWNERS ONLY. Self-demotion blocked.
+ */
+export async function revokeOwner(targetUserId: string) {
+  const { user: caller, profile: callerProfile, supabase, isOwner } = await verifyAdmin()
+  const adminClient = getAdminClient()
+
+  if (!isOwner) {
+    throw new Error('Permission Denied: Only Owners can revoke Owner roles')
+  }
+
+  if (caller.id === targetUserId) {
+    throw new Error('You cannot demote yourself from Owner')
+  }
+
+  const { error } = await adminClient
+    .from('profiles')
+    .update({ role: 'admin' }) // Revoke to admin by default
+    .eq('id', targetUserId)
+
+  if (error) {
+    throw new Error(`Failed to revoke owner role: ${error.message}`)
+  }
+
+  await supabase.from('admin_audit_logs').insert({
+    admin_id: caller.id,
+    target_user_id: targetUserId,
+    target_content_type: 'profile',
+    target_content_id: targetUserId,
+    action: 'revoke_owner',
+    details: { caller_role: callerProfile.role }
+  })
+
+  revalidatePath('/admin/users')
   return { success: true }
 }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { useAuth } from '@/app/providers'
+import { sanitizeSlug } from '@/lib/utils/slug'
 
 interface ForkModalProps {
   isOpen: boolean
@@ -24,6 +25,7 @@ export default function ForkModal({
   const [improvementSummary, setImprovementSummary] = useState('')
   const [bestFor, setBestFor] = useState('')
   const [visibility, setVisibility] = useState('public')
+  const [slug, setSlug] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { user } = useAuth()
 
@@ -96,11 +98,8 @@ export default function ForkModal({
       let forkedPrompt: any = null
       let insertError: any = null
       for (let attempt = 0; attempt < 3; attempt++) {
-        const attemptSlug = newTitle
-          .toLowerCase()
-          .replace(/[^a-z0-9\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .substring(0, 50) + '-' + Math.random().toString(36).substring(2, 8)
+        // Use central utility + forceRandom for forked prompts to ensure uniqueness
+        const attemptSlug = sanitizeSlug(newTitle, { forceRandom: true })
 
         const { data: inserted, error: err } = await supabase
           .from('prompts')
@@ -194,11 +193,23 @@ export default function ForkModal({
               type="text"
               id="title"
               value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value
+                setNewTitle(val)
+                setSlug(sanitizeSlug(val, { forceRandom: true }))
+              }}
               placeholder="e.g., Behavior-Driven Email Personalization"
               className="w-full px-3 py-2 bg-background border border-border placeholder:text-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               required
             />
+            {newTitle && (
+              <div className="mt-2 flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 border border-primary/10 rounded-md ring-1 ring-primary/10">
+                <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-wider">URL Preview</span>
+                <span className="text-xs text-muted-foreground font-mono truncate">
+                  /p/<span className="text-primary font-bold">{slug}</span>
+                </span>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground mt-1">
               Give your fork a clean, descriptive title
             </p>

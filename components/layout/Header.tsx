@@ -3,17 +3,26 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import GlobalSearch from '@/components/search/GlobalSearch'
 import { useAuth } from '@/app/providers'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LayoutDashboard, Briefcase, PlusCircle, Shield, LogOut, ChevronDown } from 'lucide-react'
+
+const NAV_LINKS = [
+  { href: '/problems', label: 'Browse' },
+  { href: '/leaderboard', label: 'Leaderboard' },
+  { href: '/compare', label: 'Compare' },
+  { href: '/guide', label: 'Guide' },
+]
 
 export default function Header() {
   const { user, loading } = useAuth()
-  const [userProfile, setUserProfile] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<{ role: string; username: string | null; display_name: string | null; avatar_url: string | null } | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Fetch profile whenever the user changes
   useEffect(() => {
     if (!user) {
       setUserProfile(null)
@@ -22,12 +31,21 @@ export default function Header() {
     const supabase = createClient()
     supabase
       .from('profiles')
-      .select('role, username')
+      .select('role, username, display_name, avatar_url')
       .eq('id', user.id)
       .single()
       .then(({ data }) => setUserProfile(data ?? null))
   }, [user])
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -35,91 +53,149 @@ export default function Header() {
     window.location.href = '/'
   }
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false)
-  }
+  const isAdminOrOwner = userProfile?.role === 'admin' || userProfile?.role === 'owner'
+
+  const avatarFallback = (userProfile?.display_name || user?.email || 'U')[0].toUpperCase()
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl shadow-sm">
-      <div className="container mx-auto px-6 py-3">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3 group">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3 h-14">
+
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
             <Image
               src="/logo.svg"
-              alt="Promptvexity Logo"
-              width={32}
-              height={32}
-              className="w-8 h-8 transition-transform group-hover:scale-105"
+              alt="Promptvexity"
+              width={28}
+              height={28}
+              className="w-7 h-7 transition-transform group-hover:scale-105"
             />
-            <span className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent tracking-tight">Promptvexity</span>
+            <span className="text-lg font-bold tracking-tight text-foreground hidden sm:block">
+              Promptvexity
+            </span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:block flex-1 max-w-md mx-8">
+          {/* Search — center */}
+          <div className="flex-1 max-w-sm hidden md:block mx-4">
             <GlobalSearch />
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-3 lg:space-x-4 text-sm font-medium">
-            <Link href="/guide" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5">
-              Guide
-            </Link>
-
-            <Link href="/problems" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all">
-              Browse Problems
-            </Link>
-            <Link href="/compare" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all">
-              Compare
-            </Link>
-            <Link href="/leaderboard" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all flex items-center gap-1">
-              Leaderboard
-            </Link>
-            {user && (
-              <>
-                <Link href="/create/problem" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all">
-                  Create Problem
-                </Link>
-                <Link href="/workspace" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all">
-                  Workspace
-                </Link>
-                <Link href="/dashboard" className="text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all">
-                  Dashboard
-                </Link>
-                {userProfile?.role === 'admin' && (
-                  <Link href="/admin/reports" className="text-destructive hover:text-destructive-foreground hover:bg-destructive px-3 py-1.5 rounded-md transition-all font-semibold">
-                    Admin
-                  </Link>
-                )}
-              </>
-            )}
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-0.5 ml-auto">
+            {NAV_LINKS.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-sm text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-md transition-all font-medium"
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Desktop Auth & Actions */}
-          <div className="hidden md:flex items-center space-x-2 text-sm font-medium ml-4">
+          {/* Desktop right — theme + auth */}
+          <div className="hidden md:flex items-center gap-2 shrink-0 ml-2">
             <ThemeToggle />
-            
+
             {loading ? (
-              <div className="text-muted-foreground px-3">Loading...</div>
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
             ) : user ? (
-              <div className="flex items-center space-x-2">
+              /* Avatar dropdown */
+              <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={handleSignOut}
-                  className="text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-md hover:bg-accent transition-all"
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center gap-1 p-0.5 rounded-full hover:ring-2 hover:ring-primary/30 transition-all"
+                  aria-label="Open user menu"
                 >
-                  Sign Out
+                  {userProfile?.avatar_url ? (
+                    <img
+                      src={userProfile.avatar_url}
+                      alt="avatar"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm select-none">
+                      {avatarFallback}
+                    </div>
+                  )}
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
+
+                {/* Dropdown */}
+                {dropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-xl shadow-lg z-50 overflow-hidden">
+                    {/* User info */}
+                    <div className="px-3 py-2.5 border-b border-border">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {userProfile?.display_name || userProfile?.username || 'My Account'}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
+                    </div>
+
+                    <div className="py-1">
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-muted-foreground shrink-0" />
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/workspace"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      >
+                        <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
+                        Workspace
+                      </Link>
+                      <Link
+                        href="/create/problem"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      >
+                        <PlusCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+                        Create Problem
+                      </Link>
+
+                      {isAdminOrOwner && (
+                        <Link
+                          href="/admin/reports"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Shield className="w-4 h-4 shrink-0" />
+                          Admin Panel
+                        </Link>
+                      )}
+                    </div>
+
+                    <div className="border-t border-border py-1">
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      >
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>
                 <Link
                   href="/login"
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent px-4 py-2 rounded-lg transition-all"
+                  className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-accent transition-all font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/signup"
-                  className="bg-foreground text-background px-4 py-2 rounded-lg hover:bg-foreground/90 shadow-sm transition-all font-semibold"
+                  className="text-sm bg-primary text-primary-foreground px-4 py-1.5 rounded-lg hover:bg-primary/90 transition-all font-semibold shadow-sm"
                 >
                   Sign Up
                 </Link>
@@ -127,15 +203,15 @@ export default function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-2">
+          {/* Mobile right */}
+          <div className="md:hidden flex items-center gap-2 ml-auto">
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors"
-              aria-label="Toggle mobile menu"
+              className="p-2 rounded-lg hover:bg-accent text-muted-foreground transition-colors"
+              aria-label="Toggle menu"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -146,96 +222,77 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Search Bar - Mobile */}
-        <div className="md:hidden mt-4">
+        {/* Mobile search */}
+        <div className="md:hidden pb-3">
           <GlobalSearch />
         </div>
 
-        {/* Mobile Navigation Menu */}
+        {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-gray-200">
-            <nav className="flex flex-col space-y-4">
-              <Link
-                href="/problems"
-                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                onClick={closeMobileMenu}
-              >
-                Browse Problems
-              </Link>
-              <Link
-                href="/compare"
-                className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                onClick={closeMobileMenu}
-              >
-                Compare
-              </Link>
-              <Link
-                href="/leaderboard"
-                className="text-gray-600 hover:text-gray-900 transition-colors py-2 flex items-center gap-2"
-                onClick={closeMobileMenu}
-              >
-                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                Leaderboard
-              </Link>
+          <div className="md:hidden border-t border-border py-2">
+            <nav className="flex flex-col gap-0.5">
+              {NAV_LINKS.map(({ href, label }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-2 rounded-md transition-colors font-medium"
+                >
+                  {label}
+                </Link>
+              ))}
 
-
+              <div className="my-1.5 border-t border-border" />
 
               {user ? (
                 <>
-                  <Link
-                    href="/dashboard"
-                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                    onClick={closeMobileMenu}
-                  >
-                    Dashboard
+                  {/* User info strip */}
+                  <div className="flex items-center gap-2.5 px-3 py-2 mb-0.5">
+                    {userProfile?.avatar_url ? (
+                      <img src={userProfile.avatar_url} alt="avatar" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0 select-none">
+                        {avatarFallback}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {userProfile?.display_name || userProfile?.username || 'My Account'}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+                    <LayoutDashboard className="w-4 h-4 text-muted-foreground shrink-0" /> Dashboard
                   </Link>
-                  <Link
-                    href="/workspace"
-                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                    onClick={closeMobileMenu}
-                  >
-                    Workspace
+                  <Link href="/workspace" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+                    <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" /> Workspace
                   </Link>
-                  <Link
-                    href="/create/problem"
-                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                    onClick={closeMobileMenu}
-                  >
-                    Create Problem
+                  <Link href="/create/problem" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors">
+                    <PlusCircle className="w-4 h-4 text-muted-foreground shrink-0" /> Create Problem
                   </Link>
-                  {userProfile?.role === 'admin' && (
-                    <Link
-                      href="/admin/reports"
-                      className="text-red-600 hover:text-red-700 transition-colors py-2 font-medium"
-                      onClick={closeMobileMenu}
-                    >
-                      Admin
+                  {isAdminOrOwner && (
+                    <Link href="/admin/reports" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors">
+                      <Shield className="w-4 h-4 shrink-0" /> Admin Panel
                     </Link>
                   )}
+
+                  <div className="my-1.5 border-t border-border" />
+
                   <button
-                    onClick={() => {
-                      handleSignOut()
-                      closeMobileMenu()
-                    }}
-                    className="text-left text-gray-600 hover:text-gray-900 transition-colors py-2"
+                    onClick={() => { handleSignOut(); setMobileMenuOpen(false) }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors w-full text-left"
                   >
-                    Sign Out
+                    <LogOut className="w-4 h-4 shrink-0" /> Sign Out
                   </button>
                 </>
               ) : (
                 <>
-                  <Link
-                    href="/login"
-                    className="text-gray-600 hover:text-gray-900 transition-colors py-2"
-                    onClick={closeMobileMenu}
-                  >
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors font-medium">
                     Sign In
                   </Link>
-                  <Link
-                    href="/signup"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
-                    onClick={closeMobileMenu}
-                  >
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-center font-semibold mt-1">
                     Sign Up
                   </Link>
                 </>

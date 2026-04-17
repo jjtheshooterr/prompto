@@ -9,9 +9,10 @@ import { useAuth } from '@/app/providers'
 interface CreatePromptClientProps {
   user: any
   problemId: string
+  aiGenerationEnabled: boolean
 }
 
-export default function CreatePromptClient({ user, problemId }: CreatePromptClientProps) {
+export default function CreatePromptClient({ user, problemId, aiGenerationEnabled }: CreatePromptClientProps) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [paramsError, setParamsError] = useState('')
@@ -196,12 +197,15 @@ export default function CreatePromptClient({ user, problemId }: CreatePromptClie
 
       // Stats are now auto-created by database trigger
 
-      // Fire-and-forget background job to generate the AI Quality Score
-      fetch('/api/jobs/score-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promptId: prompt.id }),
-      }).catch(err => console.error('Failed to trigger AI score:', err))
+      // Fire-and-forget background job to generate the AI Quality Score.
+      // Gated by the platform-level ai_generation_enabled flag.
+      if (aiGenerationEnabled) {
+        fetch('/api/jobs/score-prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ promptId: prompt.id }),
+        }).catch(err => console.error('Failed to trigger AI score:', err))
+      }
 
       router.push(promptUrl(prompt))
     } catch (error) {

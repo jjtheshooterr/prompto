@@ -19,7 +19,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="bg-background min-h-screen text-foreground flex flex-col pt-8">
-      <main className="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
+      <main className="flex-grow max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full">
         {/* Header Section */}
         <div className="mb-8 text-center max-w-2xl mx-auto">
           <h1 className="text-3xl font-extrabold text-foreground tracking-tight">

@@ -204,7 +204,7 @@ export default async function HomePage() {
           <div className="grid md:grid-cols-4 gap-8 relative">
             <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-border -z-0"></div>
             <div className="relative z-10 bg-card p-6">
-              <div className="w-12 h-12 bg-foreground text-background rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
+              <div className="w-12 h-12 bg-muted text-muted-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <Target className="w-6 h-6" />
               </div>
               <h4 className="font-bold text-foreground">Problem</h4>
@@ -218,14 +218,14 @@ export default async function HomePage() {
               <p className="text-sm text-muted-foreground mt-2">Construct the engineering input.</p>
             </div>
             <div className="relative z-10 bg-card p-6">
-              <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
+              <div className="w-12 h-12 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <BarChart3 className="w-6 h-6" />
               </div>
               <h4 className="font-bold text-foreground">Score</h4>
               <p className="text-sm text-muted-foreground mt-2">Evaluate against objective metrics.</p>
             </div>
             <div className="relative z-10 bg-card p-6">
-              <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
+              <div className="w-12 h-12 bg-amber-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-sm">
                 <RefreshCw className="w-6 h-6" />
               </div>
               <h4 className="font-bold text-foreground">Improve</h4>
@@ -236,52 +236,90 @@ export default async function HomePage() {
       </section>
 
       {/* Core Model Section */}
-      <section className="py-24">
+      <section className="py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-slate-900 rounded-3xl p-8 lg:p-16 text-white overflow-hidden relative shadow-2xl">
-            <div className="relative z-10 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-6">
-                <Layers className="w-4 h-4" />
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* Left — text */}
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-6">
+                <Layers className="w-3.5 h-3.5" />
                 Architecture
               </div>
-              <h2 className="text-4xl lg:text-5xl font-bold mb-6 tracking-tight">Problems Turn Prompts Into Solutions</h2>
-              <p className="text-slate-300 text-lg mb-10 leading-relaxed font-light">
-                In Promptvexity, a Prompt is never standalone. It is always a solution to a specific Problem. This hierarchy ensures that every token you write has a measurable purpose.
+              <h2 className="text-4xl lg:text-5xl font-bold text-foreground mb-6 leading-[1.1] tracking-tight">
+                Problems Turn<br />Prompts Into<br /><span className="text-primary">Solutions</span>
+              </h2>
+              <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
+                In Promptvexity, a Prompt is never standalone. It is always a solution to a specific Problem. This hierarchy ensures every token you write has a measurable purpose.
               </p>
-              
-              <div className="grid sm:grid-cols-2 gap-8">
-                <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-4">
-                    <CheckCircle2 className="w-6 h-6" />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <h4 className="text-xl font-semibold text-slate-100 mb-2">Defining Goals</h4>
-                  <p className="text-slate-400 leading-relaxed">Problems define the strict constraints, objective success criteria, and hidden test cases for evaluation.</p>
+                  <h4 className="font-bold text-foreground mb-2">Defining Goals</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">Problems define strict constraints, objective success criteria, and hidden test cases.</p>
                 </div>
-                
-                <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-4">
-                    <GitBranch className="w-6 h-6" />
+                <div className="group bg-card rounded-2xl p-6 border border-border hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                    <GitBranch className="w-5 h-5" />
                   </div>
-                  <h4 className="text-xl font-semibold text-slate-100 mb-2">Versioning Solutions</h4>
-                  <p className="text-slate-400 leading-relaxed">Branch prompts like source code. Compare v1 vs v2 head-to-head across the exact same problem sets.</p>
+                  <h4 className="font-bold text-foreground mb-2">Versioning Solutions</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">Branch prompts like source code. Compare v1 vs v2 head-to-head across the same problem sets.</p>
                 </div>
               </div>
             </div>
-            {/* Abstract UI Decoration */}
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:block opacity-40 pointer-events-none pr-8 pt-8 overflow-visible">
-              <div className="w-[120%] h-full rounded-2xl border border-white/10 bg-slate-800/80 backdrop-blur-md p-6 flex flex-col gap-4 shadow-2xl transform translate-x-8 translate-y-8 rotate-6">
-                <div className="flex gap-2 mb-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-amber-400/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-400/80"></div>
+
+            {/* Right — hierarchy diagram */}
+            <div className="relative flex items-center justify-center">
+              {/* Glow */}
+              <div className="absolute inset-0 bg-primary/5 rounded-3xl blur-3xl"></div>
+              <div className="relative w-full max-w-sm mx-auto space-y-3">
+                {/* Problem node */}
+                <div className="bg-card border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shrink-0">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Problem</p>
+                    <p className="text-sm font-semibold text-foreground">Classify support tickets by urgency</p>
+                  </div>
                 </div>
-                <div className="h-4 bg-white/20 rounded w-1/3"></div>
-                <div className="h-4 bg-white/10 rounded w-2/3"></div>
-                <div className="h-4 bg-white/5 rounded w-1/2"></div>
-                <div className="flex-1 mt-4 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                   <div className="w-16 h-16 rounded-full border border-blue-400/20 flex items-center justify-center">
-                     <div className="w-8 h-8 rounded-full bg-blue-400/20 animate-pulse"></div>
-                   </div>
+                {/* Connector */}
+                <div className="flex items-center justify-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <div className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">3 solutions</div>
+                  <div className="h-px flex-1 bg-border"></div>
+                </div>
+                {/* Prompt nodes */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'v1.0', score: 61, color: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20' },
+                    { label: 'v1.2', score: 78, color: 'text-primary bg-primary/10 border-primary/20' },
+                    { label: 'v2.0', score: 94, color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20', winner: true },
+                  ].map((v) => (
+                    <div key={v.label} className={`rounded-xl p-3 border ${v.winner ? 'bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-card border-border'} flex flex-col items-center gap-1.5`}>
+                      <span className="text-[10px] text-muted-foreground font-mono">{v.label}</span>
+                      <span className={`text-lg font-black ${v.winner ? 'text-emerald-500' : 'text-foreground'}`}>{v.score}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-wider">score</span>
+                      {v.winner && <span className="text-[9px] text-emerald-500 font-bold">★ Best</span>}
+                    </div>
+                  ))}
+                </div>
+                {/* Connector down */}
+                <div className="flex items-center justify-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border"></div>
+                  <div className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded">forked ×2</div>
+                  <div className="h-px flex-1 bg-border"></div>
+                </div>
+                {/* Fork node */}
+                <div className="bg-card border border-border rounded-2xl p-4 shadow-sm flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <GitBranch className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">v2.1 Fork</p>
+                    <p className="text-xs font-medium text-foreground">Community improvement → 97</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -425,11 +463,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section — intentionally always dark */}
-      <section className="py-24 bg-slate-900 text-white overflow-hidden relative border-t border-slate-800">
+      {/* CTA Section */}
+      <section className="py-24 bg-card overflow-hidden relative border-t border-border">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl font-bold mb-6">Start solving problems with better prompts</h2>
-          <p className="text-lg text-slate-400 mb-10 leading-relaxed">
+          <h2 className="text-4xl font-bold text-foreground mb-6">Start solving problems with better prompts</h2>
+          <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
             Join 100+ builders who value structure, testing, and objective performance. Move beyond &quot;it seems to work&quot; to &quot;we know it works.&quot;
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
@@ -441,15 +479,15 @@ export default async function HomePage() {
             </Link>
             <Link
               href="/problems"
-              className="bg-white/10 hover:bg-white/20 border border-white/10 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all backdrop-blur-sm inline-flex items-center justify-center"
+              className="bg-background hover:bg-muted border border-border text-foreground px-10 py-4 rounded-xl font-bold text-lg transition-all inline-flex items-center justify-center"
             >
               Browse Problems
             </Link>
           </div>
-          <p className="mt-8 text-sm text-slate-500">Build better AI features today. No credit card required.</p>
+          <p className="mt-8 text-sm text-muted-foreground">Build better AI features today. No credit card required.</p>
         </div>
         {/* Background glow for CTA */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
       </section>
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeSlug } from '@/lib/utils/slug'
 
 export async function listProblems({
   search = '',
@@ -139,83 +140,8 @@ export async function listProblems({
   }
 }
 
-export async function getPublicProblemBySlug(slugOrShortId: string, shortId?: string | null, isFullUuid?: boolean) {
-  const supabase = await createClient()
 
-  // RLS will handle visibility filtering, but we still check for soft deletes
-  let query = supabase
-    .from('problems')
-    .select(`
-      *,
-      real_world_context,
-      difficulty,
-      example_input,
-      expected_output,
-      known_failure_modes,
-      problem_tags(tags(name))
-    `)
-    .eq('is_deleted', false)
-
-  let data: any = null
-  let error: any = null
-
-  if (isFullUuid) {
-    const res = await query.eq('id', slugOrShortId).single()
-    data = res.data
-    error = res.error
-  } else if (shortId) {
-    // To gracefully handle missing short_id column on production, fetch by slug and filter by shortId in-memory
-    const res = await query.eq('slug', slugOrShortId)
-    if (res.error) {
-      error = res.error
-    } else if (res.data) {
-      data = res.data.find((p: any) => p.id.startsWith(shortId)) || (res.data.length > 0 ? res.data[0] : null)
-      if (data && !data.short_id) {
-        data.short_id = data.id.slice(0, 8)
-      }
-    }
-  } else {
-    // legacy or fallback: match by exact slug
-    const res = await query.eq('slug', slugOrShortId)
-    if (res.error) {
-      error = res.error
-    } else if (res.data && res.data.length > 0) {
-      data = res.data[0]
-      if (data && !data.short_id) {
-        data.short_id = data.id.slice(0, 8)
-      }
-    }
-  }
-
-  if (error) {
-    console.error('Error fetching problem:', error)
-    return null
-  }
-
-  if (data) {
-    // Transform tags
-    if (data.problem_tags) {
-      data.tags = data.problem_tags.map((pt: any) => pt.tags?.name).filter(Boolean)
-    }
-
-    // Fetch author data separately
-    if (data.created_by) {
-      const { data: author } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_url')
-        .eq('id', data.created_by)
-        .single()
-
-      if (author) {
-        data.author = author
-      }
-    }
-  }
-
-  return data
-}
-
-// New function that handles all problem access (public, private with membership)
+// Handles all problem access (public, private with membership, UUID, slug, short_id)
 export async function getProblemBySlug(slugOrShortId: string, shortId?: string | null, isFullUuid?: boolean) {
   const supabase = await createClient()
 
@@ -479,10 +405,8 @@ export async function createProblem(formData: FormData) {
       ? known_failure_modes_raw.split(',').map(m => m.trim()).filter(Boolean)
       : []
 
-    // Create slug from title
-    const slug = title.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
+    // Create slug from title — sanitizeSlug guards against reserved route words
+    const slug = sanitizeSlug(title)
 
     // Get or create user's default workspace
     let { data: workspace } = await supabase
