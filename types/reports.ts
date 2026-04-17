@@ -2,6 +2,7 @@ export interface Report {
   id: string
   content_type: 'prompt' | 'problem' | 'comment'
   content_id: string
+  content_slug?: string
   reason: string
   details?: string
   status: 'pending' | 'reviewed' | 'resolved' | 'dismissed'

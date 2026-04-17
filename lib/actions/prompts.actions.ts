@@ -268,7 +268,7 @@ export async function createPrompt(formData: FormData) {
     }
 
     const randomSuffix = Math.random().toString(36).substring(2, 8)
-    const slug = sanitizeSlug(title, 50, randomSuffix) + '-' + randomSuffix
+    const slug = sanitizeSlug(title, { maxLen: 50, shortSuffix: randomSuffix }) + '-' + randomSuffix
 
     const { data, error } = await supabase
       .from('prompts')
@@ -371,7 +371,7 @@ export async function forkPrompt(parentPromptId: string) {
   let forkInsertError: any = null
   for (let attempt = 0; attempt < 3; attempt++) {
     const forkRandomSuffix = Math.random().toString(36).substring(2, 8)
-    const slug = sanitizeSlug(forkTitle, 50, forkRandomSuffix) + '-' + forkRandomSuffix
+    const slug = sanitizeSlug(forkTitle, { maxLen: 50, shortSuffix: forkRandomSuffix }) + '-' + forkRandomSuffix
 
     const { data: inserted, error: err } = await supabase
       .from('prompts')
@@ -534,7 +534,7 @@ export async function forkPromptWithModal(parentPromptId: string, newTitle: stri
 
   // Generate slug from new title
   const forkModalSuffix = Math.random().toString(36).substring(2, 8)
-  const slug = sanitizeSlug(newTitle, 50, forkModalSuffix) + '-' + forkModalSuffix
+  const slug = sanitizeSlug(newTitle, { maxLen: 50, shortSuffix: forkModalSuffix }) + '-' + forkModalSuffix
 
   // Create forked prompt
   const { data: forkedPrompt, error } = await supabase
